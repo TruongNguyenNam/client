@@ -25,14 +25,14 @@ const router = createRouter({
                 // },
 
                 {
-                    path: '/prodductadd',
+                    path: '/productadd',
                     name: 'prodductadd',
                     component: () => import('@/views/pages/admin/product/ProductForm.vue')
                 },
                 {
                     path: '/productupdate/:id',
                     name: 'ProductUpdate',
-                    component: () => import('@/views/pages/admin/product/ProductForm.vue'),
+                    component: () => import('@/views/pages/admin/product/ProductUpdate.vue'),
                 },
                 {
                     path: '/category',

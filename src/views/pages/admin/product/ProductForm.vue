@@ -175,7 +175,9 @@ import { ProductService } from '../../../../service/ProductServiceLegacy';
 import { ProductImageService } from '../../../../service/ProductImageService';
 import { ProductTagService } from '../../../../service/ProductTagService';
 import { ProductAttributeService } from '../../../../service/ProductAttribueService';
-
+import type { CategoryResponse } from '../../../../model/category';
+import type { SupplierResponse } from '../../../../model/supplier';
+import type { ProductTagResponse } from '../../../../model/ProductTag';
 // Interfaces
 interface ProductAttributeValue {
     attributeId: number;
@@ -226,10 +228,10 @@ const product = reactive<ProductRequest>({
 // Refs
 const variants = ref<ProductAttributeValue[]>([]);
 const fileUploadRef = ref();
-const categories = ref([]);
-const suppliers = ref([]);
+const categories = ref<CategoryResponse[]>([]);
+const suppliers = ref<SupplierResponse[]>([]);
 const productAttributes = ref<ProductAttribute[]>([]);
-const productTag = ref([]);
+const productTag = ref<ProductTagResponse[]>([]);
 const uploadedImageIds = ref<number[]>([]);
 
 // Methods
