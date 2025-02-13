@@ -298,34 +298,51 @@
           const productData: ProductResponse = await ProductService.getProductById(productId.value);
           
           // Update form data
-          Object.assign(product, {
-              name: productData.name,
-              description: productData.description,
-              price: productData.price,
-              stockQuantity: productData.stockQuantity,
-              sportType: productData.sportType,
-              sku: productData.sku,
-              supplierId: suppliers.value.find(s => s.name === productData.supplierName)?.id || 0,
-              categoryId: categories.value.find(c => c.name === productData.categoryName)?.id || 0,
-              tagId: productData.tagName.map(name => productTag.value.find(t => t.name === name)?.id || 0).filter(id => id !== 0),
-          });
-  
+          product.name = productData.name;
+          product.description = productData.description;
+          product.price = productData.price || 0;
+          product.stockQuantity = productData.stockQuantity || 0;
+          product.sportType = productData.sportType;
+          product.sku = productData.sku;
+
+          // Find and set supplier
+          const supplier = suppliers.value.find(s => s.name === productData.supplierName);
+          if (supplier) {
+              product.supplierId = supplier.id;
+          }
+
+          // Find and set category
+          const category = categories.value.find(c => c.name === productData.categoryName);
+          if (category) {
+              product.categoryId = category.id;
+          }
+
+          // Set tags
+          if (productData.tagName && productData.tagName.length > 0) {
+              product.tagId = productData.tagName
+                  .map(name => {
+                      const tag = productTag.value.find(t => t.name === name);
+                      return tag ? tag.id : null;
+                  })
+                  .filter(id => id !== null) as number[];
+          }
+
           // Load existing images
-          if (productData.imageUrl) {
-              existingImages.value = productData.imageUrl.map((url) => ({
-                  id: uploadedImageIds.value[0] || 0, // Temporary fix - should get proper image IDs
-                  url
+          if (productData.imageUrl && productData.imageUrl.length > 0) {
+              existingImages.value = productData.imageUrl.map((url, index) => ({
+                  id: index + 1, // Temporary ID if real IDs are not available
+                  url: url
               }));
           }
-  
-          // Load existing attributes
+
+          // Load product attributes
           if (productData.productAttributeValueResponses) {
-              variants.value = productData.productAttributeValueResponses.map((attr: ProductAttributeValueResponse) => ({
-                  attributeId: attr.id,
+              variants.value = productData.productAttributeValueResponses.map(attr => ({
+                  attributeId: productAttributes.value.find(pa => pa.name === attr.attributeName)?.id || 0,
                   value: attr.value
               }));
           }
-  
+
       } catch (error) {
           console.error('Error loading product:', error);
           toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load product data', life: 3000 });
@@ -382,6 +399,7 @@
           .filter(variant => variant.attributeId !== 0)
           .map(variant => ({
               attributeId: variant.attributeId,
+            
               value: variant.value
           }));
   
@@ -394,7 +412,7 @@
       try {
           await ProductService.updateProduct(productId.value, product);
           toast.add({ severity: 'success', summary: 'Success', detail: 'Product updated successfully', life: 3000 });
-          router.push('/products');
+          router.push('/documentation');
       } catch (error) {
           console.error('Update error:', error);
           toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update product', life: 3000 });

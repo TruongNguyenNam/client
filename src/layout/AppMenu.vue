@@ -95,11 +95,11 @@ const model = ref([
                         icon: 'pi pi-fw pi-pencil',
                          to: '/pages/test'
                     },
-                    {
-                        label: 'Error',
-                        icon: 'pi pi-fw pi-times-circle',
-                        to: '/pages/productform'
-                    },
+                    // {
+                    //     label: 'Error',
+                    //     icon: 'pi pi-fw pi-times-circle',
+                    //     to: '/pages/productform'
+                    // },
                     {
                         label: 'Access Denied',
                         icon: 'pi pi-fw pi-lock',

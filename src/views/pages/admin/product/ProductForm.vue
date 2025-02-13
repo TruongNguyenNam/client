@@ -169,6 +169,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { useRoute, useRouter } from 'vue-router';
 import { CategoryService } from '../../../../service/CategoryService';
 import { SupplierService } from '../../../../service/SupplierService';
 import { ProductService } from '../../../../service/ProductServiceLegacy';
@@ -208,7 +209,7 @@ interface ProductRequest {
 
 const toast = useToast();
 const submitted = ref(false);
-
+const router = useRouter();
 // Form data
 const product = reactive<ProductRequest>({
     name: '',
@@ -286,6 +287,7 @@ const submitProduct = async () => {
         console.log('Submitting product:', product);
         const response = await ProductService.addProduct(product);
         toast.add({ severity: 'success', summary: 'Success', detail: 'Product added successfully', life: 3000 });
+        router.push("/documentation")
         console.log('Product submitted:', response);
     } catch (error) {
         console.error('Submit error:', error);
