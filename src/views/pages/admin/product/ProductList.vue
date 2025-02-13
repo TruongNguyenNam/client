@@ -220,14 +220,13 @@ const deleteSelectedProducts = async () => {
                                 <span>{{ data.name }}</span>
                             </div>
                         </template>
-                    </Column>
-
+                    </Column>                   
                     <Column field="price" header="Price" sortable style="min-width: 120px">
                         <template #body="{ data }">
                             {{ data.price?.toLocaleString() }}
                         </template>
                     </Column>
-
+                    
                     <Column field="stockQuantity" header="Stock" sortable style="min-width: 120px">
                         <template #body="{ data }">
                             <Tag :severity="data.stockQuantity > 10 ? 'success' : 'danger'">

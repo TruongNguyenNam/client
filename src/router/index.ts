@@ -30,6 +30,16 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/product/ProductForm.vue')
                 },
                 {
+                    path: '/categoryadd',
+                    name: 'categoryadd',
+                    component: () => import('@/views/pages/admin/category/CategoryForm.vue')
+                },
+                {
+                    path: '/categoryedit/:id',
+                    name: 'categoryedit',
+                    component: () => import('@/views/pages/admin/category/CategoryUpdate.vue')
+                },
+                {
                     path: '/productupdate/:id',
                     name: 'ProductUpdate',
                     component: () => import('@/views/pages/admin/product/ProductUpdate.vue'),
