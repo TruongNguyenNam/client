@@ -186,19 +186,12 @@ const deleteSelectedProducts = async () => {
                 <DataTable
                     v-model:selection="selectedProducts"
                     :value="listProduct"
-                    :paginator="true"
+                    :paginator="false"
                     class="p-datatable-gridlines"
-                    :totalRecords="totalRecords"
                     dataKey="id"
                     :rowHover="true"
                     :loading="loading"
                     responsiveLayout="scroll"
-                    @page="changePage"
-                    :first="currentPage * pageSize"
-                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                    :rowsPerPageOptions="[5,10,20,50]"
-                    v-model:rows="pageSize"
                 >
                     <template #header>
                         <div class="flex justify-content-between align-items-center">
@@ -257,42 +250,34 @@ const deleteSelectedProducts = async () => {
                     </Column>
                 </DataTable>
 
-                <!-- Custom Pagination Controls -->
-                <div class="pagination-controls mt-5" v-if="totalRecords > 0">
-                    <div class="flex justify-content-center align-items-center gap-3">
-                        <Button icon="pi pi-angle-double-left" 
-                              @click="onFirst" 
-                              :disabled="currentPage === 0"
-                              class="p-button-rounded p-button-text" />
-                        
-                        <Button icon="pi pi-angle-left" 
-                              @click="onPrev" 
-                              :disabled="currentPage === 0"
-                              class="p-button-rounded p-button-text" />
-                        
-                        <span class="current-page font-medium">{{ currentPage + 1 }}</span>
-                        
-                        <Button icon="pi pi-angle-right" 
-                              @click="onNext" 
-                              :disabled="currentPage >= Math.ceil(totalRecords / pageSize) - 1"
-                              class="p-button-rounded p-button-text" />
-                        
-                        <Button icon="pi pi-angle-double-right" 
-                              @click="onLast" 
-                              :disabled="currentPage >= Math.ceil(totalRecords / pageSize) - 1"
-                              class="p-button-rounded p-button-text" />
-                        
-                        <span class="showing-records text-color-secondary">
-                            Showing {{ (currentPage * pageSize) + 1 }} - 
-                            {{ Math.min((currentPage + 1) * pageSize, totalRecords) }} of 
-                            {{ totalRecords }}
-                        </span>
-                        
-                        <Dropdown v-model="pageSize" 
-                                :options="[5, 10, 20, 50]" 
-                                class="page-size-dropdown w-10rem" 
-                                @change="fetchData" />
-                    </div>
+                <!-- Thay thế phần phân trang bằng code sau -->
+                <div class="flex align-items-center justify-content-center mt-4">
+                    <Button icon="pi pi-angle-double-left" 
+                            class="p-button-text" 
+                            @click="onFirst"
+                            :disabled="currentPage === 0" />
+                    <Button icon="pi pi-angle-left" 
+                            class="p-button-text" 
+                            @click="onPrev"
+                            :disabled="currentPage === 0" />
+                    
+                    <span class="mx-2">{{ currentPage + 1 }}</span>
+                    <span class="mx-2">{{ Math.min(currentPage + 2, Math.ceil(totalRecords / pageSize)) }}</span>
+                    
+                    <Button icon="pi pi-angle-right" 
+                            class="p-button-text" 
+                            @click="onNext"
+                            :disabled="currentPage >= Math.ceil(totalRecords / pageSize) - 1" />
+                    <Button icon="pi pi-angle-double-right" 
+                            class="p-button-text" 
+                            @click="onLast"
+                            :disabled="currentPage >= Math.ceil(totalRecords / pageSize) - 1" />
+
+                    <Dropdown v-model="pageSize" 
+                             :options="[5, 10, 20, 50]" 
+                             class="mx-2 pagination-dropdown" />
+                    
+                    <span>Hiển thị {{ currentPage * pageSize + 1 }} đến {{ Math.min((currentPage + 1) * pageSize, totalRecords) }} của {{ totalRecords }} danh mục</span>
                 </div>
             </div>
         </div>
@@ -313,36 +298,38 @@ const deleteSelectedProducts = async () => {
     }
 }
 
-.pagination-controls {
-    .p-button {
-        min-width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50% !important;
-        
-        &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-    }
-    
-    .current-page {
-        min-width: 40px;
-        text-align: center;
-        padding: 0 1rem;
-        font-size: 1.1rem;
-    }
-    
-    .showing-records {
-        font-size: 0.9rem;
-        margin-left: 1.5rem;
-        color: var(--text-color-secondary);
-    }
-}
-
 ::v-deep(.p-datatable) {
     .p-paginator-bottom {
         border: none;
         background: transparent;
     }
+}
+
+.pagination-dropdown {
+    :deep(.p-dropdown) {
+        height: 2rem;
+        min-width: 4rem;
+        
+        .p-dropdown-label {
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .p-dropdown-trigger {
+            width: 2rem;
+        }
+    }
+}
+
+:deep(.p-button.p-button-text) {
+    padding: 0.5rem;
+    
+    &:focus {
+        box-shadow: none;
+    }
+}
+
+.mx-2 {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
 }
 </style>

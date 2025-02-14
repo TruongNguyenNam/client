@@ -40,6 +40,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/category/CategoryList.vue')
                 },
                 {
+                    path: '/categoryadd',
+                    name: 'categoryadd',
+                    component: () => import('@/views/pages/admin/category/CategoryForm.vue')
+                },
+                {
                     path: '/supplier',
                     name: 'supplier',
                     component: () => import('@/views/pages/admin/supplier/SupplierList.vue')

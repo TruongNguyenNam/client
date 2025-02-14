@@ -12,7 +12,7 @@ const model = ref([
         label: 'Admin Store',
         items: [
             // { label: 'productForm', icon: 'pi pi-fw pi-id-card', to: '/prodductadd' },
-            { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/documentation' },
+            { label: 'Product', icon: 'pi pi-fw pi-id-card', to: '/documentation' },
             { label: 'Category', icon: 'pi pi-fw pi-check-square', to: '/category' },
             { label: 'Supplier', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },
             { label: 'Attribute', icon: 'pi pi-fw pi-exclamation-circle', to: '/attribute' },
