@@ -50,6 +50,12 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/supplier/SupplierList.vue')
                 },
                 {
+                    path: '/supplieraddadd',
+                    name: 'supplieradd',
+                    component: () => import('@/views/pages/admin/supplier/SupplierForm.vue')
+                },
+                
+                {
                     path: '/attribute',
                     name: 'attribute',
                     component: () => import('@/views/pages/admin/attribute/AttributeList.vue')
