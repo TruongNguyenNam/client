@@ -225,8 +225,6 @@
     stockQuantity: string; // Changed to String
 }
 
-
-
   // Interfaces
   interface ProductAttributeValue {
       attributeId: number;

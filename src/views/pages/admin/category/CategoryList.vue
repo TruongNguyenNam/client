@@ -109,6 +109,7 @@ const saveCategory = async () => {
         emit("close");
         loadCategories();
         router.push("/category");
+        hideDialog();
     } catch (error) {
         console.error("Lỗi khi lưu danh mục:", error);
     }

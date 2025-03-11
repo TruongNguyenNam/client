@@ -34,6 +34,8 @@ export const ProductImageService = {
             return null;
         }
     }
+
+    
 };
 
 
