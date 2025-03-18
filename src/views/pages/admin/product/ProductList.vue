@@ -4,6 +4,7 @@ import { ProductService } from '../../../../service/ProductServiceLegacy';
 import type { ProductResponse, ProductApiResponse } from '../../../../model/product';
 import { RouterLink } from 'vue-router';
 
+
 const listProduct = ref<ProductResponse[]>([]);
 const loading = ref(false);
 const filters = ref({
@@ -74,6 +75,23 @@ const onLast = () => {
     currentPage.value = totalPages - 1;
     fetchData();
 };
+
+
+const getAllParentProduct = async () => {
+    loading.value = true;
+    try {
+        listProduct.value = await ProductService.getAllParentProducts();
+        console.log(listProduct)
+    } catch (error) {
+        console.error("Error fetching products:", error);
+    }
+
+
+}
+
+onMounted(getAllParentProduct)
+
+
 
 // Data Fetching
 const fetchData = async () => {

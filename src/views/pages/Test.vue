@@ -1,169 +1,165 @@
-<script lang="ts" setup>
-import { ref, onMounted } from 'vue';
-import { ProductService } from '../../service/ProductServiceLegacy';
-import type { ProductResponse } from '../../model/product';
-
-// Khai báo các biến cần thiết
-const listProduct = ref<ProductResponse[]>([]);
-const loading = ref(false);
-const filters = ref({
-    global: { value: null, matchMode: 'contains' },
-});
-
-// Fetch data
-onMounted(async () => {
-    loading.value = true;
-    const page = 0;
-    const size = 5;
-    try {
-        const response = await ProductService.getAllProducts(page, size);
-        console.log("Dữ liệu từ API:", response);  // Kiểm tra dữ liệu
-        listProduct.value = response.content.map(product => ({
-            ...product,
-            status: product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock' // Adding status based on stock quantity
-        }));
-    } catch (error) {
-        console.error("Error fetching products:", error);
-        listProduct.value = [];
-    } finally {
-        loading.value = false;
-    }
-});
-
-
-const clearFilter = () => {
-    filters.value = {
-        global: { value: null, matchMode: 'contains' },
-    };
-};
-</script>
-
 <template>
     <div class="grid">
         <div class="col-12">
             <div class="card">
-                <h5>Products List</h5>
+                <Toast />
                 <Toolbar class="mb-4">
                     <template v-slot:start>
                         <div class="my-2">
-                            <Button label="New" icon="pi pi-plus" class="p-button-success mr-2"/>
+                            <Button label="New" icon="pi pi-plus" class="p-button-success mr-2"  />
                             <Button label="Delete" icon="pi pi-trash" class="p-button-danger"  />
                         </div>
                     </template>
 
                     <template v-slot:end>
                         <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" />
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" />
+                        <Button label="Export" icon="pi pi-upload" class="p-button-help"  />
                     </template>
                 </Toolbar>
+
                 <DataTable
+                    ref="dt"
                     :value="listProduct"
-                    :paginator="true"
-                    class="p-datatable-gridlines"
-                    :rows="10"
+                    v-model:selection="selectedProducts"
                     dataKey="id"
-                    :rowHover="true"
-                    v-model:filters="filters"
-                    filterDisplay="menu"
-                    :loading="loading"
+                    :paginator="true"
+                    :rows="1"
+                    :filters="filters"
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    :rowsPerPageOptions="[5, 10, 25]"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
                     responsiveLayout="scroll"
-                    :globalFilterFields="['name', 'description', 'supplierName', 'categoryName']"
                 >
                     <template #header>
-                        <div class="flex justify-content-between flex-column sm:flex-row">
-                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2" @click="clearFilter()" />
-                            <span class="p-input-icon-left mb-2">
+                        <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                            <h5 class="m-0">Manage Products</h5>
+                            <span class="block mt-2 md:mt-0 p-input-icon-left">
                                 <i class="pi pi-search" />
-                                <InputText v-model="filters.global.value" placeholder="Keyword Search" style="width: 100%" />
+                                <InputText v-model="filters['global'].value" placeholder="Search..." />
                             </span>
                         </div>
                     </template>
 
-                    <Column field="name" header="Name" sortable style="min-width: 12rem">
-                        <template #body="{ data }">
-                            {{ console.log(data) }} 
-                            {{ data.name }}
+                    <!-- Selection Column -->
+                    <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+
+                    <!-- ID Column -->
+                    <Column field="id" header="ID" :sortable="true" headerStyle="width: 10%; min-width: 10rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">ID</span>
+                            {{ slotProps.data.id }}
                         </template>
                     </Column>
 
-                    <Column field="price" header="Price" sortable style="min-width: 8rem">
-                        <template #body="{ data }">
-                            {{ data.price }}
+                    <!-- Name Column -->
+                    <Column field="name" header="Name" :sortable="true" headerStyle="width: 14%; min-width: 10rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Name</span>
+                            {{ slotProps.data.name }}
                         </template>
                     </Column>
 
-                    <Column field="stockQuantity" header="Stock" sortable style="min-width: 8rem">
-                        <template #body="{ data }">
-                            {{ data.stockQuantity }}
+                    <!-- Category Column -->
+                    <Column field="categoryName" header="Category" :sortable="true" headerStyle="width: 14%; min-width: 10rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Category</span>
+                            {{ slotProps.data.categoryName }}
                         </template>
                     </Column>
 
-                    <Column field="categoryName" header="Category" sortable style="min-width: 10rem">
-                        <template #body="{ data }">
-                            {{ data.categoryName }}
+                    <!-- Price Column -->
+                    <Column field="price" header="Price" :sortable="true" headerStyle="width: 14%; min-width: 8rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Price</span>
+                            {{ slotProps.data.price }}
                         </template>
                     </Column>
 
-                    <Column field="supplierName" header="Supplier" sortable style="min-width: 10rem">
-                        <template #body="{ data }">
-                            {{ data.supplierName }}
+                    <!-- Stock Quantity Column -->
+                    <Column field="stockQuantity" header="Stock Quantity" :sortable="true" headerStyle="width: 14%; min-width: 8rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Stock Quantity</span>
+                            {{ slotProps.data.stockQuantity }}
                         </template>
                     </Column>
 
-                    <Column field="sku" header="SKU" sortable style="min-width: 10rem">
-                        <template #body="{ data }">
-                            {{ data.sku }}
+                    <!-- Supplier Column -->
+                    <Column field="supplierName" header="Supplier" :sortable="true" headerStyle="width: 14%; min-width: 8rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Supplier</span>
+                            {{ slotProps.data.supplierName }}
                         </template>
                     </Column>
 
-                    <Column field="imageUrl" header="Image" style="min-width: 10rem">
-                        <template #body="{ data }">
-                            <span :class="'customer-badge status-' + data.status">{{ data.status }}</span>
-                        </template>
-                        <template #filter="{ filterModel }">
-                            <Dropdown v-model="filterModel.value" :options="statuses" placeholder="Any" class="p-column-filter" :showClear="true">
-                                <template #value="slotProps">
-                                    <span :class="'customer-badge status-' + slotProps.value" v-if="slotProps.value">{{ slotProps.value }}</span>
-                                    <span v-else>{{ slotProps.placeholder }}</span>
-                                </template>
-                                <template #option="slotProps">
-                                    <span :class="'customer-badge status-' + slotProps.option">{{ slotProps.option }}</span>
-                                </template>
-                            </Dropdown>
+                    <!-- Tag Name Column -->
+                    <Column field="tagName" header="Tags" :sortable="true" headerStyle="width: 14%; min-width: 8rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Tags</span>
+                            <span v-for="(tag, index) in slotProps.data.tagName" :key="index">{{ tag }}<span v-if="index < slotProps.data.tagName.length - 1">, </span></span>
                         </template>
                     </Column>
-                    <Column field="activity" header="Activity" :showFilterMatchModes="false" style="min-width: 12rem">
-                        <template #body="{ data }">
-                            <ProgressBar :value="data.activity" :showValue="false" style="height: 0.5rem"></ProgressBar>
+
+                    <!-- Image URL Column -->
+                    <Column field="imageUrl" header="Image" :sortable="true" headerStyle="width: 14%; min-width: 10rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Image</span>
+                            <img :src="slotProps.data.imageUrl[0]" alt="Product Image" width="50" />
                         </template>
-                        <template #filter="{ filterModel }">
-                            <Slider v-model="filterModel.value" :range="true" class="m-3"></Slider>
-                            <div class="flex align-items-center justify-content-between px-2">
-                                <span>{{ filterModel.value ? filterModel.value[0] : 0 }}</span>
-                                <span>{{ filterModel.value ? filterModel.value[1] : 100 }}</span>
+                    </Column>
+
+                    <!-- Product Attributes Column -->
+                    <Column header="Attributes" headerStyle="width: 14%; min-width: 10rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Attributes</span>
+                            <div v-for="attribute in slotProps.data.productAttributeValueResponses" :key="attribute.id">
+                                {{ attribute.attributeName }}: {{ attribute.value }}
                             </div>
                         </template>
                     </Column>
-                    <Column field="verified" header="Verified" dataType="boolean" bodyClass="text-center" style="min-width: 8rem">
-                        <template #body="{ data }">
-                            <i class="pi" :class="{ 'text-green-500 pi-check-circle': data.verified, 'text-pink-500 pi-times-circle': !data.verified }"></i>
+
+                    <!-- Inventories Column -->
+                    <Column header="Inventories" headerStyle="width: 14%; min-width: 10rem;">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Inventories</span>
+                            <div v-for="inventory in slotProps.data.inventories" :key="inventory.id">
+                                {{ inventory.productName }}: {{ inventory.stockQuantity }}
+                            </div>
                         </template>
-                        <template #filter="{ filterModel }">
-                            <TriStateCheckbox v-model="filterModel.value" />
+                    </Column>
+
+                    <!-- Action Column (Edit & Delete) -->
+                    <Column headerStyle="min-width: 10rem;">
+                        <template #body="slotProps">
+                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"  />
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning mt-2"  />
                         </template>
                     </Column>
                 </DataTable>
+
+                <!-- Dialogs for editing, confirming delete -->
+                <!-- Your existing Dialog code -->
             </div>
         </div>
     </div>
 </template>
 
-<style scoped lang="scss">
-::v-deep(.p-datatable-frozen-tbody) {
-    font-weight: bold;
-}
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import type { ProductResponse } from '../../model/product';
+import { ProductService } from '../../service/ProductServiceLegacy';
 
-::v-deep(.p-datatable-scrollable .p-frozen-column) {
-    font-weight: bold;
-}
-</style>
+const listProduct = ref<ProductResponse[]>([]);
+const selectedProducts = ref<any[]>([]); // To manage selection of products
+const filters = ref<any>({ global: { value: '' } });
+
+const fetchData = async () => {
+    try {
+        listProduct.value = await ProductService.getAllParentProducts();
+        console.log(listProduct.value);
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+onMounted(fetchData);
+</script>

@@ -3,74 +3,83 @@ import axios from 'axios';
 
 const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
-
+interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data?: T;
+}
 export const ProductService = {
 
-    
-    addProduct: async (productRequest: ProductRequest): Promise<ProductResponse> => {
-        try {
-          console.log('Create Product Request:', productRequest);
-    
-          const formData = new FormData();
-          formData.append('name', productRequest.name);
-          formData.append('description', productRequest.description);
-          if (productRequest.price !== null) formData.append('price', productRequest.price.toString());
-          if (productRequest.stockQuantity !== null) formData.append('stockQuantity', productRequest.stockQuantity.toString());
-          formData.append('sportType', productRequest.sportType);
-          formData.append('sku', productRequest.sku);
-          if (productRequest.supplierId !== null) formData.append('supplierId', productRequest.supplierId.toString());
-          if (productRequest.categoryId !== null) formData.append('categoryId', productRequest.categoryId.toString());
-    
-          productRequest.tagId.forEach((tag, index) => {
-            formData.append(`tagId[${index}]`, tag.toString());
-          });
-    
-          productRequest.productAttributeValues
-            .filter(attr => attr.value?.trim())
-            .forEach((attr, index) => {
-              if (attr.attributeId) formData.append(`productAttributeValues[${index}].attributeId`, attr.attributeId.toString());
-              formData.append(`productAttributeValues[${index}].value`, attr.value);
-              if (attr.variantImages && attr.variantImages.length > 0) {
-                attr.variantImages.forEach((file) => {
-                  formData.append(`productAttributeValues[${index}].variantImages`, file);
-                });
-              }
-            });
-    
-          if (productRequest.parentImages && productRequest.parentImages.length > 0) {
-            productRequest.parentImages.forEach((file) => {
-              formData.append('parentImages', file);
-            });
-          }
-    
-          productRequest.inventoryIds.forEach((id, index) => {
-            formData.append(`inventoryIds[${index}]`, id.toString());
-          });
-    
-          const response = await axiosInstance.post<ProductResponse>(API_URL, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-    
-          console.log('Create Product Response:', response.data);
-          return response.data;
-        } catch (error) {
-          if (axios.isAxiosError(error) && error.response) {
-            console.error('Create Product Error Details:', {
-              status: error.response.status,
-              data: error.response.data,
-              message: error.message
-            });
-            if (error.response.status === 400) {
-              throw new Error(`Invalid data: ${error.response.data?.message || 'Please check your input'}`);
-            }
-            throw new Error(`Failed to create product: ${error.response.data?.message || error.message}`);
-          }
-          throw new Error('Failed to create product. Please try again later.');
-        }
-      },
 
+  addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
+    try {
+      console.log("Create Product Request:", productRequest);
+
+      const formData = new FormData();
+      const requests = [productRequest];
+
+      // Gửi products dưới dạng chuỗi JSON (không chứa parentImages và images)
+      formData.append("products", JSON.stringify(requests));
+
+      // Thêm parentImages
+      if (parentUploadedFiles && parentUploadedFiles.length > 0) {
+        parentUploadedFiles.forEach((file) => {
+          formData.append("parentImages", file, file.name);
+        });
+      }
+
+      // Thêm images (ảnh của các biến thể)
+      if (variantUploadedFiles && variantUploadedFiles.length > 0) {
+        variantUploadedFiles.forEach((files) => {
+          files.forEach((file) => {
+            formData.append("images", file, file.name);
+          });
+        });
+      }
+
+      // Log kiểm tra dữ liệu gửi đi
+      console.log("FormData entries:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+      }
+
+      // Gửi API với fetch để đảm bảo xử lý FormData đúng
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(`Failed to add product: ${errorResponse.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      console.log("Create Product Response:", data);
+      return data.message;
+    } catch (error) {
+      console.error("Unexpected Error:", error);
+      throw new Error("Không thể tạo sản phẩm. Vui lòng thử lại sau.");
+    }
+  },
+
+  getAllParentProducts: async():  Promise<ProductResponse[]> => {
+        try {
+          const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/parent`);
+          if(!response.data.status){
+            throw new Error(response.data.message || "không thể lấy được danh sách sản phẩm cha")
+          }
+          console.log("Get All Parent Products Response:", response.data);
+            return response.data.data || [];
+          
+        } catch (error) {
+              console.error("Get All Parent Products Error:", error);
+              throw new Error("Không thể lấy danh sách sản phẩm. Vui lòng thử lại sau.");
+        }
+
+  },
+
+  
     getAllProducts: async (page: number = 0, size: number = 2): Promise<ProductApiResponse> => {
         try {
             const response = await axiosInstance.get<ProductApiResponse>(`${API_URL}?page=${page}&size=${size}`);
