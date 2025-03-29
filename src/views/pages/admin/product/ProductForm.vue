@@ -68,6 +68,8 @@ const addVariant = () => {
   });
 };
 
+
+
 const removeVariant = (index: number) => {
   variants.value.splice(index, 1);
   generateCombinations();
@@ -218,20 +220,26 @@ const submitProduct = async () => {
 
 onMounted(async () => {
   try {
-    const [categoriesList, supplierList, productAttributeList, productTagList] = await Promise.all([
-      CategoryService.getAllCategories(0, 100),
-      SupplierService.getAllSupplier(0, 100),
-      ProductAttributeService.getAllProductAttribute(0, 100),
-      ProductTagService.getAllTags(0, 100)
+    const [categoriesResponse, supplierResponse, productAttributeResponse, productTagResponse] = 
+    await Promise.all([
+      CategoryService.getAllCategories(),
+      SupplierService.getAllSuppliers(),
+      ProductAttributeService.getAllProductAttribute(),
+      ProductTagService.getAllTags()
     ]);
 
-    categories.value = categoriesList.content;
-    suppliers.value = supplierList.content;
-    productAttributes.value = productAttributeList.content;
-    productTags.value = productTagList.content;
+    categories.value = categoriesResponse.data || [];
+    suppliers.value = supplierResponse.data || [];
+    productAttributes.value = productAttributeResponse.data || [];
+    productTags.value = productTagResponse.data || [];
   } catch (error) {
     console.error('Error fetching data:', error);
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load form data', life: 3000 });
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: 'Không thể tải dữ liệu. Vui lòng thử lại sau.', 
+      life: 3000 
+    });
   }
 });
 </script>

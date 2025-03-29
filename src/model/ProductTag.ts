@@ -9,7 +9,7 @@ export interface ProductTagResponse{
     name:string;
 }
 
-export interface ProductTagApiResponse extends ApiResponse<ProductTagResponse>{}
+// export interface ProductTagApiResponse extends ApiResponse<ProductTagResponse>{}
 
 
 

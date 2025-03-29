@@ -12,7 +12,7 @@ export interface SupplierResponse{
 }
 
 
-export interface SuppliersApiResponse extends ApiResponse<SupplierResponse> {}
+// export interface SuppliersApiResponse extends ApiResponse<SupplierResponse> {}
 
 
 

@@ -10,6 +10,6 @@ export interface ProductImageResponse {
     imageUrl: string;
 }
 
-export interface ProductImageApiResponse extends ApiResponse<ProductImageResponse> {}
+// export interface ProductImageApiResponse extends ApiResponse<ProductImageResponse> {}
 
 

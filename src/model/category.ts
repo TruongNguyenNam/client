@@ -11,4 +11,4 @@ export interface CategoryResponse{
     description: string;
 }
 
-export interface CategoryApiResponse extends ApiResponse<CategoryResponse> {}
+// export interface CategoryApiResponse extends ApiResponse<CategoryResponse> {}

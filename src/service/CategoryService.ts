@@ -1,47 +1,69 @@
 import axios from 'axios';
-const API_URL = "http://localhost:8080/api/v1/admin/category";
-import type { CategoryApiResponse, CategoryRequest, CategoryResponse } from "../model/category";
+import type { CategoryResponse,CategoryRequest } from '../model/category';
+import type { ApiResponse } from "../utils/ApiResponse";
 
+const API_URL = "http://localhost:8080/api/v1/admin/category";
 const axiosInstance = axios.create();
 
 export const CategoryService = {
-    getCategoryById: async (id: number): Promise<CategoryResponse> => {
-        const response = await axiosInstance.get<CategoryResponse>(`${API_URL}/${id}`);
-        return response.data;
-    },
-
-    getAllCategories: async (page: number = 0, size: number = 2): Promise<CategoryApiResponse> => {
-        const response = await axiosInstance.get<CategoryApiResponse>(`${API_URL}?page=${page}&size=${size}`);
-        return response.data;
-    },
-
-    findByName: async (name: string): Promise<CategoryResponse[]> => {
-        const response = await axiosInstance.get<CategoryResponse[]>(`${API_URL}/search?name=${name}`);
-        return response.data;
-    },
-
-    saveCategory: async (categoryRequest: CategoryRequest): Promise<CategoryResponse> => {
-        const response = await axiosInstance.post<CategoryResponse>(API_URL, categoryRequest);
-        return response.data;
-    },
-
-    updateCategory: async (id: number, categoryRequest: CategoryRequest): Promise<CategoryResponse> => {
-        const response = await axiosInstance.put<CategoryResponse>(`${API_URL}/${id}`, categoryRequest);
-        return response.data;
-    },
-
-    deleteCategory: async (ids: number[]): Promise<void> => {
+    getAllCategories: async (): Promise<ApiResponse<CategoryResponse[]>> => {
         try {
-            // Thay vì gửi dữ liệu trong body, sử dụng tham số query với dấu "," ngăn cách các ID
-            const idsParam = ids.join(',');
-            await axiosInstance.delete(`${API_URL}?id=${idsParam}`);
+            const response = await axiosInstance.get<ApiResponse<CategoryResponse[]>>(`${API_URL}`);
+            return response.data;
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                console.error('Server response:', error.response.data);
-                throw new Error(`Failed to delete categories: ${error.response.data?.message || error.message}`);
-            }
+            console.error('Error fetching all categories:', error);
+            throw new Error('Failed to fetch categories. Please try again later.');
+        }
+    },
+
+    getCategoryById: async (id: number): Promise<ApiResponse<CategoryResponse>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<CategoryResponse>>(`${API_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching category with ID ${id}:`, error);
+            throw new Error('Failed to fetch category. Please try again later.');
+        }
+    },
+
+    addCategory: async (categoryRequest: CategoryRequest): Promise<ApiResponse<CategoryResponse>> => {
+        try {
+            const response = await axiosInstance.post<ApiResponse<CategoryResponse>>(`${API_URL}`, categoryRequest);
+            return response.data;
+        } catch (error) {
+            console.error('Error adding category:', error);
+            throw new Error('Failed to add category. Please try again later.');
+        }
+    },
+
+    updateCategory: async (id: number, categoryRequest: CategoryRequest): Promise<ApiResponse<CategoryResponse>> => {
+        try {
+            const response = await axiosInstance.put<ApiResponse<CategoryResponse>>(`${API_URL}/${id}`, categoryRequest);
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating category with ID ${id}:`, error);
+            throw new Error('Failed to update category. Please try again later.');
+        }
+    },
+
+    deleteCategory: async (ids: number[]): Promise<ApiResponse<void>> => {
+        try {
+            const response = await axiosInstance.delete<ApiResponse<void>>(`${API_URL}`, { params: { ids } });
+            return response.data;
+        } catch (error) {
+            console.error('Error deleting categories:', error);
             throw new Error('Failed to delete categories. Please try again later.');
         }
+    },
+
+    findByName: async (name: string): Promise<ApiResponse<CategoryResponse[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<CategoryResponse[]>>(`${API_URL}/search`, { params: { name } });
+            return response.data;
+        } catch (error) {
+            console.error(`Error finding categories by name ${name}:`, error);
+            throw new Error('Failed to find categories. Please try again later.');
+        }
     }
-    
 };
+

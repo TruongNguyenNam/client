@@ -11,7 +11,7 @@ export interface ProductAttributeResponse{
 }
 
 
-export interface productAttributesApiResponse extends ApiResponse<ProductAttributeResponse> {}
+// export interface productAttributesApiResponse extends ApiResponse<ProductAttributeResponse> {}
 
 
 

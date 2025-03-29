@@ -57,4 +57,36 @@ export interface InventoryResponse {
     stockQuantity: string; // Changed from stockQuantity: number to stockQuantity: string
 }
 
-export interface ProductApiResponse extends ApiResponse<ProductResponse> {}
+export interface ProductUpdateChild {
+    name: string;
+    description: string;
+    sportType: string;
+    sku: string;
+    price?: number;
+    stockQuantity?: number;
+    supplierId: number;
+    categoryId: number;
+    productAttributeValues: ProductAttributeValueUpdate[];
+    images?: File[];
+
+}
+
+interface ProductAttributeValueUpdate {
+    attributeId: number;
+    value: string;
+}
+
+export interface ProductUpdateParent {
+    name: string;
+    description: string;
+    sportType: string;
+    sku: string;
+    supplierId: number; // Changed from Long to number for TypeScript compatibility
+    categoryId: number; // Changed from Long to number for TypeScript compatibility
+    tagId: number[]; // Changed from List<Long> to number[] for TypeScript compatibility
+    parentImages?: File[]; // Changed from List<MultipartFile> to File[] for TypeScript compatibility
+}
+
+
+
+// export interface ProductApiResponse extends ApiResponse<ProductResponse> {}

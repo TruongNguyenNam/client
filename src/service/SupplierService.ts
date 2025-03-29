@@ -1,5 +1,6 @@
 import axios from "axios";
-import type { SuppliersApiResponse, SupplierRequest, SupplierResponse } from "../model/supplier";
+import type { SupplierRequest, SupplierResponse } from "../model/supplier";
+import type { ApiResponse } from "../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/supplier";
 
@@ -7,47 +8,68 @@ const axiosInstance = axios.create();
 
 export const SupplierService = {
     // Lấy danh sách nhà cung cấp có phân trang
-    getAllSupplier: async (page: number = 0, size: number = 5): Promise<SuppliersApiResponse> => {
-        const response = await axiosInstance.get<SuppliersApiResponse>(`${API_URL}?page=${page}&size=${size}`);
-        return response.data;
+    getAllSuppliers: async (): Promise<ApiResponse<SupplierResponse[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<SupplierResponse[]>>(`${API_URL}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching all suppliers:', error);
+            throw new Error('Failed to fetch suppliers. Please try again later.');
+        }
     },
 
     // Tìm nhà cung cấp theo tên
-    findByName: async (name: string): Promise<SupplierResponse[]> => {
-        const response = await axiosInstance.get<SupplierResponse[]>(`${API_URL}/search?name=${name}`);
-        return response.data;
+    findByName: async (name: string): Promise<ApiResponse<SupplierResponse[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<SupplierResponse[]>>(`${API_URL}/search`, { params: { name } });
+            return response.data;
+        } catch (error) {
+            console.error(`Error finding suppliers by name ${name}:`, error);
+            throw new Error('Failed to find suppliers. Please try again later.');
+        }
     },
 
     // Lấy thông tin nhà cung cấp theo ID
-    getSupplierById: async (id: number): Promise<SupplierResponse> => {
-        const response = await axiosInstance.get<SupplierResponse>(`${API_URL}/${id}`);
-        return response.data;
+    getSupplierById: async (id: number): Promise<ApiResponse<SupplierResponse>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<SupplierResponse>>(`${API_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching supplier with ID ${id}:`, error);
+            throw new Error('Failed to fetch supplier. Please try again later.');
+        }
     },
 
     // Thêm mới nhà cung cấp
-    saveSupplier: async (supplierRequest: SupplierRequest): Promise<SupplierResponse> => {
-        const response = await axiosInstance.post<SupplierResponse>(API_URL, supplierRequest);
-        return response.data;
+    saveSupplier: async (supplierRequest: SupplierRequest): Promise<ApiResponse<SupplierResponse>> => {
+        try {
+            const response = await axiosInstance.post<ApiResponse<SupplierResponse>>(`${API_URL}`, supplierRequest);
+            return response.data;
+        } catch (error) {
+            console.error('Error saving supplier:', error);
+            throw new Error('Failed to save supplier. Please try again later.');
+        }
     },
 
     // Cập nhật nhà cung cấp
-    updateSupplier: async (id: number, supplierRequest: SupplierRequest): Promise<SupplierResponse> => {
-        const response = await axiosInstance.put<SupplierResponse>(`${API_URL}/${id}`, supplierRequest);
-        return response.data;
+    updateSupplier: async (id: number, supplierRequest: SupplierRequest): Promise<ApiResponse<SupplierResponse>> => {
+        try {
+            const response = await axiosInstance.put<ApiResponse<SupplierResponse>>(`${API_URL}/${id}`, supplierRequest);
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating supplier with ID ${id}:`, error);
+            throw new Error('Failed to update supplier. Please try again later.');
+        }
     },
 
     // Xóa một hoặc nhiều nhà cung cấp
-    deleteSupplier: async (ids: number[]): Promise<void> => {
+    deleteSupplier: async (ids: number[]): Promise<ApiResponse<void>> => {
         try {
-            // Chuyển danh sách ID thành chuỗi ngăn cách bằng dấu ","
-            const idsParam = ids.join(',');
-            await axiosInstance.delete(`${API_URL}?id=${idsParam}`);
+            const response = await axiosInstance.delete<ApiResponse<void>>(`${API_URL}`, { params: { id: ids } });
+            return response.data;
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                console.error("Server response:", error.response.data);
-                throw new Error(`Failed to delete suppliers: ${error.response.data?.message || error.message}`);
-            }
-            throw new Error("Failed to delete suppliers. Please try again later.");
+            console.error('Error deleting suppliers:', error);
+            throw new Error('Failed to delete suppliers. Please try again later.');
         }
     }
 };
