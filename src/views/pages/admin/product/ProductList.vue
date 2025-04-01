@@ -164,7 +164,7 @@ const onPageChange = (event: any) => {
           <Column header="Thao tác" style="min-width: 120px">
             <template #body="{ data }">
               <div class="flex align-items-center gap-2">
-                <RouterLink :to="`/productupdate/${data.id}`">
+                <RouterLink :to="`/productupdateparent/${data.id}`">
                   <Button icon="pi pi-pencil" 
                         class="p-button-rounded p-button-success" 
                         v-tooltip.top="'Sửa'" />

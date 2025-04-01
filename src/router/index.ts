@@ -18,11 +18,6 @@ const router = createRouter({
                     name: 'documentation',
                     component: () => import('@/views/pages/admin/product/ProductList.vue')
                 },
-                // {
-                //     path: '/pages/productform',
-                //     name: 'form',
-                //     component: () => import('@/views/pages/ProductForm.vue')
-                // },
 
                 {
                     path: '/productadd',
@@ -30,9 +25,19 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/product/ProductForm.vue')
                 },
                 {
-                    path: '/productupdate/:id',
-                    name: 'ProductUpdate',
-                    component: () => import('@/views/pages/admin/product/ProductUpdate.vue'),
+                    path: '/productupdateparent/:id',
+                    name: 'ProductUpdateParent',
+                    component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue'),
+                },
+                {
+                    path: '/productdelete',
+                    name: 'productupdatetrue',
+                    component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue'),
+                },
+                {
+                    path: '/productupdatechild/:id',
+                    name: 'ProductUpdateChild',
+                    component: () => import('@/views/pages/admin/product/ProductUpdateChild.vue'),
                 },
                 {
                     path: '/category',

@@ -18,8 +18,8 @@ const submitted = ref(false);
 const isSubmitting = ref(false);
 const router = useRouter();
 
-// Thêm biến để lưu trữ ảnh của sản phẩm cha
 const parentImages = ref<File[]>([]);
+const availableAttributes = ref<ProductAttributeResponse[]>([]);
 
 const product = reactive<ProductRequest>({
   name: '',
@@ -48,7 +48,12 @@ const suppliers = ref<SupplierResponse[]>([]);
 const productAttributes = ref<ProductAttributeResponse[]>([]);
 const productTags = ref<ProductTagResponse[]>([]);
 
-// Hàm xử lý khi upload ảnh cho sản phẩm cha
+// Hàm lấy tên thuộc tính
+const getAttributeName = (attributeId: number) => {
+  const attribute = productAttributes.value.find(attr => attr.id === attributeId);
+  return attribute ? attribute.name : '';
+};
+
 const onParentImageUpload = (event: any) => {
   const selectedFiles: File[] = event.files;
   parentImages.value = selectedFiles;
@@ -59,25 +64,46 @@ const onError = (error: any) => {
   toast.add({ severity: 'error', summary: 'Upload Error', detail: error.message, life: 3000 });
 };
 
+const updateAvailableAttributes = () => {
+  // Lấy danh sách các attributeId đã được chọn, loại bỏ các giá trị không hợp lệ
+  const selectedAttributeIds = variants.value
+    .map(v => v.attributeId)
+    .filter(id => id !== 0 && id !== undefined && id !== null);
+
+  // Cập nhật availableAttributes dựa trên productAttributes
+  availableAttributes.value = productAttributes.value.filter(attr => 
+    !selectedAttributeIds.includes(attr.id)
+  );
+
+  console.log('Selected attribute IDs:', selectedAttributeIds);
+  console.log('Available attributes after update:', availableAttributes.value);
+};
+
 const addVariant = () => {
+  const selectedIds = variants.value.map(v => v.attributeId).filter(id => id !== 0);
+  if (selectedIds.length === productAttributes.value.length) {
+    toast.add({ severity: 'warn', summary: 'Warning', detail: 'All attributes are already selected', life: 3000 });
+    return;
+  }
   variants.value.push({
     attributeId: 0,
     values: [],
     currentValue: '',
     variantImages: new Map()
   });
+  updateAvailableAttributes();
 };
-
-
 
 const removeVariant = (index: number) => {
   variants.value.splice(index, 1);
   generateCombinations();
+  updateAvailableAttributes();
 };
 
 const addVariantValue = (index: number) => {
   const variant = variants.value[index];
   const value = variant.currentValue.trim();
+  
   if (value && !variant.values.includes(value)) {
     variant.values.push(value);
     variant.currentValue = '';
@@ -98,7 +124,6 @@ const removeVariantValue = (variantIndex: number, valueIndex: number) => {
   generateCombinations();
 };
 
-// Cập nhật hàm onVariantImageUpload để lưu trữ ảnh cho từng biến thể
 const onVariantImageUpload = (index: number, event: any) => {
   const selectedFiles: File[] = event.files;
   const combination = variantCombinations.value[index];
@@ -106,7 +131,6 @@ const onVariantImageUpload = (index: number, event: any) => {
   toast.add({ severity: 'success', summary: 'Images Selected', detail: `Selected ${selectedFiles.length} images for variant "${combination.name}"`, life: 3000 });
 };
 
-// Hiển thị preview ảnh
 const getImagePreview = (files: File[]): string[] => {
   return files.map(file => URL.createObjectURL(file));
 };
@@ -144,20 +168,24 @@ const generateCombinations = () => {
       price: undefined,
       stockQuantity: undefined,
       attributes: attributes as ProductAttributeValue[],
-      images: [] // Khởi tạo images rỗng, sẽ được gán khi upload
+      images: []
     };
   });
 };
 
-watch(() => [...variants.value], () => {
-  generateCombinations();
-}, { deep: true });
+watch(
+  () => variants.value,
+  () => {
+    updateAvailableAttributes();
+    generateCombinations();
+  },
+  { deep: true }
+);
 
 const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  // Validation
   if (!product.name || !product.sku || !product.categoryId || !product.supplierId || !product.description) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all required fields.', life: 3000 });
     isSubmitting.value = false;
@@ -182,7 +210,6 @@ const submitProduct = async () => {
     return;
   }
 
-  // Chuẩn bị dữ liệu gửi đi
   const requestData: ProductRequest = {
     ...product,
     productAttributeValues: Array.from(
@@ -200,17 +227,14 @@ const submitProduct = async () => {
     inventoryIds: []
   };
 
-  // Chuẩn bị uploadedFiles từ variantCombinations và parentImages
   const variantUploadedFiles: File[][] = variantCombinations.value.map(v => v.images);
   const parentUploadedFiles: File[] = parentImages.value;
 
   try {
-    console.log('Submitting product:', JSON.stringify(requestData, null, 2));
     const message = await ProductService.addProduct(requestData, parentUploadedFiles, variantUploadedFiles);
     toast.add({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
     router.push('/documentation');
   } catch (error: any) {
-    console.error('Submit error:', error);
     const errorMessage = error.message || 'Failed to submit product';
     toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });
   } finally {
@@ -221,23 +245,26 @@ const submitProduct = async () => {
 onMounted(async () => {
   try {
     const [categoriesResponse, supplierResponse, productAttributeResponse, productTagResponse] = 
-    await Promise.all([
-      CategoryService.getAllCategories(),
-      SupplierService.getAllSuppliers(),
-      ProductAttributeService.getAllProductAttribute(),
-      ProductTagService.getAllTags()
-    ]);
+      await Promise.all([
+        CategoryService.getAllCategories(),
+        SupplierService.getAllSuppliers(),
+        ProductAttributeService.getAllProductAttribute(),
+        ProductTagService.getAllTags()
+      ]);
 
     categories.value = categoriesResponse.data || [];
     suppliers.value = supplierResponse.data || [];
     productAttributes.value = productAttributeResponse.data || [];
+    availableAttributes.value = [...productAttributes.value];
     productTags.value = productTagResponse.data || [];
-  } catch (error) {
-    console.error('Error fetching data:', error);
+
+    console.log('Initial product attributes:', productAttributes.value);
+    console.log('Initial available attributes:', availableAttributes.value);
+  } catch (error: any) {
     toast.add({ 
       severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải dữ liệu. Vui lòng thử lại sau.', 
+      summary: 'Error', 
+      detail: error.message || 'Failed to load data. Please try again later.', 
       life: 3000 
     });
   }
@@ -313,8 +340,6 @@ onMounted(async () => {
             />
             <small class="p-error" v-if="submitted && !product.description">Description is required.</small>
           </div>
-
-          <!-- Thêm phần upload ảnh cho sản phẩm cha -->
           <div class="field col-12">
             <label for="parentImages">Parent Product Images</label>
             <FileUpload
@@ -328,11 +353,6 @@ onMounted(async () => {
               @error="onError"
               :class="{'p-invalid': submitted && (!parentImages || parentImages.length === 0)}"
             />
-            <!-- <div v-if="parentImages && parentImages.length > 0" class="image-preview mt-2">
-              <div v-for="(image, index) in getImagePreview(parentImages)" :key="index" class="preview-item">
-                <img :src="image" alt="Preview" style="max-width: 100px; max-height: 100px; margin-right: 10px;" />
-              </div>
-            </div> -->
             <small class="p-error" v-if="submitted && (!parentImages || parentImages.length === 0)">At least one parent image is required.</small>
           </div>
         </div>
@@ -342,12 +362,20 @@ onMounted(async () => {
           <div class="variant-row" v-for="(variant, index) in variants" :key="index">
             <Dropdown
               v-model="variant.attributeId"
-              :options="productAttributes"
+              :options="availableAttributes"
               optionLabel="name"
               optionValue="id"
               placeholder="Select Attribute"
               class="variant-select"
-            />
+              @change="updateAvailableAttributes"
+            >
+              <template #value="slotProps">
+                <div v-if="slotProps.value">
+                  {{ getAttributeName(slotProps.value) }}
+                </div>
+                <span v-else>{{ slotProps.placeholder }}</span>
+              </template>
+            </Dropdown>
             <div class="variant-values">
               <div class="p-inputgroup">
                 <InputText
@@ -386,14 +414,14 @@ onMounted(async () => {
             @click="addVariant" 
             class="mt-2"
             severity="secondary"
+            :disabled="availableAttributes.length === 0"
           />
         </div>
 
-        <!-- Cập nhật bảng biến thể -->
         <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
-          <h3>Danh sách hàng hóa cùng loại</h3>
+          <h3>Variant List</h3>
           <DataTable :value="variantCombinations" responsiveLayout="scroll">
-            <Column header="Ảnh">
+            <Column header="Images">
               <template #body="slotProps">
                 <div class="variant-image-upload">
                   <FileUpload
@@ -407,21 +435,15 @@ onMounted(async () => {
                     @error="onError"
                     :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
                   />
-                  <!-- Hiển thị preview ảnh nếu đã upload -->
-                  <!-- <div v-if="slotProps.data.images && slotProps.data.images.length > 0" class="image-preview mt-2">
-                    <div v-for="(image, index) in getImagePreview(slotProps.data.images)" :key="index" class="preview-item">
-                      <img :src="image" alt="Preview" style="max-width: 100px; max-height: 100px; margin-right: 10px;" />
-                    </div>
-                  </div> -->
                 </div>
               </template>
             </Column>
-            <Column header="Tên">
+            <Column header="Name">
               <template #body="slotProps">
                 {{ slotProps.data.name }}
               </template>
             </Column>
-            <Column header="Giá bán">
+            <Column header="Price">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.price"
@@ -432,7 +454,7 @@ onMounted(async () => {
                 />
               </template>
             </Column>
-            <Column header="Tồn kho">
+            <Column header="Stock">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.stockQuantity"
@@ -549,17 +571,6 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-}
-
-.image-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.preview-item img {
-  border-radius: 4px;
-  object-fit: cover;
 }
 
 :deep(.p-datatable) {

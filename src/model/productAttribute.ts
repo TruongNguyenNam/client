@@ -1,4 +1,4 @@
-import type { ApiResponse } from "./apiResponse";
+
 export interface ProductAttributeRequest {
     name: string;
     description: string;

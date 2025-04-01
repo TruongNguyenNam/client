@@ -25,7 +25,7 @@ export interface ProductAttributeValue {
 export interface ProductVariant {
     price?: number;
     stockQuantity?: number;
-    images?: File[]; // Hỗ trợ nhiều ảnh
+    images?: File[]; 
 }
 
 export interface ProductResponse {
@@ -36,12 +36,12 @@ export interface ProductResponse {
     stockQuantity: number | null;
     sportType: string;
     sku: string;
-    supplierName: string; // Changed from supplierId to supplierName
-    categoryName: string; // Changed from categoryId to categoryName
+    supplierName: string; 
+    categoryName: string; 
     productAttributeValueResponses: ProductAttributeValueResponse[];
-    tagName: string[]; // Changed from tagId to tagName
-    imageUrl: string[]; // Changed ImageUrl to imageUrl
-    inventories: InventoryResponse[]; // Added inventories
+    tagName: string[]; 
+    imageUrl: string[]; 
+    inventories: InventoryResponse[];
 }
 
 export interface ProductAttributeValueResponse {

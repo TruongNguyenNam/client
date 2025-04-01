@@ -5,10 +5,14 @@ import type { ApiResponse } from "../utils/ApiResponse";
 const axiosInstance = axios.create();
 
 export const ProductTagService = {
-    getAllTags: async (page: number = 0, size: number = 2): Promise<ApiResponse<ProductTagResponse[]>> => {
+    getAllTags: async (): Promise<ApiResponse<ProductTagResponse[]>> => {
         try {
-            const response = await axiosInstance.get<ApiResponse<ProductTagResponse[]>>(`${API_URL}?page=${page}&size=${size}`);
-            return response.data; 
+            const response = await axiosInstance.get<ApiResponse<ProductTagResponse[]>>(`${API_URL}`);
+            return {
+                status: 200,
+                message: "lấy danh sách nhãn thành công",
+                data: response.data.data || []
+            }; 
         } catch (error) {
             console.error('Error fetching all product tags:', error);
             throw new Error('Failed to fetch product tags. Please try again later.');

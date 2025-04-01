@@ -71,18 +71,16 @@ export const ProductService = {
     }
   },
 
-  getAllChildProducts: async (): Promise<ProductResponse[]> => {
+  getAllChildProducts: async (): Promise<ApiResponse<ProductResponse[]>> => {
     try {
-      const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/child`);
-      if (!response.data.status) {
-        throw new Error(response.data.message || "Không thể lấy được danh sách sản phẩm con");
-      }
-      return response.data.data || [];
+        const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/child`);
+        return response.data; // ✅ Trả về toàn bộ `response.data` giống như getAllCategories
     } catch (error) {
-      console.error("Get All Child Products Error:", error);
-      throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
+        console.error("Get All Child Products Error:", error);
+        throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
     }
   },
+
 
   updateParentProduct: async (id: number, productRequest: ProductUpdateParent, parentImages: File[]): Promise<string> => {
     try {
