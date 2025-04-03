@@ -30,7 +30,7 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue'),
                 },
                 {
-                    path: '/productdelete',
+                    path: '/productdelete/:id',
                     name: 'productupdatetrue',
                     component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue'),
                 },

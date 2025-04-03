@@ -111,33 +111,33 @@ export const ProductService = {
     }
   },
 
-  updateChildProduct: async (id: number, productRequest: ProductUpdateChild, variantImages: File[]): Promise<string> => {
-    try {
-      const formData = new FormData();
-      formData.append("product", JSON.stringify(productRequest));
+  updateChildProduct: async (childId: number, childProduct: ProductUpdateChild, images: File[]): Promise<ProductResponse> => {
+    const formData = new FormData();
 
-      if (variantImages && variantImages.length > 0) {
-        variantImages.forEach((file) => {
-          formData.append("images", file, file.name);
-        });
-      }
+    const payload = {
+      description: childProduct.description,
+      price: childProduct.price,
+      stockQuantity: childProduct.stockQuantity,
+      productAttributeValues: childProduct.productAttributeValues,
+    };
 
-      const response = await fetch(`${API_URL}/child/${id}`, {
-        method: 'PUT',
-        body: formData
-      });
+    formData.append('product', JSON.stringify(payload));
+    images.forEach((image) => {
+      formData.append('images', image);
+    });
 
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        throw new Error(errorResponse.message || 'Cập nhật biến thể thất bại');
-      }
+    const response = await fetch(`${API_URL}/child/${childId}`, {
+      method: 'PUT',
+      body: formData,
+    });
 
-      const data = await response.json();
-      return data.message;
-    } catch (error) {
-      console.error("Update Child Product Error:", error);
-      throw new Error("Không thể cập nhật biến thể. Vui lòng thử lại sau.");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update child product');
     }
+
+    const responseData = await response.json();
+    return responseData.data || {};
   },
 
   searchProducts: async (

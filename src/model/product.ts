@@ -46,7 +46,7 @@ export interface ProductResponse {
 
 export interface ProductAttributeValueResponse {
     id: number;
-    attributeName: string; // Changed from attributeId to attributeName
+    attributeName: string; 
     productId: number;
     value: string;
 }
@@ -54,7 +54,7 @@ export interface ProductAttributeValueResponse {
 export interface InventoryResponse {
     id: number;
     productName: string;
-    stockQuantity: string; // Changed from stockQuantity: number to stockQuantity: string
+    stockQuantity: string; 
 }
 
 export interface ProductUpdateChild {
@@ -66,6 +66,7 @@ export interface ProductUpdateChild {
     stockQuantity?: number;
     supplierId: number;
     categoryId: number;
+    tagId: number[];
     productAttributeValues: ProductAttributeValueUpdate[];
     images?: File[];
 

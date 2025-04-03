@@ -10,7 +10,7 @@ import { ProductAttributeService } from '../../../../service/ProductAttribueServ
 import type { CategoryResponse } from '../../../../model/category';
 import type { SupplierResponse } from '../../../../model/supplier';
 import type { ProductTagResponse } from '../../../../model/ProductTag';
-import type { ProductRequest, ProductAttributeValue, ProductVariant } from '../../../../model/product';
+import type { ProductRequest, ProductAttributeValue } from '../../../../model/product';
 import type { ProductAttributeResponse } from '../../../../model/productAttribute';
 
 const toast = useToast();
@@ -48,7 +48,7 @@ const suppliers = ref<SupplierResponse[]>([]);
 const productAttributes = ref<ProductAttributeResponse[]>([]);
 const productTags = ref<ProductTagResponse[]>([]);
 
-// Hàm lấy tên thuộc tính
+
 const getAttributeName = (attributeId: number) => {
   const attribute = productAttributes.value.find(attr => attr.id === attributeId);
   return attribute ? attribute.name : '';
