@@ -66,6 +66,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/attribute/AttributeList.vue')
                 },
                 {
+                    path: '/atributeadd',
+                    name: 'atributeadd',
+                    component: () => import('@/views/pages/admin/attribute/AttributeForm.vue')
+                },
+                {
                     path: '/tag',
                     name: 'tag',
                     component: () => import('@/views/pages/admin/tag/TagList.vue')
