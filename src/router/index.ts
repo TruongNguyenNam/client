@@ -71,6 +71,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/tag/TagList.vue')
                 },
                 {
+                    path: '/order',
+                    name: 'order',
+                    component: () => import('@/views/pages/admin/order/Invoice.vue')
+                },
+                {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
