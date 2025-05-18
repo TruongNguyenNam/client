@@ -1,6 +1,8 @@
 <template>
     <div>
-        <h2>add order</h2>
+        <h2>danh sách khách hàng</h2>
+
+
     </div>
 </template>
 
