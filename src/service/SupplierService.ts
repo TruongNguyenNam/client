@@ -13,6 +13,11 @@ export const SupplierService = {
             const response = await axiosInstance.get<ApiResponse<SupplierResponse[]>>(`${API_URL}`);
             return response.data;
         } catch (error) {
+            // git push origin --delete Viet_Ha
+            // git add .
+            // git commit -m "WIP: Save local changes before merging"
+            // git merge origin/Viet-Ha
+            
             console.error('Error fetching all suppliers:', error);
             throw new Error('Failed to fetch suppliers. Please try again later.');
         }
