@@ -65,6 +65,21 @@ const router = createRouter({
                     name: 'attribute',
                     component: () => import('@/views/pages/admin/attribute/AttributeList.vue')
                 },
+                  {
+                    path: '/discount',
+                    name: 'discount',
+                    component: () => import('@/views/pages/admin/discount/DiscountList.vue')
+                },
+                  {
+                    path: '/discountadd',
+                    name: 'discountadd',
+                    component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
+                },
+                  {
+                    path: '/tet',
+                    name: 'tet',
+                    component: () => import('@/views/pages/admin/discount/Tet.vue')
+                },
                 {
                     path: '/atributeadd',
                     name: 'atributeadd',
