@@ -43,7 +43,7 @@ export const SupplierService = {
     // Thêm mới nhà cung cấp
     saveSupplier: async (supplierRequest: SupplierRequest): Promise<ApiResponse<SupplierResponse>> => {
         try {
-            const response = await axiosInstance.post<ApiResponse<SupplierResponse>>(`${API_URL}`, supplierRequest);
+            const response = await axiosInstance.post<ApiResponse<SupplierResponse>>(`${API_URL}/add`, supplierRequest);
             return response.data;
         } catch (error) {
             console.error('Error saving supplier:', error);
