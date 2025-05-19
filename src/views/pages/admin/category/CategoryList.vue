@@ -3,6 +3,10 @@ import { FilterMatchMode } from "primevue/api";
 import { CategoryService } from "../../../../service/CategoryService";
 import { ref, onBeforeMount, watch, defineEmits } from "vue";
 import { useRouter } from "vue-router";
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
 
 const categories = ref([]);
 const loading = ref(true);
@@ -45,11 +49,26 @@ const initFilters = () => {
 const loadCategories = async () => {
     loading.value = true;
     try {
-        const response = await CategoryService.getAllCategories(lazyParams.value.page, lazyParams.value.size);
-        categories.value = response.content;
-        totalRecords.value = response.totalItems;
+        const searchQuery = filters.value.global.value?.trim() || '';
+        let response;
+
+        if (searchQuery) {
+            response = await CategoryService.findByName(searchQuery);
+        } else {
+            response = await CategoryService.getAllCategories(lazyParams.value.page, lazyParams.value.size);
+        }
+
+        if (response?.data) {
+            categories.value = response.data;
+            totalRecords.value = response.totalRecords ?? response.data.length;
+        } else {
+            console.error("Dữ liệu API không hợp lệ:", response);
+            categories.value = [];
+            totalRecords.value = 0;
+        }
     } catch (error) {
         console.error("Lỗi khi tải danh mục:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi tải danh mục', life: 3000 });
     } finally {
         loading.value = false;
     }
@@ -74,18 +93,20 @@ onBeforeMount(() => {
     loadCategories();
 });
 
-// Xóa danh mục
+// Xóa danh mục nhiều mục
 const deleteCategories = async () => {
     const selectedIds = categories.value.filter(category => category.selected).map(category => category.id);
     if (selectedIds.length === 0) {
-        alert("Chưa chọn danh mục nào để xóa!");
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chưa chọn danh mục nào để xóa!', life: 3000 });
         return;
     }
     try {
-        await CategoryService.deleteCategory(selectedIds); // Gọi API xóa danh mục
+        await CategoryService.deleteCategory(selectedIds);
+        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xóa danh mục thành công', life: 3000 });
         loadCategories();
     } catch (error) {
         console.error("Lỗi khi xóa danh mục:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi xóa danh mục', life: 3000 });
     }
 };
 
@@ -101,38 +122,70 @@ const hideDialog = () => {
 
 const saveCategory = async () => {
     try {
-        if (category.value.id) {
-            await CategoryService.updateCategory(category.value.id, category.value);
-        } else {
-            await CategoryService.saveCategory(category.value);
+        const trimmedName = category.value.name.trim();
+        const trimmedDescription = category.value.description.trim();
+
+        if (!trimmedName) {
+            toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được để trống', life: 3000 });
+            return;
         }
-        emit("close");
-        loadCategories();
-        router.push("/category");
+
+        if (!trimmedDescription) {
+            toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Mô tả danh mục không được để trống', life: 3000 });
+            return;
+        }
+
+        const isDuplicate = isDuplicateCategoryName(trimmedName, category.value.id);
+
+        if (isDuplicate) {
+            toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục đã tồn tại. Vui lòng chọn tên khác.', life: 3000 });
+            return;
+        }
+
+        if (category.value.id) {
+            await CategoryService.updateCategory(category.value.id, {
+                name: trimmedName,
+                description: trimmedDescription,
+            });
+            toast.add({ severity: 'success', summary: 'Thành công', detail: 'Cập nhật danh mục thành công', life: 3000 });
+        } else {
+            await CategoryService.addCategory({
+                name: trimmedName,
+                description: trimmedDescription,
+            });
+            toast.add({ severity: 'success', summary: 'Thành công', detail: 'Thêm danh mục thành công', life: 3000 });
+        }
+
         hideDialog();
+        loadCategories();
+
     } catch (error) {
         console.error("Lỗi khi lưu danh mục:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lưu danh mục thất bại', life: 3000 });
     }
 };
 
 const openEdit = async (categoryId) => {
     try {
         const response = await CategoryService.getCategoryById(categoryId);
-        category.value = response;
+        category.value = { ...response.data };
         categoryDialog.value = true;
     } catch (error) {
         console.error("Lỗi khi tải danh mục:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi tải danh mục', life: 3000 });
     }
 };
 
-// Xóa danh mục
+// Xóa danh mục đơn
 const deleteCategory = async () => {
     try {
         await CategoryService.deleteCategory([category.value.id]);
         deleteProductDialog.value = false;
+        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xóa danh mục thành công', life: 3000 });
         loadCategories();
     } catch (error) {
         console.error("Lỗi khi xóa danh mục:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi xóa danh mục', life: 3000 });
     }
 };
 
@@ -140,31 +193,43 @@ const deleteCategory = async () => {
 const deleteSelectedCategories = async () => {
     const selectedIds = selectedCategories.value.map(category => category.id);
     if (selectedIds.length === 0) {
-        alert("Chưa chọn danh mục nào để xóa!");
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chưa chọn danh mục nào để xóa!', life: 3000 });
         return;
     }
     try {
         await CategoryService.deleteCategory(selectedIds);
         deleteProductsDialog.value = false;
+        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xóa danh mục thành công', life: 3000 });
         loadCategories();
     } catch (error) {
         console.error("Lỗi khi xóa danh mục:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi xóa danh mục', life: 3000 });
     }
 };
 
 // Mở modal xác nhận xóa
-const confirmDeleteCategory = (category) => {
-    category.value = category;
+const confirmDeleteCategory = (cat) => {
+    category.value = cat;
     deleteProductDialog.value = true;
 };
 
-const editCategory = (category) => {
-    openEdit(category.id);
+const editCategory = (categoryData) => {
+    openEdit(categoryData.id);
 };
+
+//check trùng
+const isDuplicateCategoryName = (name, excludeId = null) => {
+    return categories.value.some((cat) => 
+        cat.name.trim().toLowerCase() === name.trim().toLowerCase() && 
+        cat.id !== excludeId
+    );
+};
+
 </script>
 
 <template>
     <div class="grid">
+        <Toast />
         <div class="col-12">
             <div class="card">
                 <h5>Danh sách danh mục</h5>
@@ -209,7 +274,7 @@ const editCategory = (category) => {
                     filterDisplay="menu"
                     v-model:filters="filters"
                     :loading="loading"
-                    :lazy="true"
+                    :lazy="false"
                     @page="onPage"
                     responsiveLayout="scroll"
                     :globalFilterFields="['name', 'description']"
