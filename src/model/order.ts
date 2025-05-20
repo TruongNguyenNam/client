@@ -21,8 +21,9 @@ export interface OrderRequest {
   }
   
   export interface ShipmentRequest {
-    carrier: string;
-    estimatedDeliveryDate: string; 
+    shipmentId?: number;
+    // carrier: string;
+    estimatedDeliveryDate: string;
     orderItemIds: number[];
   }
 

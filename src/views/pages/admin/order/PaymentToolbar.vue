@@ -1,5 +1,12 @@
 <template>
-  <div class="payment-toolbar">
+  <Sidebar
+    v-model:visible="isVisible"
+    position="right"
+    class="payment-toolbar"
+     :style="{ width: '500px', maxWidth: '100%' }"
+    :dismissable="false"
+    @hide="$emit('close')"
+  >
     <div class="p-4">
       <h3 class="text-xl font-semibold mb-4">{{ invoice.orderCode }}</h3>
 
@@ -50,10 +57,10 @@
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Nhà vận chuyển</label>
         <Dropdown
-          v-model="invoice.carrier"
+          v-model="invoice.shipmentId"
           :options="shipments"
           optionLabel="carrier"
-          optionValue="carrier"
+          optionValue="id"
           placeholder="Chọn nhà vận chuyển"
           class="w-full"
         />
@@ -135,12 +142,13 @@
         <Button label="Hoàn tất" icon="pi pi-check" @click="$emit('complete-payment')" />
       </div>
     </div>
-  </div>
+  </Sidebar>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import Sidebar from 'primevue/sidebar';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
@@ -173,6 +181,7 @@ const emit = defineEmits<{
 // State
 const selectedCustomerId = ref<number | null>(props.invoice.userId);
 const toast = useToast();
+const isVisible = ref(true); // Control Sidebar visibility
 
 // Computed
 const selectedCustomer = computed(() => {
@@ -240,7 +249,6 @@ watch(() => props.invoice.paymentMethodId, () => {
 watch(() => props.invoice.couponId, (newCouponId) => {
   const coupon = props.coupons.find(c => c.id === newCouponId);
   if (coupon) {
-    // Kiểm tra điều kiện mã giảm giá (VD: minOrderValue)
     if (props.invoice.orderTotal < (coupon.discountAmount || 0)) {
       props.invoice.discount = 0;
       props.invoice.couponId = null;
@@ -262,22 +270,12 @@ watch(() => props.invoice.couponId, (newCouponId) => {
 
 <style scoped>
 .payment-toolbar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background: white;
-  z-index: 101;
-  overflow-y: auto;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  width: 600px;
 }
 
 @media (max-width: 992px) {
   .payment-toolbar {
-    position: static;
-    box-shadow: none;
-    height: auto;
+    width: 100%;
   }
 }
 </style>

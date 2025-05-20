@@ -279,7 +279,7 @@ const debouncedSearch = (event) => {
 
                     <template #footer>
                         <!-- Nút Hủy -->
-                        <Button label="Hủy" icon="pi pi-times" class="p-button-text cancel-button"
+                        <Button label="Hủy" icon="pi pi-times" class="p-button-text"
                             @click="hideAddDialog" />
                         <!-- Nút Thêm -->
                         <Button label="Thêm" icon="pi pi-check" class="p-button-primary save-button"

@@ -255,7 +255,8 @@ const addInvoiceTab = async () => {
         paymentMethod: paymentMethods.value[0]?.name || 'Tiền mặt',
         paymentMethodId: paymentMethods.value[0]?.id || 1,
         notes: '',
-        carrier: shipments.value[0]?.carrier || 'GHN',
+        // carrier: shipments.value[0]?.carrier || 'GHN',
+        shipmentId: shipments.value[0]?.id || null, // Khởi tạo shipmentId
         estimatedDeliveryDate: null,
         couponId: null
       };
@@ -393,6 +394,10 @@ const completePayment = async () => {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn khách hàng', life: 3000 });
     return;
   }
+  if (!selectedInvoice.value.isPos && !selectedInvoice.value.shipmentId) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn nhà vận chuyển', life: 3000 });
+    return;
+  }
   const finalTotal = calculateFinalTotal();
   if (!selectedInvoice.value.paidAmount || selectedInvoice.value.paidAmount < finalTotal) {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Số tiền khách thanh toán phải lớn hơn hoặc bằng số tiền cần trả', life: 3000 });
@@ -416,7 +421,8 @@ const completePayment = async () => {
   if (!selectedInvoice.value.isPos && customer) {
     const orderItemIds = selectedInvoice.value.items.map((item: any) => item.id);
     payload.shipments = [{
-      carrier: selectedInvoice.value.carrier || 'GHN',
+      shipmentId:selectedInvoice.value.shipmentId || undefined,
+      // carrier: selectedInvoice.value.carrier || 'GHN',
       estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate || new Date().toISOString(),
       orderItemIds: orderItemIds
     }];
@@ -441,6 +447,11 @@ const completePayment = async () => {
         detail: `Đã thanh toán ${formatCurrency(finalTotal).replace('₫', 'đ')}. Tiền thừa: ${formatCurrency(changeAmount.value).replace('₫', 'đ')}`,
         life: 5000 
       });
+      // Đợi 300ms rồi mới đóng PaymentToolbar
+      setTimeout(() => {
+        closePaymentToolbar();
+      }, 300);
+
       const index = invoiceTabs.value.findIndex(tab => tab.orderCode === selectedInvoice.value.orderCode);
       if (index !== -1) {
         invoiceTabs.value.splice(index, 1);
@@ -448,12 +459,12 @@ const completePayment = async () => {
           activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
         }
       }
+      return; // Đảm bảo không gọi closePaymentToolbar() lần nữa bên dưới
     }
   } catch (error) {
     console.error("Lỗi khi thanh toán đơn hàng:", error);
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Thanh toán thất bại', life: 3000 });
   }
-  closePaymentToolbar();
 };
 
 const formatCurrency = (value: number) => {
