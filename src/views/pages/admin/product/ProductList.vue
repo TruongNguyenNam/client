@@ -38,7 +38,6 @@ const clearSearch = () => {
   getAllParentProduct(); // Reset về danh sách ban đầu
 };
 
-// Cập nhật method tìm kiếm
 const searchProducts = async () => {
   if (!searchTerm.value.trim()) {
     await getAllParentProduct();
@@ -59,16 +58,6 @@ const searchProducts = async () => {
   }
 };
 
-// const deleteSelectedProducts = async () => {
-//   try {
-//     const selectedIds = selectedProducts.value.map(product => product.id);
-//     await ProductService.deleteProducts(selectedIds);
-//     await getAllParentProduct();
-//     selectedProducts.value = [];
-//   } catch (error) {
-//     console.error("Lỗi khi xóa sản phẩm:", error);
-//   }
-// };
 
 const onPageChange = (event: any) => {
   first.value = event.first;

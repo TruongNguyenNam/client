@@ -2,40 +2,40 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Update Child Product</h5>
+        <h5>Cập nhật sản phẩm con</h5>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label for="productName">Product Name</label>
+            <label for="productName">Tên sản phẩm</label>
             <InputText 
               id="productName" 
               v-model="product.name" 
-              placeholder="Enter product name" 
+              placeholder="nhập tên sản phẩm" 
               :class="{'p-invalid': submitted && !product.name}" 
               disabled
             />
-            <small class="p-error" v-if="submitted && !product.name">Product name is required.</small>
+            <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="sku">SKU</label>
             <InputText 
               id="sku" 
               v-model="product.sku" 
-              placeholder="Enter SKU" 
+              placeholder="tự động sinh" 
               :class="{'p-invalid': submitted && !product.sku}" 
               disabled
             />
-            <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small>
+            <!-- <small class="p-error" v-if="submitted && !product.sku">SKU là bắt buộc.</small> -->
           </div>
           <!-- CategoryName -->
           <div class="field col-12 md:col-6">
-            <label for="productCategory">Category</label>
+            <label for="productCategory">Danh mục</label>
             <Dropdown
               id="productCategory"
               v-model="product.categoryId"
               :options="categories"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Category"
+              placeholder="chọn danh mục"
               :class="{'p-invalid': submitted && !product.categoryId}"
               disabled
             />
@@ -43,38 +43,38 @@
           </div>
 
           <div class="field col-12 md:col-6">
-            <label for="sportType">Sport Type</label>
+            <label for="sportType">Loại thể thao</label> 
             <InputText 
               id="sportType" 
               v-model="product.sportType" 
-              placeholder="Enter sport type" 
+              placeholder="nhập loại thể thao" 
               disabled
             />
           </div>
 
           <div class="field col-12 md:col-6">
-            <label for="productTag">Tags</label>
+            <label for="productTag">Nhãn</label>
             <MultiSelect
               id="productTag"
               v-model="product.tagId"
               :options="productTags"
               optionLabel="name"
               optionValue="id"            
-              placeholder="Select Tags"
+              placeholder="chọn nhãn"
               :multiple="true"
               disabled
             />
           </div> 
 
           <div class="field col-12 md:col-6">
-            <label for="supplier">Supplier</label>
+            <label for="supplier">Nhà cung cấp</label>
             <Dropdown
               id="supplier"
               v-model="product.supplierId"
               :options="suppliers"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Supplier"
+              placeholder="chọn nhà cung cấp"
               :class="{'p-invalid': submitted && !product.supplierId}"
               disabled
             />
@@ -83,20 +83,20 @@
 
           <!-- Description -->
           <div class="field col-12">
-            <label for="description">Description</label>
+            <label for="description">Mô tả</label>
             <Textarea 
               id="description" 
               v-model="product.description" 
               rows="4" 
-              placeholder="Enter product description"
+              placeholder="nhập mô tả"
               :class="{'p-invalid': submitted && !product.description}"
             />
-            <small class="p-error" v-if="submitted && !product.description">Description is required.</small>
+            <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
 
           <!-- Price -->
           <div class="field col-12 md:col-6">
-            <label for="price">Price</label>
+            <label for="price">Giá</label>    
             <InputNumber 
               id="price" 
               v-model="product.price" 
@@ -111,19 +111,19 @@
 
           <!-- Stock Quantity -->
           <div class="field col-12 md:col-6">
-            <label for="stockQuantity">Stock Quantity</label>
+            <label for="stockQuantity">Kho</label>
             <InputNumber 
               id="stockQuantity" 
               v-model="product.stockQuantity" 
               :min="0"
               :class="{'p-invalid': submitted && product.stockQuantity === null}"
             />
-            <small class="p-error" v-if="submitted && product.stockQuantity === null">Stock quantity is required.</small>
+            <small class="p-error" v-if="submitted && product.stockQuantity === null">Kho là bắt buộc.</small>   
           </div>
 
           <!-- Images -->
           <div class="field col-12">
-            <label for="images">Images</label>
+            <label for="images">Hình ảnh</label>
             <div v-if="existingImages.length > 0" class="image-preview">
               <img 
                 v-for="(img, index) in existingImages" 
@@ -139,18 +139,18 @@
               :multiple="true"
               accept="image/*"
               :auto="false"
-              chooseLabel="Choose Images"
+              chooseLabel="chọn hình ảnh"   
               @select="onImageUpload"
               :maxFileSize="1000000"
               @error="onError"
               :class="{'p-invalid': submitted && !existingImages.length && !newImages.length}"
             />
-            <small class="p-error" v-if="submitted && !existingImages.length && !newImages.length">At least one image is required.</small>
+            <small class="p-error" v-if="submitted && !existingImages.length && !newImages.length">Ít nhất một hình ảnh là bắt buộc.</small>
           </div>
 
-          <!-- Product Attributes -->
+          <!-- Product Attributes -->     
           <div class="field col-12">
-            <label for="productAttributes">Product Attributes</label>
+            <label for="productAttributes">Thuộc tính sản phẩm</label>
             <div v-for="(attr, index) in product.productAttributeValues" :key="index" class="p-fluid formgrid grid">
               <div class="field col-12 md:col-5">
                 <Dropdown
@@ -158,18 +158,18 @@
                   :options="productAttributes"
                   optionLabel="name"
                   optionValue="id"
-                  placeholder="Select Attribute"
+                  placeholder="chọn thuộc tính"
                   :class="{'p-invalid': submitted && !attr.attributeId}"
                 />
-                <small class="p-error" v-if="submitted && !attr.attributeId">Attribute is required.</small>
+                <small class="p-error" v-if="submitted && !attr.attributeId">Thuộc tính là bắt buộc.</small>
               </div>
               <div class="field col-12 md:col-5">
                 <InputText 
                   v-model="attr.value" 
-                  placeholder="Enter attribute value"
+                  placeholder="nhập giá trị thuộc tính"     
                   :class="{'p-invalid': submitted && !attr.value}"
                 />
-                <small class="p-error" v-if="submitted && !attr.value">Value is required.</small>
+                <small class="p-error" v-if="submitted && !attr.value">Giá trị là bắt buộc.</small>
               </div>
               <div class="field col-12 md:col-2">
                 <Button 
@@ -180,7 +180,7 @@
               </div>
             </div>
             <Button 
-              label="Add Attribute" 
+              label="Thêm thuộc tính" 
               icon="pi pi-plus" 
               severity="secondary" 
               class="add-attribute-btn"
@@ -191,14 +191,14 @@
 
         <div class="flex justify-content-end mt-4">
           <Button 
-            label="Cancel" 
+            label="Hủy" 
             icon="pi pi-times" 
             severity="secondary" 
             class="mr-2" 
             @click="router.push('/documentation')" 
           />
           <Button 
-            label="Update Child Product" 
+            label="Cập nhật sản phẩm con" 
             icon="pi pi-check" 
             @click="submitChildProduct" 
             :loading="isSubmitting" 
@@ -321,8 +321,8 @@ const onImageUpload = (event: any) => {
 const onError = (event: any) => {
   toast.add({ 
     severity: 'error', 
-    summary: 'Upload Error', 
-    detail: event.message || 'Failed to upload images.', 
+    summary: 'Lỗi tải lên', 
+    detail: event.message || 'Lỗi tải lên hình ảnh.', 
     life: 3000 
   });
 };
@@ -348,8 +348,8 @@ const submitChildProduct = async () => {
       (!existingImages.value.length && !newImages.value.length)) {
     toast.add({ 
       severity: 'warn', 
-      summary: 'Validation Error', 
-      detail: 'Please fill in all required fields.', 
+      summary: 'Lỗi kiểm tra', 
+      detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', 
       life: 3000 
     });
     return;
@@ -368,16 +368,16 @@ const submitChildProduct = async () => {
     await ProductService.updateChildProduct(productId, product, newImages.value);
     toast.add({ 
       severity: 'success', 
-      summary: 'Success', 
-      detail: 'Child product updated successfully.', 
+      summary: 'Thành công', 
+      detail: 'Cập nhật sản phẩm con thành công.', 
       life: 3000 
     });
     router.push('/documentation');
   } catch (error: any) {
     toast.add({ 
       severity: 'error', 
-      summary: 'Error', 
-      detail: error.message || 'Failed to update child product.', 
+      summary: 'Lỗi', 
+      detail: error.message || 'Lỗi cập nhật sản phẩm con.', 
       life: 3000 
     });
   } finally {
@@ -406,8 +406,8 @@ onMounted(async () => {
   } catch (error: any) {
     toast.add({ 
       severity: 'error', 
-      summary: 'Error', 
-      detail: error.message || 'Failed to load data. Please try again later.', 
+      summary: 'Lỗi', 
+      detail: error.message || 'Lỗi tải dữ liệu. Vui lòng thử lại sau.', 
       life: 3000 
     });
   }

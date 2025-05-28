@@ -163,3 +163,18 @@ const fetchData = async () => {
 
 onMounted(fetchData);
 </script>
+
+
+ id: 0,
+name: '',
+description: '',
+price: null,
+stockQuantity: null,
+sportType: '',
+sku: '',
+supplierName: '',
+categoryName: '',
+productAttributeValueResponses: [],
+tagName: [],
+imageUrl: [], 
+inventories: [] 

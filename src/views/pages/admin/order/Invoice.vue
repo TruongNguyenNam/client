@@ -28,7 +28,7 @@
       :invoice="selectedInvoice"
       :customers="customers"
       :paymentMethods="paymentMethods"
-      :coupons="coupons"
+      :couponUsage="couponUsage"
       :shipments="shipments"
       :changeAmount="changeAmount"
       @update-total="updateTotal"
@@ -45,7 +45,7 @@ import { useToast } from 'primevue/usetoast';
 import type { ProductResponse } from '../../../../model/product';
 import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/order';
 import type { CustomerResponse } from '../../../../model/customer';
-import type { CouponResponse } from '../../../../model/coupon';
+import type { CouponUsageResponse } from '../../../../model/couponUsage';
 import type { PaymentMethodResponse } from '../../../../model/paymentMethod';
 import type { ShipmentResponse } from '../../../../model/shipment';
 import { CustomerService } from '../../../../service/CustomerServiceLegacy';
@@ -53,7 +53,7 @@ import { ProductService } from '../../../../service/ProductServiceLegacy';
 import { OrderService } from '../../../../service/OrderService';
 import { PaymentMethodService } from '../../../../service/PaymentMethodService';
 import { ShipmentService } from '../../../../service/ShipmentService';
-import { CouponService } from '../../../../service/CouponService';
+import { CouponUsageService } from '../../../../service/CouponUsageService';
 import InvoiceHeader from './InvoiceHeader.vue';
 import ProductList from './ProductList.vue';
 import CartSection from './CartSection.vue';
@@ -71,7 +71,7 @@ const selectedInvoice = ref<any | null>(null);
 const searchQuery = ref('');
 const customers = ref<CustomerResponse[]>([]);
 const paymentMethods = ref<PaymentMethodResponse[]>([]);
-const coupons = ref<CouponResponse[]>([]);
+const couponUsage = ref<CouponUsageResponse[]>([]);
 const shipments = ref<ShipmentResponse[]>([]);
 const changeAmount = ref(0);
 
@@ -144,13 +144,13 @@ const getAllPaymentMethods = async () => {
 };
 
 // Load danh sách mã giảm giá
-const getAllCoupons = async () => {
+const getAllCouponUsage = async (customerId: number) => {
   loading.value = true;
   try {
-    const response = await CouponService.getAllCoupons();
+    const response = await CouponUsageService.getAllCouponUsage(customerId);
     if (response && response.data) {
-      coupons.value = response.data;
-      console.log("Lấy thành công danh sách mã giảm giá:", coupons.value);
+      couponUsage.value = response.data;
+      console.log("Lấy thành công danh sách mã giảm giá ban đầu:", couponUsage.value);
     }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách mã giảm giá:", error);
@@ -198,7 +198,7 @@ onMounted(async () => {
       getAllChildProduct(),
       getAllCustomers(),
       getAllPaymentMethods(),
-      getAllCoupons(),
+      getAllCouponUsage(1),
       getAllShipments()
     ]);
     console.log("Tải dữ liệu thành công");
@@ -251,14 +251,13 @@ const addInvoiceTab = async () => {
         items: [],
         customerName: '',
         discount: 0,
-        paidAmount: 0,
+        paidAmount: 0, 
         paymentMethod: paymentMethods.value[0]?.name || 'Tiền mặt',
         paymentMethodId: paymentMethods.value[0]?.id || 1,
         notes: '',
-        // carrier: shipments.value[0]?.carrier || 'GHN',
-        shipmentId: shipments.value[0]?.id || null, // Khởi tạo shipmentId
+        shipmentId: shipments.value[0]?.id || null,
         estimatedDeliveryDate: null,
-        couponId: null
+        couponUsageIds: [] 
       };
       invoiceTabs.value.push(newInvoice);
       activeTabIndex.value = invoiceTabs.value.length - 1;
@@ -289,7 +288,6 @@ const removeTab = (index: number) => {
   }
 };
 
-// Xử lý giỏ hàng
 const addProductToActiveInvoice = (product: any) => {
   if (invoiceTabs.value.length === 0) {
     toast.add({ severity: 'warn', summary: 'Chưa có đơn hàng', detail: 'Vui lòng tạo đơn hàng trước', life: 3000 });
@@ -308,7 +306,7 @@ const addProductToActiveInvoice = (product: any) => {
     activeInvoice.items.push({ 
       ...product, 
       quantity: 1, 
-      price: product.price || 0
+      price: product.price || 0 
     });
   }
   recalculateTotal(activeInvoice);
@@ -348,7 +346,7 @@ const recalculateTotal = (invoice: any) => {
 
 const openPaymentToolbar = (invoice: any) => {
   selectedInvoice.value = { ...invoice };
-  selectedInvoice.value.paidAmount = calculateFinalTotal();
+  selectedInvoice.value.paidAmount = 0; // Khởi tạo paidAmount ban đầu
   updateChange();
 };
 
@@ -366,7 +364,6 @@ const updateTotal = () => {
   if (selectedInvoice.value.discount < 0) {
     selectedInvoice.value.discount = 0;
   }
-  selectedInvoice.value.paidAmount = calculateFinalTotal();
   updateChange();
 };
 
@@ -414,15 +411,14 @@ const completePayment = async () => {
     })),
     payment: {
       paymentMethodId: selectedInvoice.value.paymentMethodId || 1,
-      amount: finalTotal
+      amount: selectedInvoice.value.paidAmount || 0 // Sử dụng paidAmount (400) thay vì finalTotal (300)
     },
-    couponId: selectedInvoice.value.couponId || undefined
+    couponUsageIds: selectedInvoice.value.couponUsageIds || undefined
   };
   if (!selectedInvoice.value.isPos && customer) {
     const orderItemIds = selectedInvoice.value.items.map((item: any) => item.id);
     payload.shipments = [{
-      shipmentId:selectedInvoice.value.shipmentId || undefined,
-      // carrier: selectedInvoice.value.carrier || 'GHN',
+      shipmentId: selectedInvoice.value.shipmentId || undefined,
       estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate || new Date().toISOString(),
       orderItemIds: orderItemIds
     }];
@@ -447,7 +443,6 @@ const completePayment = async () => {
         detail: `Đã thanh toán ${formatCurrency(finalTotal).replace('₫', 'đ')}. Tiền thừa: ${formatCurrency(changeAmount.value).replace('₫', 'đ')}`,
         life: 5000 
       });
-      // Đợi 300ms rồi mới đóng PaymentToolbar
       setTimeout(() => {
         closePaymentToolbar();
       }, 300);
@@ -459,7 +454,7 @@ const completePayment = async () => {
           activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
         }
       }
-      return; // Đảm bảo không gọi closePaymentToolbar() lần nữa bên dưới
+      return;
     }
   } catch (error) {
     console.error("Lỗi khi thanh toán đơn hàng:", error);

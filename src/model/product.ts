@@ -89,5 +89,13 @@ export interface ProductUpdateParent {
 }
 
 
+export interface AddProductChild {
+    parentProductId: number;
+    productAttributeValues: ProductAttributeValue[];
+    variants: ProductVariant[];
+}
+
+
+
 
 // export interface ProductApiResponse extends ApiResponse<ProductResponse> {}
