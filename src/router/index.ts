@@ -40,6 +40,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/product/ProductUpdateChild.vue'),
                 },
                 {
+                    path: '/addvariantsdetails/:id',
+                    name: 'addvariantsdetails',
+                    component: () => import('@/views/pages/admin/product/AddVariantsDetails.vue')
+                },
+                {
                     path: '/category',
                     name: 'category',
                     component: () => import('@/views/pages/admin/category/CategoryList.vue')
@@ -96,6 +101,13 @@ const router = createRouter({
                     name: 'order',
                     component: () => import('@/views/pages/admin/order/Invoice.vue')
                 },
+                // phần thống kê
+                {
+                    path: '/home',
+                    name: 'home',
+                    component: () => import('@/views/pages/admin/statistical/Statistical.vue')
+                },
+
                 {
                     path: '/uikit/formlayout',
                     name: 'formlayout',

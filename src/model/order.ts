@@ -4,9 +4,7 @@ export interface OrderRequest {
     userId?: number;  
     items?: OrderItemRequest[]; 
     payment?: PaymentRequest;   
-    couponId?: number; 
-    // isPos?: boolean;  // Có thể bỏ nếu không dùng
-    // addressId?: number; // Có thể bỏ nếu không dùng
+    couponUsageIds?: number[]; 
     shipments?: ShipmentRequest[]; // Optional
   }
   
@@ -21,8 +19,8 @@ export interface OrderRequest {
   }
   
   export interface ShipmentRequest {
-    carrier: string;
-    estimatedDeliveryDate: string; 
+    shipmentId?: number;
+    estimatedDeliveryDate: string;
     orderItemIds: number[];
   }
 

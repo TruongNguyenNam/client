@@ -13,6 +13,8 @@ export const SupplierService = {
             const response = await axiosInstance.get<ApiResponse<SupplierResponse[]>>(`${API_URL}`);
             return response.data;
         } catch (error) {
+            
+        
             console.error('Error fetching all suppliers:', error);
             throw new Error('Failed to fetch suppliers. Please try again later.');
         }
@@ -43,7 +45,7 @@ export const SupplierService = {
     // Thêm mới nhà cung cấp
     saveSupplier: async (supplierRequest: SupplierRequest): Promise<ApiResponse<SupplierResponse>> => {
         try {
-            const response = await axiosInstance.post<ApiResponse<SupplierResponse>>(`${API_URL}`, supplierRequest);
+            const response = await axiosInstance.put<ApiResponse<SupplierResponse>>(`${API_URL}/add`, supplierRequest);
             return response.data;
         } catch (error) {
             console.error('Error saving supplier:', error);
