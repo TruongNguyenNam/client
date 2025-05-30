@@ -1,10 +1,11 @@
 <script setup>
 import { ref, onBeforeMount, watch, defineEmits } from "vue";
-import { SupplierService } from "../../../../service/SupplierService";
+import { ProductTagService } from "../../../../service/ProductTagService";
 import { FilterMatchMode } from "primevue/api";
 import { useRouter } from "vue-router";
+import Toast from "primevue/toast";
 
-const suppliers = ref([]);
+const tags = ref([]);
 const loading = ref(true);
 const totalRecords = ref(0);
 
@@ -16,145 +17,155 @@ const lazyParams = ref({
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    description: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
-const supplierDialog = ref(false);
-const supplier = ref({
+const tagDialog = ref(false);
+const tag = ref({
     id: null,
     name: '',
-    description: ''
+    description: '' // Thêm description vào đây
 });
-const selectedSuppliers = ref([]);
-const deleteSupplierDialog = ref(false);
-const deleteSuppliersDialog = ref(false);
+const selectedTags = ref([]);
+const deleteTagDialog = ref(false);
+const deleteTagsDialog = ref(false);
+
+const toast = ref(null);
 
 const emit = defineEmits();
 const router = useRouter();
 
-// Khởi tạo filters
 const initFilters = () => {
     filters.value = {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-        description: { value: null, matchMode: FilterMatchMode.CONTAINS },
     };
 };
 
-// Load danh sách nhà cung cấp từ API
-const loadSuppliers = async () => {
+const loadTags = async () => {
     loading.value = true;
     try {
-        const response = await SupplierService.getAllSupplier(lazyParams.value.page, lazyParams.value.size);
-        suppliers.value = response.content;
-        totalRecords.value = response.totalItems;
+        const response = await ProductTagService.getAllTags();
+        tags.value = response.data;
+        totalRecords.value = response.data.length;
     } catch (error) {
-        console.error("Lỗi khi tải nhà cung cấp:", error);
+        console.error("Lỗi khi tải danh sách tag:", error);
     } finally {
         loading.value = false;
     }
 };
 
-// Xử lý phân trang
 const onPage = (event) => {
     lazyParams.value.page = event.page;
     lazyParams.value.size = event.rows;
-    loadSuppliers();
+    loadTags();
 };
 
-// Watch filters
 watch(() => filters.value.global.value, () => {
     lazyParams.value.page = 0;
-    loadSuppliers();
+    loadTags();
 });
 
-// Khởi tạo dữ liệu
 onBeforeMount(() => {
     initFilters();
-    loadSuppliers();
+    loadTags();
 });
 
-// Xóa nhà cung cấp
-const deleteSupplier = async () => {
+const deleteTag = async () => {
     try {
-        await SupplierService.deleteSupplier([supplier.value.id]);
-        deleteSupplierDialog.value = false;
-        loadSuppliers();
+        deleteTagDialog.value = false;
+        // Bạn nhớ gọi API xóa ở đây nếu có nhé
+        await loadTags();
     } catch (error) {
-        console.error("Lỗi khi xóa nhà cung cấp:", error);
+        console.error("Lỗi khi xóa tag:", error);
     }
 };
 
-// Xóa các nhà cung cấp đã chọn
-const deleteSelectedSuppliers = async () => {
-    const selectedIds = selectedSuppliers.value.map(supplier => supplier.id);
+const deleteSelectedTags = async () => {
+    const selectedIds = selectedTags.value.map(tag => tag.id);
     if (selectedIds.length === 0) {
-        alert("Chưa chọn nhà cung cấp nào để xóa!");
+        toast.value.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chưa chọn tag nào để xóa!', life: 3000 });
         return;
     }
     try {
-        await SupplierService.deleteSupplier(selectedIds);
-        deleteSuppliersDialog.value = false;
-        loadSuppliers();
+        deleteTagsDialog.value = false;
+        // Bạn nhớ gọi API xóa nhiều tag ở đây nếu có nhé
+        await loadTags();
     } catch (error) {
-        console.error("Lỗi khi xóa các nhà cung cấp:", error);
+        console.error("Lỗi khi xóa các tag:", error);
     }
 };
 
-// Mở modal để thêm nhà cung cấp mới
 const openNew = () => {
-    supplier.value = { name: '', description: '' };
-    supplierDialog.value = true;
+    tag.value = { id: null, name: '', description: '' }; 
+    tagDialog.value = true;
 };
 
-// Ẩn modal
 const hideDialog = () => {
-    supplierDialog.value = false;
+    tagDialog.value = false;
 };
 
-// Lưu nhà cung cấp (thêm hoặc sửa)
-const saveSupplier = async () => {
+const isDuplicateName = (name, id = null) => {
+    if (!name) return false;
+    return tags.value.some(
+        t => t.name.trim().toLowerCase() === name.trim().toLowerCase() && t.id !== id
+    );
+};
+
+const saveTag = async () => {
+    const name = tag.value.name?.trim();
+
+    if (!name) {
+        toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Tên tag không được để trống', life: 3000 });
+        return;
+    }
+
+    if (isDuplicateName(name, tag.value.id)) {
+        toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Tên tag đã tồn tại', life: 3000 });
+        return;
+    }
+
     try {
-        if (supplier.value.id) {
-            // Cập nhật nhà cung cấp
-            await SupplierService.updateSupplier(supplier.value.id, supplier.value);
+        if (tag.value.id) {
+            // Cập nhật
+            await ProductTagService.updateProductTag(tag.value.id, tag.value);
+            toast.value.add({ severity: 'success', summary: 'Thành công', detail: 'Cập nhật tag thành công', life: 3000 });
         } else {
-            // Thêm mới nhà cung cấp
-            await SupplierService.saveSupplier(supplier.value);
+            // Thêm mới
+            await ProductTagService.addProductTag(tag.value);
+            toast.value.add({ severity: 'success', summary: 'Thành công', detail: 'Thêm tag thành công', life: 3000 });
         }
         emit("close");
-        loadSuppliers();
-        router.push("/supplier"); // Chuyển về trang danh sách nhà cung cấp sau khi lưu
+        await loadTags();
+        tagDialog.value = false; // đóng dialog sau khi thêm/cập nhật
     } catch (error) {
-        console.error("Lỗi khi lưu nhà cung cấp:", error);
+        console.error("Lỗi khi lưu tag:", error);
+        toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Lưu tag thất bại', life: 3000 });
     }
 };
 
-// Mở modal chỉnh sửa nhà cung cấp
-const openEdit = async (supplierId) => {
+const openEdit = async (tagId) => {
     try {
-        const response = await SupplierService.getSupplierById(supplierId);
-        supplier.value = response;
-        supplierDialog.value = true;
+        const response = await ProductTagService.getTagById(tagId);
+        tag.value = response.data;
+        tagDialog.value = true;
     } catch (error) {
-        console.error("Lỗi khi tải nhà cung cấp:", error);
+        console.error("Lỗi khi tải tag:", error);
     }
 };
 
-// Xác nhận xóa nhà cung cấp (1 nhà cung cấp)
-const confirmDeleteSupplier = (selectedSupplier) => {
-    supplier.value = selectedSupplier; // Gán nhà cung cấp muốn xóa vào supplier
-    deleteSupplierDialog.value = true; // Hiển thị modal xác nhận xóa
+const editTag = (tagItem) => {
+    openEdit(tagItem.id);
 };
 
-// Sửa thông tin nhà cung cấp
-const editSupplier = (supplier) => {
-    openEdit(supplier.id);
+const confirmDeleteTag = (selectedTag) => {
+    tag.value = selectedTag;
+    deleteTagDialog.value = true;
 };
 </script>
 
 <template>
     <div class="grid">
+        <Toast ref="toast" />
         <div class="col-12">
             <div class="card">
                 <h5>Danh Sách Tag</h5>
@@ -162,7 +173,7 @@ const editSupplier = (supplier) => {
                     <template v-slot:start>
                         <div class="my-2">
                             <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="deleteSelectedSuppliers" :disabled="!selectedSuppliers.length" />
+                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="deleteSelectedTags" :disabled="!selectedTags.length" />
                         </div>
                     </template>
 
@@ -172,25 +183,25 @@ const editSupplier = (supplier) => {
                     </template>
                 </Toolbar>
 
-                <!-- Modal thêm/sửa nhà cung cấp -->
-                <Dialog v-model:visible="supplierDialog" :style="{width: '450px'}" header="Chi tiết nhà cung cấp" :modal="true" class="p-fluid">
+                <!-- Modal thêm/sửa tag -->
+                <Dialog v-model:visible="tagDialog" :style="{width: '450px'}" header="Chi tiết Tag" :modal="true" class="p-fluid">
                     <div class="field">
                         <label for="name">Tên của tag</label>
-                        <InputText id="name" v-model="supplier.name" required="true" autofocus />
+                        <InputText id="name" v-model="tag.name" required autofocus />
                     </div>
                     <div class="field">
                         <label for="description">Mô tả</label>
-                        <Textarea id="description" v-model="supplier.description" rows="3" />
+                        <Textarea id="description" v-model="tag.description" autoResize rows="3" />
                     </div>
                     <template #footer>
                         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
-                        <Button label="Lưu" icon="pi pi-check" class="p-button-text" @click="saveSupplier" />
+                        <Button label="Lưu" icon="pi pi-check" class="p-button-text" @click="saveTag" />
                     </template>
                 </Dialog>
 
                 <DataTable
-                    :value="suppliers"
-                    v-model:selection="selectedSuppliers"
+                    :value="tags"
+                    v-model:selection="selectedTags"
                     :paginator="true"
                     :first="lazyParams.page * lazyParams.size"
                     :rows="lazyParams.size"
@@ -200,18 +211,18 @@ const editSupplier = (supplier) => {
                     filterDisplay="menu"
                     v-model:filters="filters"
                     :loading="loading"
-                    :lazy="true"
+                    :lazy="false"
                     @page="onPage"
                     responsiveLayout="scroll"
-                    :globalFilterFields="['name', 'description']"
+                    :globalFilterFields="['name']"
                     :rowsPerPageOptions="[5, 10, 20, 50]"
-                    currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} nhà cung cấp"
+                    currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} tag"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                     :pageLinkSize="3"
                 >
                     <template #header>
                         <div class="flex justify-content-between flex-column sm:flex-row">
-                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2" @click="clearFilter()" />
+                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2" @click="initFilters()" />
                             <span class="p-input-icon-left mb-2">
                                 <i class="pi pi-search" />
                                 <InputText v-model="filters.global.value" placeholder="Tìm kiếm..." style="width: 100%" />
@@ -221,44 +232,44 @@ const editSupplier = (supplier) => {
 
                     <Column selectionMode="multiple" header="" style="min-width: 8rem" />
                     <Column field="id" header="ID" sortable style="min-width: 5rem"></Column>
-                    <Column field="name" header="Tên nhà cung cấp" sortable style="min-width: 12rem"></Column>
-                    <Column field="description" header="Mô tả" sortable style="min-width: 16rem"></Column>
+                    <Column field="name" header="Tên Tag" sortable style="min-width: 12rem"></Column>
+                    <Column field="description" header="Mô tả" sortable style="min-width: 20rem"></Column>
 
                     <Column :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
-                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editSupplier(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteSupplier(slotProps.data)" />
+                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editTag(slotProps.data)" />
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteTag(slotProps.data)" />
                         </template>
                     </Column>
 
-                    <template #empty> Không tìm thấy nhà cung cấp nào. </template>
+                    <template #empty> Không tìm thấy tag nào. </template>
                     <template #loading> Đang tải dữ liệu... </template>
                 </DataTable>
 
-                <!-- Dialog xác nhận xóa nhà cung cấp -->
-                <Dialog v-model:visible="deleteSupplierDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
+                <!-- Dialog xác nhận xóa tag -->
+                <Dialog v-model:visible="deleteTagDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
                     <div class="confirmation-content">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span v-if="supplier">Bạn có chắc chắn muốn xóa <b>{{supplier.name}}</b>?</span>
+                        <span v-if="tag">Bạn có chắc chắn muốn xóa <b>{{tag.name}}</b>?</span>
                     </div>
                     <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteSupplierDialog = false"/>
-                        <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteSupplier" />
+                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteTagDialog = false"/>
+                        <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteTag" />
                     </template>
                 </Dialog>
 
-                <!-- Dialog xác nhận xóa các nhà cung cấp đã chọn -->
-                <Dialog v-model:visible="deleteSuppliersDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
+                <!-- Dialog xác nhận xóa các tag đã chọn -->
+                <Dialog v-model:visible="deleteTagsDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
                     <div class="confirmation-content">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span v-if="supplier">Bạn có chắc chắn muốn xóa các nhà cung cấp đã chọn?</span>
+                        <span>Bạn có chắc chắn muốn xóa các tag đã chọn?</span>
                     </div>
                     <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteSuppliersDialog = false"/>
-                        <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteSelectedSuppliers" />
+                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteTagsDialog = false"/>
+                        <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteSelectedTags" />
                     </template>
                 </Dialog>
             </div>
         </div>
     </div>
-</template> 
+</template>
