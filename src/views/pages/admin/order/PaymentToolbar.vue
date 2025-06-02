@@ -308,4 +308,4 @@ watch(() => props.invoice.couponUsageIds, (newCouponIds) => {
     width: 100%;
   }
 }
-</style>
+</style> 

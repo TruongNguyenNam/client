@@ -46,6 +46,7 @@ export interface ProductResponse {
 
 export interface ProductAttributeValueResponse {
     id: number;
+    attributeId: number;
     attributeName: string; 
     productId: number;
     value: string;

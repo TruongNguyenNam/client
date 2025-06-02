@@ -12,7 +12,7 @@
     </td>
     <td class="cart-item-info">
       <div class="cart-item-name">{{ item.name }}</div>
-      <div class="cart-item-sku" v-if="item.sku">{{ item.sku }}</div>
+      <!-- <div class="cart-item-sku" v-if="item.sku">{{ item.sku }}</div> -->
     </td>
     <td class="cart-item-quantity">
       <Button
