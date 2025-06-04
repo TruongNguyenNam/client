@@ -100,7 +100,7 @@ const getAllChildProduct = async () => {
 const getAllCustomers = async () => {
   loading.value = true;
   try {
-    const response = await CustomerService.getAllCustomers();
+    const response = await CustomerService.getAllUsers();
     if (response && response.data) {
       customers.value = response.data;
       console.log("Lấy thành công danh sách khách hàng:", customers.value);

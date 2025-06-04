@@ -2,7 +2,7 @@
 export interface CouponRequest {
     couponName: string;
     quantity: number;
-    couponAmount: number;
+    discountAmount: number;
     expirationDate: string | null;
     startDate: string | null;
 
@@ -19,7 +19,7 @@ export interface CouponResponse {
     codeCoupon: string; 
     usedCount?: number; 
     quantity: number;
-    couponAmount: number;
+    discountAmount: number;
     expirationDate: string | null;
     startDate: string | null;
     couponStatus: string;

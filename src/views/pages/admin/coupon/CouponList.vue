@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, defineEmits } from "vue";
 import { CouponService } from "../../../../service/CouponService";
 import { useRouter } from "vue-router";
-
+import type { CouponRequest } from "../../../../model/coupon";
 //Tìm kiếm theo khoảng giá trị giảm
 const minDiscount = ref<number | null>(null);
 const maxDiscount = ref<number | null>(null);
@@ -14,7 +14,7 @@ interface Coupon {
     couponName: string;
     quantity: number;
     usedCount?: number;
-    couponAmount: number;
+    discountAmount: number;
     expirationDate: Date | null;
     startDate: Date | null;
     couponStatus: string;
@@ -22,13 +22,13 @@ interface Coupon {
 }
 
 // Interface request gửi lên backend (kiểu string)
-interface CouponRequest {
-    couponName: string;
-    quantity: number;
-    couponAmount: number;
-    expirationDate: string | null;
-    startDate: string | null;
-}
+// interface CouponRequest {
+//     couponName: string;
+//     quantity: number;
+//     discountAmount: number;
+//     expirationDate: string | null;
+//     startDate: string | null;
+// }
 
 const coupons = ref<Coupon[]>([]);
 const loading = ref<boolean>(true);
@@ -47,7 +47,7 @@ const coupon = ref<Coupon>({
     codeCoupon: '',
     couponName: '',
     quantity: 0,
-    couponAmount: 0.0,
+    discountAmount: 0.0,
     expirationDate: null,
     startDate: null,
     couponStatus: '', // status mặc định backend tự sinh
@@ -58,7 +58,7 @@ const newCoupon = ref<Coupon>({
     codeCoupon: '',
     couponName: '',
     quantity: 1,
-    couponAmount: 0.0,
+    discountAmount: 0.0,
     expirationDate: null,
     startDate: new Date(),
     couponStatus: '',
@@ -80,7 +80,7 @@ function toCouponRequest(c: Coupon): CouponRequest {
     return {
         couponName: c.couponName,
         quantity: c.quantity,
-        couponAmount: c.couponAmount,
+        discountAmount: c.discountAmount,
         expirationDate: c.expirationDate ? toLocalISOString(c.expirationDate) : null,
         startDate: c.startDate ? toLocalISOString(c.startDate) : null,
     };
@@ -96,9 +96,9 @@ function toCouponRequestUpdate(c: Coupon): CouponRequest & { couponStatus: strin
     return {
         couponName: c.couponName,
         quantity: c.quantity,
-        couponAmount: typeof c.couponAmount === "string"
-            ? parseInt(String(c.couponAmount).replace(/[^\d]/g, ""), 10)
-            : c.couponAmount,
+        discountAmount: typeof c.discountAmount === "string"
+            ? parseInt(String(c.discountAmount).replace(/[^\d]/g, ""), 10)
+            : c.discountAmount,
         expirationDate: c.expirationDate ? c.expirationDate.toISOString() : null,
         startDate: c.startDate ? c.startDate.toISOString() : null,
         couponStatus: c.couponStatus || "ACTIVE"
@@ -115,7 +115,7 @@ const loadCoupons = async (): Promise<void> => {
                 couponName: item.couponName ?? "",
                 quantity: item.quantity ?? 0,
                 usedCount: item.usedCount ?? 0,
-                couponAmount: item.couponAmount ?? 0.0,
+                discountAmount: item.discountAmount ?? 0.0,
                 expirationDate: item.expirationDate ? new Date(item.expirationDate) : null,
                 startDate: item.startDate ? new Date(item.startDate) : null,
                 couponStatus: item.couponStatus ?? "",
@@ -140,7 +140,7 @@ const openAddDialog = () => {
         codeCoupon: '',
         couponName: '',
         quantity: 1,
-        couponAmount: 0.0,
+        discountAmount: 0.0,
         expirationDate: null,
         startDate: new Date(),
         couponStatus: '',
@@ -178,7 +178,7 @@ const openEdit = async (couponId: number | null): Promise<void> => {
             codeCoupon: response.data.codeCoupon ?? "",
             couponName: response.data.couponName ?? "",
             quantity: response.data.quantity ?? 0,
-            couponAmount: response.data.couponAmount ?? 0.0,
+            discountAmount: response.data.discountAmount ?? 0.0,
             expirationDate: response.data.expirationDate ? new Date(response.data.expirationDate) : null,
             startDate: response.data.startDate ? new Date(response.data.startDate) : null,
             couponStatus: response.data.couponStatus ?? "",
@@ -195,7 +195,7 @@ const hideUpdateDialog = () => {
         codeCoupon: '',
         couponName: '',
         quantity: 0,
-        couponAmount: 0.0,
+        discountAmount: 0.0,
         expirationDate: null,
         startDate: null,
         couponStatus: '',
@@ -211,7 +211,7 @@ const saveCoupon = async (): Promise<void> => {
             await CouponService.saveCoupon(toCouponRequest(coupon.value));
         }
         couponUpdateDialog.value = false;
-        await loadCoupons();
+        await loadCoupons();        
     } catch (error) { }
 };
 
@@ -242,7 +242,7 @@ const searchCoupons = async (): Promise<void> => {
                 couponName: item.couponName ?? "",
                 quantity: item.quantity ?? 0,
                 usedCount: item.usedCount ?? 0,
-                couponAmount: item.couponAmount ?? 0.0,
+                discountAmount: item.discountAmount ?? 0.0,
                 expirationDate: item.expirationDate ? new Date(item.expirationDate) : null,
                 startDate: item.startDate ? new Date(item.startDate) : null,
                 couponStatus: item.couponStatus ?? "",
@@ -355,8 +355,8 @@ const goToGiftCoupon = (coupon: Coupon) => {
 
                         <!-- Giá trị giảm -->
                         <div class="field">
-                            <label for="add-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
-                            <InputNumber id="add-couponAmount" v-model="newCoupon.couponAmount" :min="0" mode="currency"
+                            <label for="add-discountAmount" class="field-label">Giá trị giảm (đ) *</label>
+                            <InputNumber id="add-discountAmount" v-model="newCoupon.discountAmount" :min="0" mode="currency"
                                 currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
                         </div>
 
@@ -409,9 +409,9 @@ const goToGiftCoupon = (coupon: Coupon) => {
 
                         <!-- Giá trị giảm -->
                         <div class="field">
-                            <label for="edit-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
-                            <InputNumber id="edit-couponAmount" v-model="coupon.couponAmount" :min="0" mode="currency"
-                                currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
+                            <label for="edit-discountAmount" class="field-label">Giá trị giảm (đ) *</label>
+                                <InputNumber id="edit-discountAmount" v-model="coupon.discountAmount" :min="0" mode="currency"
+                                    currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
                         </div>
 
                         <!-- Ngày bắt đầu -->
@@ -462,7 +462,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     </Column>
                     <Column field="discountAmount" header="Giá trị giảm" sortable>
                         <template #body="slotProps">
-                            {{ formatCurrency(slotProps.data.couponAmount) }}
+                                            {{ formatCurrency(slotProps.data.discountAmount) }}
                         </template>
                     </Column>
                     <Column field="startDate" header="Ngày bắt đầu" sortable>
