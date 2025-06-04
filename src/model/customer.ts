@@ -13,22 +13,5 @@ export interface CustomerResponse {
     addressDistrict: string; // Quận/Huyện (Huyện Vĩnh Tuy)
     addressProvince: string; // Tỉnh (Quận Long Biên)
     isActive: boolean;
+    gender: string;
   }
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
