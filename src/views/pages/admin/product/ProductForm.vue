@@ -57,11 +57,11 @@ const getAttributeName = (attributeId: number) => {
 const onParentImageUpload = (event: any) => {
   const selectedFiles: File[] = event.files;
   parentImages.value = selectedFiles;
-  toast.add({ severity: 'success', summary: 'Parent Images Selected', detail: `Selected ${selectedFiles.length} images for parent product`, life: 3000 });
+  toast.add({ severity: 'success', summary: 'Hình ảnh sản phẩm cha đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho sản phẩm cha`, life: 3000 });
 };
 
 const onError = (error: any) => {
-  toast.add({ severity: 'error', summary: 'Upload Error', detail: error.message, life: 3000 });
+  toast.add({ severity: 'error', summary: 'Lỗi tải lên', detail: error.message, life: 3000 });
 };
 
 const updateAvailableAttributes = () => {
@@ -82,7 +82,7 @@ const updateAvailableAttributes = () => {
 const addVariant = () => {
   const selectedIds = variants.value.map(v => v.attributeId).filter(id => id !== 0);
   if (selectedIds.length === productAttributes.value.length) {
-    toast.add({ severity: 'warn', summary: 'Warning', detail: 'All attributes are already selected', life: 3000 });
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tất cả các thuộc tính đã được chọn', life: 3000 });
     return;
   }
   variants.value.push({
@@ -108,10 +108,10 @@ const addVariantValue = (index: number) => {
     variant.values.push(value);
     variant.currentValue = '';
     variant.variantImages.set(value, []);
-    toast.add({ severity: 'success', summary: 'Value Added', detail: `Added "${value}"`, life: 3000 });
+    toast.add({ severity: 'success', summary: 'Giá trị đã thêm', detail: `Đã thêm "${value}"`, life: 3000 });
     generateCombinations();
   } else if (value) {
-    toast.add({ severity: 'warn', summary: 'Duplicate Value', detail: 'This value already exists', life: 3000 });
+    toast.add({ severity: 'warn', summary: 'Giá trị đã tồn tại', detail: 'Giá trị này đã tồn tại', life: 3000 });
   }
 };
 
@@ -120,7 +120,7 @@ const removeVariantValue = (variantIndex: number, valueIndex: number) => {
   const removedValue = variant.values[valueIndex];
   variant.values.splice(valueIndex, 1);
   variant.variantImages.delete(removedValue);
-  toast.add({ severity: 'info', summary: 'Value Removed', detail: `Removed "${removedValue}"`, life: 3000 });
+  toast.add({ severity: 'info', summary: 'Giá trị đã xóa', detail: `Đã xóa "${removedValue}"`, life: 3000 });
   generateCombinations();
 };
 
@@ -128,7 +128,7 @@ const onVariantImageUpload = (index: number, event: any) => {
   const selectedFiles: File[] = event.files;
   const combination = variantCombinations.value[index];
   combination.images = selectedFiles || [];
-  toast.add({ severity: 'success', summary: 'Images Selected', detail: `Selected ${selectedFiles.length} images for variant "${combination.name}"`, life: 3000 });
+  toast.add({ severity: 'success', summary: 'Hình ảnh đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho biến thể "${combination.name}"`, life: 3000 });
 };
 
 const getImagePreview = (files: File[]): string[] => {
@@ -186,26 +186,50 @@ const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  if (!product.name || !product.sku || !product.categoryId || !product.supplierId || !product.description) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all required fields.', life: 3000 });
+  if (!product.name ||  !product.categoryId || !product.supplierId || !product.description) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
   }
 
   if (variantCombinations.value.length > 0 && variantCombinations.value.some(v => v.price === undefined || v.stockQuantity === undefined)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill price and stock for all variants.', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền giá và số lượng cho tất cả biến thể.', life: 3000 });
+    isSubmitting.value = false;
+    return;
+  }
+
+  if (
+    variantCombinations.value.length > 0 &&
+    variantCombinations.value.some(
+      v =>
+        v.price === undefined ||
+        v.price === null ||
+        isNaN(Number(v.price)) ||
+        Number(v.price) <= 0 ||
+        v.stockQuantity === undefined ||
+        v.stockQuantity === null ||
+        isNaN(Number(v.stockQuantity)) ||
+        Number(v.stockQuantity) < 0
+    )
+  ) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Vui lòng nhập giá > 0 và số lượng >= 0 cho tất cả biến thể.',
+      life: 3000
+    });
     isSubmitting.value = false;
     return;
   }
 
   if (variantCombinations.value.length > 0 && variantCombinations.value.some(v => !v.images || v.images.length === 0)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Please upload at least one image for each variant.', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng tải lên ít nhất một hình ảnh cho mỗi biến thể.', life: 3000 });
     isSubmitting.value = false;
     return;
   }
 
   if (!parentImages.value || parentImages.value.length === 0) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Please upload at least one image for the parent product.', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng tải lên ít nhất một hình ảnh cho sản phẩm cha.', life: 3000 });
     isSubmitting.value = false;
     return;
   }
@@ -235,7 +259,7 @@ const submitProduct = async () => {
     toast.add({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
     router.push('/documentation');
   } catch (error: any) {
-    const errorMessage = error.message || 'Failed to submit product';
+    const errorMessage = error.message || 'Lỗi khi thêm sản phẩm';
     toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });
   } finally {
     isSubmitting.value = false;
@@ -258,7 +282,7 @@ onMounted(async () => {
     availableAttributes.value = [...productAttributes.value];
     productTags.value = productTagResponse.data || [];
 
-    console.log('Initial product attributes:', productAttributes.value);
+    console.log('Initial product  attributes:', productAttributes.value);
     console.log('Initial available attributes:', availableAttributes.value);
   } catch (error: any) {
     toast.add({ 
@@ -275,97 +299,97 @@ onMounted(async () => {
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Add Product</h5>
+        <h5>Thêm sản phẩm</h5>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label for="productName">Product Name</label>
-            <InputText id="productName" v-model="product.name" placeholder="Enter product name" :class="{'p-invalid': submitted && !product.name}" />
-            <small class="p-error" v-if="submitted && !product.name">Product name is required.</small>
+            <label for="productName">Tên sản phẩm</label>
+            <InputText id="productName" v-model="product.name" placeholder="nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" />
+            <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="sku">SKU</label>
-            <InputText id="sku" v-model="product.sku" placeholder="Enter SKU" :class="{'p-invalid': submitted && !product.sku}" />
-            <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small>
+            <InputText id="sku" v-model="product.sku" placeholder="tự động sinh" disabled />
+            <!-- <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small> -->
           </div>
           <div class="field col-12 md:col-6">
-            <label for="productCategory">Category</label>
+            <label for="productCategory">Danh mục</label>
             <Dropdown
               id="productCategory"
               v-model="product.categoryId"
               :options="categories"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Category"
+              placeholder="chọn danh mục"
               :class="{'p-invalid': submitted && !product.categoryId}"
             />
-            <small class="p-error" v-if="submitted && !product.categoryId">Category is required.</small>
+            <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sportType">Sport Type</label>
+            <label for="sportType">Loại thể thao</label>
             <InputText id="sportType" v-model="product.sportType" placeholder="Enter sport type" />
           </div>
           <div class="field col-12 md:col-6">
-            <label for="productTag">Tags</label>
+            <label for="productTag">Nhãn</label>
             <MultiSelect
               id="productTag"
               v-model="product.tagId"
               :options="productTags"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Tags"
+              placeholder="chọn nhãn"
               :multiple="true"
             />
           </div>
           <div class="field col-12 md:col-6">
-            <label for="supplier">Supplier</label>
+            <label for="supplier">Nhà cung cấp</label>
             <Dropdown
               id="supplier"
               v-model="product.supplierId"
               :options="suppliers"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Supplier"
+              placeholder="chọn nhà cung cấp"
               :class="{'p-invalid': submitted && !product.supplierId}"
             />
-            <small class="p-error" v-if="submitted && !product.supplierId">Supplier is required.</small>
+            <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
           </div>
           <div class="field col-12">
-            <label for="productDescription">Description</label>
+            <label for="productDescription">Mô tả</label>
             <Textarea 
               id="productDescription" 
               v-model="product.description" 
               rows="4" 
-              placeholder="Enter product description"
+              placeholder="nhập mô tả"
               :class="{'p-invalid': submitted && !product.description}"
             />
-            <small class="p-error" v-if="submitted && !product.description">Description is required.</small>
+            <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
           <div class="field col-12">
-            <label for="parentImages">Parent Product Images</label>
+            <label for="parentImages">Hình ảnh sản phẩm</label>
             <FileUpload
               name="parentImages"
               :multiple="true"
               accept="image/*"
               :auto="false"
-              chooseLabel="Choose Images"
+              chooseLabel="chọn hình ảnh"
               @select="onParentImageUpload"
               :maxFileSize="1000000"
               @error="onError"
               :class="{'p-invalid': submitted && (!parentImages || parentImages.length === 0)}"
             />
-            <small class="p-error" v-if="submitted && (!parentImages || parentImages.length === 0)">At least one parent image is required.</small>
+            <small class="p-error" v-if="submitted && (!parentImages || parentImages.length === 0)">Ít nhất một hình ảnh sản phẩm là bắt buộc.</small>
           </div>
         </div>
 
         <div class="variants mt-4">
-          <h3>Product Attributes</h3>
+          <h3>Thuộc tính sản phẩm</h3>
           <div class="variant-row" v-for="(variant, index) in variants" :key="index">
             <Dropdown
               v-model="variant.attributeId"
               :options="availableAttributes"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Attribute"
+              placeholder="Chọn thuộc tính"
               class="variant-select"
               @change="updateAvailableAttributes"
             >
@@ -380,7 +404,7 @@ onMounted(async () => {
               <div class="p-inputgroup">
                 <InputText
                   v-model="variant.currentValue"
-                  placeholder="Enter value and press Enter"
+                  placeholder="nhập giá trị và nhấn Enter"
                   class="variant-input"
                   @keydown.enter="addVariantValue(index)"
                 />
@@ -409,7 +433,7 @@ onMounted(async () => {
             />
           </div>
           <Button 
-            label="Add Attribute" 
+            label="Thêm thuộc tính" 
             icon="pi pi-plus" 
             @click="addVariant" 
             class="mt-2"
@@ -419,9 +443,9 @@ onMounted(async () => {
         </div>
 
         <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
-          <h3>Variant List</h3>
+          <h3>Danh sách biến thể</h3>
           <DataTable :value="variantCombinations" responsiveLayout="scroll">
-            <Column header="Images">
+            <Column header="Hình ảnh">
               <template #body="slotProps">
                 <div class="variant-image-upload">
                   <FileUpload
@@ -429,7 +453,7 @@ onMounted(async () => {
                     :multiple="true"
                     accept="image/*"
                     :auto="false"
-                    chooseLabel="Choose Images"
+                    chooseLabel="chọn hình ảnh"
                     @select="onVariantImageUpload(slotProps.index, $event)"
                     :maxFileSize="1000000"
                     @error="onError"
@@ -438,12 +462,12 @@ onMounted(async () => {
                 </div>
               </template>
             </Column>
-            <Column header="Name">
+            <Column header="Tên">
               <template #body="slotProps">
                 {{ slotProps.data.name }}
               </template>
             </Column>
-            <Column header="Price">
+            <Column header="Giá">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.price"
@@ -454,7 +478,7 @@ onMounted(async () => {
                 />
               </template>
             </Column>
-            <Column header="Stock">
+            <Column header="Kho">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.stockQuantity"
@@ -477,8 +501,14 @@ onMounted(async () => {
         </div>
 
         <div class="flex justify-content-end mt-4">
-          <Button label="Cancel" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/documentation')" />
-          <Button label="Submit Product" icon="pi pi-check" @click="submitProduct" :loading="isSubmitting" />
+          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/documentation')" />
+          <Button
+            label="Thêm Sản Phẩm"
+            icon="pi pi-check"
+            @click="submitProduct"
+            :loading="isSubmitting"
+            :disabled="variants.length === 0"
+          />
         </div>
       </div>
     </div>

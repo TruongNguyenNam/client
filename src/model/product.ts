@@ -46,6 +46,7 @@ export interface ProductResponse {
 
 export interface ProductAttributeValueResponse {
     id: number;
+    attributeId: number;
     attributeName: string; 
     productId: number;
     value: string;
@@ -87,6 +88,14 @@ export interface ProductUpdateParent {
     tagId: number[]; // Changed from List<Long> to number[] for TypeScript compatibility
     parentImages?: File[]; // Changed from List<MultipartFile> to File[] for TypeScript compatibility
 }
+
+
+export interface AddProductChild {
+    parentProductId: number;
+    productAttributeValues: ProductAttributeValue[];
+    variants: ProductVariant[];
+}
+
 
 
 

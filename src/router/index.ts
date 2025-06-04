@@ -40,6 +40,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/product/ProductUpdateChild.vue'),
                 },
                 {
+                    path: '/addvariantsdetails/:id',
+                    name: 'addvariantsdetails',
+                    component: () => import('@/views/pages/admin/product/AddVariantsDetails.vue')
+                },
+                {
                     path: '/category',
                     name: 'category',
                     component: () => import('@/views/pages/admin/category/CategoryList.vue')
@@ -55,32 +60,46 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/supplier/SupplierList.vue')
                 },
                 {
+                    path: '/coupon',
+                    name: 'coupon',
+                    component: () => import('@/views/pages/admin/coupon/CouponList.vue')
+                },
+                {
+                    path: '/admin/coupon/gift/:couponId',
+                    name: 'GiftCoupon',
+                    component: () => import('@/views/pages/admin/coupon/CouponForm.vue')
+                },
+                {
                     path: '/supplieraddadd',
                     name: 'supplieradd',
                     component: () => import('@/views/pages/admin/supplier/SupplierForm.vue')
                 },
-                
+
                 {
                     path: '/attribute',
                     name: 'attribute',
                     component: () => import('@/views/pages/admin/attribute/AttributeList.vue')
                 },
-                  {
+                {
                     path: '/discount',
                     name: 'discount',
                     component: () => import('@/views/pages/admin/discount/DiscountList.vue')
                 },
-                  {
+                {
                     path: '/discountadd',
                     name: 'discountadd',
                     component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
                 },
+<<<<<<< HEAD
                  {
                     path: '/discountupdate/:id',
                     name: 'discountupdate',
                     component: () => import('@/views/pages/admin/discount/DiscountFromUpdate.vue')
                 },
                   {
+=======
+                {
+>>>>>>> f5d1f40720d06e7440a55c53cbebab7cb988cda5
                     path: '/tet',
                     name: 'tet',
                     component: () => import('@/views/pages/admin/discount/Tet.vue')
@@ -95,6 +114,25 @@ const router = createRouter({
                     name: 'tag',
                     component: () => import('@/views/pages/admin/tag/TagList.vue')
                 },
+                // phần BÁN HÀNG 
+                {
+                    path: '/order',
+                    name: 'order',
+                    component: () => import('@/views/pages/admin/order/Invoice.vue')
+                },
+                // phần thống kê
+                {
+                    path: '/home',
+                    name: 'home',
+                    component: () => import('@/views/pages/admin/statistical/Statistical.vue')
+                },
+
+                {
+                    path: '/uikit/formlayout',
+                    name: 'formlayout',
+                    component: () => import('@/views/uikit/FormLayout.vue')
+                },
+
                 {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
@@ -229,7 +267,7 @@ const router = createRouter({
                     name: 'producttest',
                     component: () => import('@/views/pages/TestProduct.vue')
                 },
-                
+
             ]
         },
         {

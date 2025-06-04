@@ -28,7 +28,7 @@ export const CategoryService = {
 
     addCategory: async (categoryRequest: CategoryRequest): Promise<ApiResponse<CategoryResponse>> => {
         try {
-            const response = await axiosInstance.post<ApiResponse<CategoryResponse>>(`${API_URL}`, categoryRequest);
+            const response = await axiosInstance.post<ApiResponse<CategoryResponse>>(`${API_URL}/add`, categoryRequest);
             return response.data;
         } catch (error) {
             console.error('Error adding category:', error);
@@ -38,7 +38,7 @@ export const CategoryService = {
 
     updateCategory: async (id: number, categoryRequest: CategoryRequest): Promise<ApiResponse<CategoryResponse>> => {
         try {
-            const response = await axiosInstance.put<ApiResponse<CategoryResponse>>(`${API_URL}/${id}`, categoryRequest);
+            const response = await axiosInstance.put<ApiResponse<CategoryResponse>>(`${API_URL}/update/${id}`, categoryRequest);
             return response.data;
         } catch (error) {
             console.error(`Error updating category with ID ${id}:`, error);

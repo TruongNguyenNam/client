@@ -16,10 +16,32 @@ const model = ref([
             { label: 'Category', icon: 'pi pi-fw pi-check-square', to: '/category' },
             { label: 'Supplier', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },
             { label: 'Attribute', icon: 'pi pi-fw pi-exclamation-circle', to: '/attribute' },
-         { label: 'Discount', icon: 'pi pi-fw pi-exclamation-circle', to: '/discount' },
+            { label: 'Discount', icon: 'pi pi-fw pi-exclamation-circle', to: '/discount' },
+            { label: 'Coupon', icon: 'pi pi-fw pi-ticket', to: '/coupon' }, 
             { label: 'Tag', icon: 'pi pi-fw pi-mobile', to: '/tag', class: 'rotated-icon' },
-            // { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
-            // { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
+            { label: 'Order', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
+            { label: 'Statistical', icon: 'pi pi-fw pi-table', to: '/home',class:'rotated-icon' },
+            {
+                label: 'User',
+                icon: 'pi pi-fw pi-user',
+                items: [
+                    {
+                        label: 'Login',
+                        icon: 'pi pi-fw pi-sign-in',
+                        to: '/auth/login'
+                    },
+                    {
+                        label: 'Error',
+                        icon: 'pi pi-fw pi-times-circle',
+                        to: '/auth/error'
+                    },
+                    {
+                        label: 'Access Denied',
+                        icon: 'pi pi-fw pi-lock',
+                        to: '/auth/access'
+                    }
+                ]
+            },
             // { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
             // { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
             // { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },

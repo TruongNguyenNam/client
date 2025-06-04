@@ -1,9 +1,64 @@
-import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent } from "../model/product";
+import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild} from "../model/product";
 import axios from 'axios';
 import type { ApiResponse } from "../utils/ApiResponse";
 const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
 export const ProductService = {
+
+  addVariantsToProduct: async (
+    parentProductId: number,
+    request: AddProductChild,
+    variantImages: File[]
+  ): Promise<ApiResponse<void>> => {
+    try {
+      // Tạo bản sao của request và loại bỏ images khỏi variants
+      const sanitizedRequest: AddProductChild = {
+        ...request,
+        variants: request.variants.map(variant => ({
+          price: variant.price,
+          stockQuantity: variant.stockQuantity,
+          // Không gửi images trong JSON
+        })),
+      };
+  
+      const formData = new FormData();
+      formData.append('request', JSON.stringify(sanitizedRequest));
+  
+      if (variantImages && variantImages.length > 0) {
+        variantImages.forEach((file) => {
+          formData.append('variantImages', file);
+        });
+      }
+  
+      // Log kiểm tra dữ liệu gửi đi
+      console.log("Sending FormData for addVariantsToProduct:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+      }
+  
+      const response = await fetch(`${API_URL}/${parentProductId}/variants`, {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Backend Error Response:", errorData);
+        throw new Error(errorData.message || `Failed to add variants (Status: ${response.status})`);
+      }
+  
+      const data = await response.json();
+      console.log("Backend Success Response:", data);
+      return {
+        status: response.status,
+        message: data.message || 'Thêm biến thể sản phẩm thành công',
+        data: undefined,
+      };
+    } catch (error) {
+      console.error("Add Variants Error:", error);
+      throw new Error("Lỗi hệ thống, vui lòng thử lại sau");
+    }
+  },
 
 
   addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
@@ -74,7 +129,7 @@ export const ProductService = {
   getAllChildProducts: async (): Promise<ApiResponse<ProductResponse[]>> => {
     try {
         const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/child`);
-        return response.data; // ✅ Trả về toàn bộ `response.data` giống như getAllCategories
+        return response.data; 
     } catch (error) {
         console.error("Get All Child Products Error:", error);
         throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
@@ -212,6 +267,8 @@ export const ProductService = {
       throw new Error("Không thể xóa sản phẩm. Vui lòng thử lại sau.");
     }
   }
+  
+
 
 
 };
