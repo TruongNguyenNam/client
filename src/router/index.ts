@@ -55,27 +55,37 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/supplier/SupplierList.vue')
                 },
                 {
+                    path: '/coupon',
+                    name: 'coupon',
+                    component: () => import('@/views/pages/admin/coupon/CouponList.vue')
+                },
+                {
+                    path: '/admin/coupon/gift/:couponId',
+                    name: 'GiftCoupon',
+                    component: () => import('@/views/pages/admin/coupon/CouponForm.vue')
+                },
+                {
                     path: '/supplieraddadd',
                     name: 'supplieradd',
                     component: () => import('@/views/pages/admin/supplier/SupplierForm.vue')
                 },
-                
+
                 {
                     path: '/attribute',
                     name: 'attribute',
                     component: () => import('@/views/pages/admin/attribute/AttributeList.vue')
                 },
-                  {
+                {
                     path: '/discount',
                     name: 'discount',
                     component: () => import('@/views/pages/admin/discount/DiscountList.vue')
                 },
-                  {
+                {
                     path: '/discountadd',
                     name: 'discountadd',
                     component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
                 },
-                  {
+                {
                     path: '/tet',
                     name: 'tet',
                     component: () => import('@/views/pages/admin/discount/Tet.vue')
@@ -101,7 +111,7 @@ const router = createRouter({
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
                 },
-                
+
                 {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
@@ -236,7 +246,7 @@ const router = createRouter({
                     name: 'producttest',
                     component: () => import('@/views/pages/TestProduct.vue')
                 },
-                
+
             ]
         },
         {

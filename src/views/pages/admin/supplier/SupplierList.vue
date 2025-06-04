@@ -3,20 +3,18 @@ import { ref, onMounted, watch, defineEmits } from "vue";
 import { SupplierService } from "../../../../service/SupplierService";
 import { useRouter } from "vue-router";
 
-// Khai báo các biến phản ứng (reactive variables)
+
 const suppliers = ref([]); // Danh sách nhà cung cấp
 const loading = ref(true); // Trạng thái đang tải dữ liệu
 const totalRecords = ref(0); // Tổng số nhà cung cấp
 const searchTerm = ref('');
 const lazyParams = ref({
-    page: 0,  // Trang hiện tại
-    size: 5,  // Số lượng bản ghi trên mỗi trang
+    page: 0,  
+    size: 5, 
 });
 const selectedSuppliers = ref([]); // Danh sách nhà cung cấp được chọn
 const supplierUpdateDialog = ref(false); // Dialog sửa nhà cung cấp
 const addSupplierDialog = ref(false); // Dialog thêm nhà cung cấp
-const deleteSupplierDialog = ref(false); // Dialog xác nhận xóa nhà cung cấp
-const deleteSuppliersDialog = ref(false); // Dialog xác nhận xóa nhiều nhà cung cấp
 const supplier = ref({ id: null, name: '', description: '' }); // Thông tin nhà cung cấp hiện tại
 const newSupplier = ref({ name: "", description: "" }); // Biến lưu thông tin nhà cung cấp mới
 
@@ -50,41 +48,6 @@ const onPage = (event) => {
     lazyParams.value.size = event.rows; // Cập nhật số lượng bản ghi trên mỗi trang
     loadSuppliers();
 };
-
-
-
-// Hàm xóa một nhà cung cấp
-// const deleteSupplier = async () => {
-//     try {
-//         await SupplierService.deleteSupplier([supplier.value.id]); 
-//         deleteSupplierDialog.value = false; 
-//         loadSuppliers(); 
-//     } catch (error) {
-//         console.error("Lỗi khi xóa nhà cung cấp:", error);
-//     }
-// };
-
-// Hàm xóa các nhà cung cấp đã chọn
-// const deleteSelectedSuppliers = async () => {
-//     const selectedIds = selectedSuppliers.value.map(supplier => supplier.id); // Lấy danh sách ID các nhà cung cấp đã chọn
-//     if (selectedIds.length === 0) {
-//         alert("Chưa chọn nhà cung cấp nào để xóa!"); // Hiển thị thông báo nếu không chọn
-//         return;
-//     }
-//     try {
-//         await SupplierService.deleteSupplier(selectedIds); 
-//         deleteSuppliersDialog.value = false; 
-//         loadSuppliers(); 
-//     } catch (error) {
-//         console.error("Lỗi khi xóa các nhà cung cấp:", error);
-//     }
-// };
-
-// Xác nhận xóa một nhà cung cấp
-// const confirmDeleteSupplier = (selectedSupplier) => {
-//     supplier.value = selectedSupplier; 
-//     deleteSupplierDialog.value = true; 
-// };
 
 
 // Mở form thêm nhà cung cấp
@@ -225,34 +188,7 @@ const debouncedSearch = (event) => {
                         </span>
                     </div>
                 </div>
-                <!-- 
-                Dialog xác nhận xóa một nhà cung cấp
-                <Dialog v-model:visible="deleteSupplierDialog" :style="{ width: '450px' }" header="Xác nhận" modal>
-                    <div class="confirmation-content">
-                        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span>Bạn có chắc chắn muốn xóa nhà cung cấp <b>{{ supplier.name }}</b>?</span>
-                    </div>
-                    <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text"
-                            @click="deleteSupplierDialog = false" />
-                        <Button label="Có" icon="pi pi-check" class="p-button-danger" @click="deleteSupplier" />
-                    </template>
-                </Dialog> -->
-
-                <!-- Dialog xác nhận xóa nhiều nhà cung cấp -->
-                <!-- <Dialog v-model:visible="deleteSuppliersDialog" :style="{ width: '450px' }" header="Xác nhận" modal>
-                    <div class="confirmation-content">
-                        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span>Bạn có chắc chắn muốn xóa các nhà cung cấp đã chọn?</span>
-                    </div>
-                    <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text"
-                            @click="deleteSuppliersDialog = false" />
-                        <Button label="Có" icon="pi pi-check" class="p-button-danger"
-                            @click="deleteSelectedSuppliers" />
-                    </template>
-                </Dialog> -->
-
+              
                 <!-- Modal Thêm Nhà Cung Cấp -->
                 <Dialog v-model:visible="addSupplierDialog" :style="{ width: '500px' }" header="Thêm Nhà Cung Cấp" modal
                     class="custom-dialog">

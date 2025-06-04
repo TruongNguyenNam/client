@@ -16,7 +16,8 @@ const model = ref([
             { label: 'Category', icon: 'pi pi-fw pi-check-square', to: '/category' },
             { label: 'Supplier', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },
             { label: 'Attribute', icon: 'pi pi-fw pi-exclamation-circle', to: '/attribute' },
-         { label: 'Discount', icon: 'pi pi-fw pi-exclamation-circle', to: '/discount' },
+            { label: 'Discount', icon: 'pi pi-fw pi-exclamation-circle', to: '/discount' },
+            { label: 'Coupon', icon: 'pi pi-fw pi-ticket', to: '/coupon' }, 
             { label: 'Tag', icon: 'pi pi-fw pi-mobile', to: '/tag', class: 'rotated-icon' },
             { label: 'Order', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
             {
