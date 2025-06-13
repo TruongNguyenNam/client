@@ -1,9 +1,26 @@
 import axios from 'axios';
-import type { ApiResponse } from "../utils/ApiResponse";
-import type { AddressResponse } from './../model/address';
+import type { ApiResponse } from "../../utils/ApiResponse";
+import type { AddressResponse } from '../../model/address';
 
 const API_URL = "http://localhost:8080/api/v1/admin/address";
 const axiosInstance = axios.create();
+
+const getAuthToken = (): string | null => {
+    return localStorage.getItem('authToken');
+};
+
+axiosInstance.interceptors.request.use(
+    (config) => {
+        const token = getAuthToken();
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const AddressService = {
     getAllAddress: async (): Promise<ApiResponse<AddressResponse[]>> => {

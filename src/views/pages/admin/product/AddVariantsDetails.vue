@@ -40,7 +40,7 @@
                   </div>
                 </template>
               </FileUpload>
-              <small class="p-error" v-if="hasImageError">Vui lòng tải lên ít nhất một hình ảnh.</small>
+              <small class="p-error" v-if="hasImageError">{{ imageErrorMessage }}</small>
               
               <!-- Hiển thị preview ảnh đã chọn -->
               <div v-if="variant.images.length > 0" class="image-preview mt-3 flex flex-wrap gap-2">
@@ -71,7 +71,7 @@
                 :class="{ 'p-invalid': hasPriceError }"
                 class="w-full"
               />
-              <small class="p-error" v-if="hasPriceError">Vui lòng nhập giá hợp lệ (lớn hơn 0).</small>
+              <small class="p-error" v-if="hasPriceError">{{ priceErrorMessage }}</small>
             </div>
 
             <div class="field col-12 md:col-6">
@@ -83,7 +83,7 @@
                 :class="{ 'p-invalid': hasStockError }"
                 class="w-full"
               />
-              <small class="p-error" v-if="hasStockError">Vui lòng nhập số lượng tồn kho hợp lệ (lớn hơn hoặc bằng 0).</small>
+              <small class="p-error" v-if="hasStockError">{{ stockErrorMessage }}</small>
             </div>
 
             <div class="field col-12">
@@ -138,7 +138,7 @@
                     </div>
                   </template>
                 </Dropdown>
-                <small class="p-error" v-if="hasAttributeIdError[index]">Vui lòng chọn thuộc tính.</small>
+                <small class="p-error" v-if="hasAttributeIdError[index]">{{ attributeIdErrorMessages[index] }}</small>
               </div>
 
               <div class="field col-12 md:col-5">
@@ -149,7 +149,7 @@
                   class="w-full"
                   :class="{ 'p-invalid': hasAttributeValueError[index] }"
                 />
-                <small class="p-error" v-if="hasAttributeValueError[index]">Vui lòng nhập giá trị.</small>
+                <small class="p-error" v-if="hasAttributeValueError[index]">{{ attributeValueErrorMessages[index] }}</small>
               </div>
 
               <div class="field col-12 md:col-2 flex align-items-end justify-content-center">
@@ -165,6 +165,9 @@
               </div>
             </div>
           </div>
+
+          <!-- Hiển thị lỗi từ backend (trùng lặp) -->
+          <small class="p-error block mt-2" v-if="hasDuplicateError">{{ duplicateErrorMessage }}</small>
 
           <small class="block mt-2 text-color-secondary" v-if="attributes.length >= productAttributes.length">
             Đã đạt tối đa số thuộc tính có thể thêm
@@ -197,8 +200,8 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { ProductAttributeService } from '../../../../service/ProductAttribueService';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
 import type { ProductAttributeResponse } from '../../../../model/productAttribute';
 import type { ProductResponse, AddProductChild } from '../../../../model/product';
 
@@ -216,6 +219,7 @@ const parentProduct = ref<ProductResponse>({
   price: null,
   stockQuantity: null,
   sportType: '',
+  originalPrice: null,
   sku: '',
   supplierName: '',
   categoryName: '',
@@ -240,17 +244,31 @@ const attributes = ref<Array<{
 
 const productAttributes = ref<ProductAttributeResponse[]>([]);
 
-// Lưu trạng thái lỗi
+// Lưu trạng thái lỗi và thông báo
 const hasImageError = ref(false);
 const hasPriceError = ref(false);
 const hasStockError = ref(false);
 const hasAttributeIdError = ref<boolean[]>([]);
 const hasAttributeValueError = ref<boolean[]>([]);
+const imageErrorMessage = ref('');
+const priceErrorMessage = ref('');
+const stockErrorMessage = ref('');
+const attributeIdErrorMessages = ref<string[]>([]);
+const attributeValueErrorMessages = ref<string[]>([]);
 
-// Cập nhật mảng lỗi khi thêm/xóa thuộc tính
+// Thêm trạng thái cho lỗi trùng lặp từ backend
+const hasDuplicateError = ref(false);
+const duplicateErrorMessage = ref('');
+
+// Cập nhật mảng lỗi và thông báo khi thêm/xóa thuộc tính
 const updateErrorArrays = () => {
   hasAttributeIdError.value = new Array(attributes.value.length).fill(false);
   hasAttributeValueError.value = new Array(attributes.value.length).fill(false);
+  attributeIdErrorMessages.value = new Array(attributes.value.length).fill('');
+  attributeValueErrorMessages.value = new Array(attributes.value.length).fill('');
+  // Reset lỗi trùng lặp khi thay đổi thuộc tính
+  hasDuplicateError.value = false;
+  duplicateErrorMessage.value = '';
 };
 
 updateErrorArrays();
@@ -270,7 +288,7 @@ const loadParentProduct = async () => {
     parentProduct.value = productData;
     updateVariantNameAndSku();
   } catch (error: any) {
-    showError('Lỗi tải thông tin sản phẩm cha', error);
+    showError('Không thể tải thông tin sản phẩm cha', error);
   }
 };
 
@@ -279,7 +297,7 @@ const loadProductAttributes = async () => {
     const response = await ProductAttributeService.getAllProductAttribute();
     productAttributes.value = response.data || [];
   } catch (error: any) {
-    showError('Lỗi tải danh sách thuộc tính', error);
+    showError('Không thể tải danh sách thuộc tính', error);
   }
 };
 
@@ -331,12 +349,14 @@ const updateVariantNameAndSku = () => {
 
 const onVariantImageUpload = (event: any) => {
   variant.images = event.files;
-  hasImageError.value = false; // Reset lỗi khi chọn ảnh
+  hasImageError.value = false;
+  imageErrorMessage.value = '';
 };
 
 const removeImage = (index: number) => {
   variant.images.splice(index, 1);
-  hasImageError.value = variant.images.length === 0; // Đặt lỗi nếu không còn ảnh
+  hasImageError.value = variant.images.length === 0;
+  imageErrorMessage.value = variant.images.length === 0 ? 'Bạn chưa chọn hình ảnh nào. Vui lòng tải lên ít nhất một hình ảnh cho sản phẩm con.' : '';
 };
 
 const getImageUrl = (file: File) => {
@@ -344,14 +364,14 @@ const getImageUrl = (file: File) => {
 };
 
 const onError = (error: any) => {
-  showError('Lỗi tải lên ảnh', error);
+  showError('Không thể tải ảnh lên', error);
 };
 
 const showError = (summary: string, error: any) => {
   toast.add({
     severity: 'error',
     summary,
-    detail: error.message || 'Đã xảy ra lỗi',
+    detail: typeof error === 'string' ? error : error.message || 'Đã xảy ra lỗi không xác định',
     life: 5000
   });
 };
@@ -363,62 +383,83 @@ const validateForm = () => {
   hasStockError.value = false;
   hasAttributeIdError.value.fill(false);
   hasAttributeValueError.value.fill(false);
+  imageErrorMessage.value = '';
+  priceErrorMessage.value = '';
+  stockErrorMessage.value = '';
+  attributeIdErrorMessages.value.fill('');
+  attributeValueErrorMessages.value.fill('');
+  hasDuplicateError.value = false;
+  duplicateErrorMessage.value = '';
 
-  // Mảng lưu trữ tất cả thông báo lỗi
+  // Tập hợp các lỗi
   const errors: string[] = [];
 
   // Kiểm tra hình ảnh
   if (variant.images.length === 0) {
     hasImageError.value = true;
-    errors.push("Hình ảnh sản phẩm con là bắt buộc. Vui lòng tải lên ít nhất một hình ảnh.");
+    imageErrorMessage.value = 'Bạn chưa chọn hình ảnh nào. Vui lòng tải lên ít nhất một hình ảnh cho sản phẩm con.';
+    errors.push(imageErrorMessage.value);
   }
 
   // Kiểm tra giá
   if (!variant.price || variant.price <= 0) {
     hasPriceError.value = true;
-    errors.push("Giá sản phẩm phải lớn hơn 0. Vui lòng nhập giá hợp lệ.");
+    priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá lớn hơn 0.';
+    errors.push(priceErrorMessage.value);
   }
 
   // Kiểm tra số lượng
   if (variant.stockQuantity === undefined || variant.stockQuantity < 0) {
     hasStockError.value = true;
-    errors.push("Số lượng tồn kho không hợp lệ. Vui lòng nhập số lớn hơn hoặc bằng 0.");
+    stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số lớn hơn hoặc bằng 0.';
+    errors.push(stockErrorMessage.value);
   }
 
   // Kiểm tra thuộc tính
   if (attributes.value.length === 0) {
-    errors.push("Vui lòng thêm ít nhất một thuộc tính cho sản phẩm con.");
+    hasAttributeIdError.value[0] = true;
+    attributeIdErrorMessages.value[0] = 'Bạn chưa thêm thuộc tính nào. Vui lòng thêm ít nhất một thuộc tính cho sản phẩm con.';
+    errors.push(attributeIdErrorMessages.value[0]);
   } else {
     for (let i = 0; i < attributes.value.length; i++) {
       const attr = attributes.value[i];
+      const attrName = productAttributes.value.find(pa => pa.id === attr.attributeId)?.name || `Thuộc tính thứ ${i + 1}`;
+
       if (!attr.attributeId) {
         hasAttributeIdError.value[i] = true;
-        errors.push(`Thuộc tính thứ ${i + 1}: Vui lòng chọn tên thuộc tính.`);
+        attributeIdErrorMessages.value[i] = `Bạn chưa chọn tên cho ${attrName}. Vui lòng chọn một thuộc tính.`;
+        errors.push(attributeIdErrorMessages.value[i]);
       }
+
       if (!attr.value.trim()) {
         hasAttributeValueError.value[i] = true;
-        errors.push(`Thuộc tính thứ ${i + 1}: Vui lòng nhập giá trị thuộc tính.`);
+        attributeValueErrorMessages.value[i] = `Bạn chưa nhập giá trị cho ${attrName}. Vui lòng nhập giá trị.`;
+        errors.push(attributeValueErrorMessages.value[i]);
       }
     }
   }
 
-  // Nếu có lỗi, hiển thị tất cả thông báo lỗi qua toast
+  // Hiển thị thông báo lỗi tổng hợp
   if (errors.length > 0) {
-    showError("Thông tin không hợp lệ", errors.join("\n"));
+    const errorMessage = errors.join(' | ');
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi dữ liệu',
+      detail: errorMessage,
+      life: 5000
+    });
     return false;
   }
 
   return true;
 };
-
 const submitVariant = async () => {
   if (!validateForm()) {
-    showError('Lỗi nhập liệu', 'Vui lòng kiểm tra lại các trường bắt buộc.');
     return;
   }
 
   isSubmitting.value = true;
-  
+
   try {
     const variantForm: AddProductChild = {
       parentProductId,
@@ -436,30 +477,80 @@ const submitVariant = async () => {
     };
 
     await ProductService.addVariantsToProduct(parentProductId, variantForm, variant.images);
-    
+
     toast.add({
       severity: 'success',
       summary: 'Thành công',
       detail: 'Thêm sản phẩm con thành công',
       life: 3000
     });
-    
+
     router.push(`/productupdateparent/${parentProductId}`);
   } catch (error: any) {
-    let errorMessage = 'Đã xảy ra lỗi khi thêm sản phẩm con';
-    if (error.response && error.response.data && error.response.data.message) {
-      errorMessage = error.response.data.message;
-      if (errorMessage.includes('Tổ hợp giá trị thuộc tính đã tồn tại')) {
-        errorMessage = 'Tổ hợp giá trị bạn nhập đã tồn tại. Vui lòng chọn giá trị khác.';
-      } else if (errorMessage.includes('Tập hợp thuộc tính không khớp')) {
-        errorMessage = 'Thuộc tính không khớp. Vui lòng chọn Size và Color.';
+    // Ghi log chi tiết để debug
+    console.error("Chi tiết lỗi đầy đủ:", JSON.stringify(error, null, 2));
+    console.error("Dữ liệu thô từ response:", JSON.stringify(error.response, null, 2));
+    console.error("Thông điệp lỗi:", error.message);
+
+    let errorMessage = 'Không thể thêm sản phẩm con';
+    hasDuplicateError.value = false;
+
+    // Lấy thông điệp lỗi từ backend
+    let backendMessage = error.message || 'Đã xảy ra lỗi không xác định';
+    if (error.response && error.response.data) {
+      if (typeof error.response.data === 'object' && error.response.data.message) {
+        backendMessage = error.response.data.message;
+      } else if (typeof error.response.data === 'string') {
+        backendMessage = error.response.data;
+      } else if (typeof error.response.data === 'object' && error.response.data.error) {
+        backendMessage = error.response.data.error;
       }
     }
-    showError('Lỗi', errorMessage);
+
+    // Ánh xạ thông điệp lỗi
+    if (typeof backendMessage === 'string') {
+      if (backendMessage.includes('Dữ liệu JSON không hợp lệ')) {
+        errorMessage = 'Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+      } else if (backendMessage.includes('Danh sách thuộc tính mới không được để trống')) {
+        errorMessage = 'Bạn chưa thêm thuộc tính nào cho sản phẩm con. Vui lòng thêm ít nhất một thuộc tính.';
+        hasAttributeIdError.value[0] = true;
+        attributeIdErrorMessages.value[0] = errorMessage;
+      } else if (backendMessage.includes('Không tìm thấy biến thể nào cho sản phẩm cha với ID')) {
+        errorMessage = 'Không tìm thấy sản phẩm cha hoặc biến thể liên quan. Vui lòng kiểm tra lại sản phẩm.';
+      } else if (backendMessage.includes('Không tìm thấy product_id đầu tiên') || backendMessage.includes('Không tìm thấy biến thể con đầu tiên')) {
+        errorMessage = 'Không tìm thấy biến thể con để tham chiếu. Vui lòng kiểm tra lại sản phẩm cha.';
+      } else if (backendMessage.includes('Tập hợp thuộc tính không khớp')) {
+        errorMessage = 'Thuộc tính không khớp với biến thể con đầu tiên. Vui lòng kiểm tra lại Size và Color.';
+      } else if (backendMessage.includes('Giá trị thuộc tính không được để trống')) {
+        errorMessage = 'Giá trị thuộc tính không được để trống. Vui lòng nhập đầy đủ giá trị.';
+        hasAttributeValueError.value = attributes.value.map(() => true);
+        attributeValueErrorMessages.value = attributes.value.map((_, i) => `Giá trị cho thuộc tính thứ ${i + 1} không được để trống`);
+      } else if (backendMessage.includes('Tổ hợp giá trị thuộc tính đã tồn tại')) {
+        errorMessage = `Sản phẩm với tổ hợp giá trị này đã tồn tại: ${backendMessage.split(': ')[1] || ''}. Vui lòng chọn giá trị khác.`;
+        hasDuplicateError.value = true;
+      } else if (backendMessage.includes('Lỗi hệ thống')) {
+        errorMessage = 'Lỗi hệ thống, vui lòng thử lại sau.';
+      } else if (backendMessage.includes('Request failed with status code 404')) {
+        errorMessage = 'Không tìm thấy sản phẩm cha hoặc endpoint. Vui lòng kiểm tra ID và kết nối.';
+      } else {
+        errorMessage = backendMessage; // Hiển thị thông điệp gốc
+      }
+    }
+
+    duplicateErrorMessage.value = errorMessage;
+    
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: errorMessage,
+      life: 4000
+    });
   } finally {
     isSubmitting.value = false;
   }
 };
+
+
 
 // Chạy khi trang tải
 onMounted(async () => {

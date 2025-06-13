@@ -214,11 +214,11 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
-import { CategoryService } from '../../../../service/CategoryService';
-import { SupplierService } from '../../../../service/SupplierService';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { ProductTagService } from '../../../../service/ProductTagService';
-import { ProductAttributeService } from '../../../../service/ProductAttribueService';
+import { CategoryService } from '../../../../service/admin/CategoryService';
+import { SupplierService } from '../../../../service/admin/SupplierService';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { ProductTagService } from '../../../../service/admin/ProductTagService';
+import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
 import type { CategoryResponse } from '../../../../model/category';
 import type { SupplierResponse } from '../../../../model/supplier';
 import type { ProductTagResponse } from '../../../../model/ProductTag';

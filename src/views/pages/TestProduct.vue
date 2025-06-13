@@ -172,17 +172,17 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { CategoryService } from '../../service/CategoryService';
-import { SupplierService } from '../../service/SupplierService';
-import { ProductService } from '../../service/ProductServiceLegacy';
-import { ProductImageService } from '../../service/ProductImageService';
+import { CategoryService } from '../../service/admin/CategoryService';
+import { SupplierService } from '../../service/admin/SupplierService';
+import { ProductService } from '../../service/admin/ProductServiceLegacy';
+import { ProductImageService } from '../../service/admin/ProductImageService';
 import type { ProductRequest } from '../../model/product';
 import type { CategoryResponse } from '../../model/category';
 import type { SupplierResponse } from '../../model/supplier';
 import type { ProductTagResponse } from '../../model/ProductTag';
-import { ProductTagService } from '../../service/ProductTagService';
+import { ProductTagService } from '../../service/admin/ProductTagService';
 import type { ProductAttributeResponse } from '../../model/productAttribute';
-import { ProductAttributeService } from '../../service/ProductAttribueService';
+import { ProductAttributeService } from '../../service/admin/ProductAttribueService';
 import type { ProductAttributeValue } from '../../model/product';
 
 

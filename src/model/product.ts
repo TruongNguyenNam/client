@@ -33,6 +33,7 @@ export interface ProductResponse {
     name: string;
     description: string;
     price: number | null;
+    originalPrice : number | null;
     stockQuantity: number | null;
     sportType: string;
     sku: string;

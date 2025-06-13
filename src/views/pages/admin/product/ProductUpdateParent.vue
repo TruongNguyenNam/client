@@ -21,6 +21,7 @@
               v-model="product.sku" 
               placeholder="nhập mã sản phẩm" 
               :class="{'p-invalid': submitted && !product.sku}" 
+              disabled
             />
             <!-- <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small> -->
           </div>
@@ -192,11 +193,11 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
-import { CategoryService } from '../../../../service/CategoryService';
-import { SupplierService } from '../../../../service/SupplierService';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { ProductTagService } from '../../../../service/ProductTagService';
-import { ProductAttributeService } from '../../../../service/ProductAttribueService';
+import { CategoryService } from '../../../../service/admin/CategoryService';
+import { SupplierService } from '../../../../service/admin/SupplierService';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { ProductTagService } from '../../../../service/admin/ProductTagService';
+import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
 import type { CategoryResponse } from '../../../../model/category';
 import type { SupplierResponse } from '../../../../model/supplier';
 import type { ProductTagResponse } from '../../../../model/ProductTag';

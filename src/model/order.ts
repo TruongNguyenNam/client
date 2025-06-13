@@ -1,11 +1,12 @@
 export interface OrderRequest {
     id?: number;
     orderCode?: string; 
+    notes?:string;
     userId?: number;  
     items?: OrderItemRequest[]; 
     payment?: PaymentRequest;   
     couponUsageIds?: number[]; 
-    shipments?: ShipmentRequest[]; // Optional
+    shipments?: ShipmentRequest[]; 
   }
   
   export interface OrderItemRequest {
@@ -19,15 +20,17 @@ export interface OrderRequest {
   }
   
   export interface ShipmentRequest {
-    shipmentId?: number;
+    carrierId?: number;
     estimatedDeliveryDate: string;
     orderItemIds: number[];
   }
+
 
   
   export interface OrderResponse {
     id: number;
     orderCode: string;
+    notes?:string;
     address?: AddressResponse; 
     orderStatus: string;
     orderTotal: number;
@@ -82,7 +85,7 @@ export interface OrderRequest {
     shipmentDate: string; 
     shipmentStatus: string;
     trackingNumber: string;
-    carrier: string;
+    carrierName: string;
     estimatedDeliveryDate: string; 
   }
   

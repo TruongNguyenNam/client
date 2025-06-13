@@ -1,9 +1,25 @@
 import axios from 'axios';
-import type { ProductResponse } from '../model/product'; // Adjust the import path as necessary
+import type { ProductResponse } from '../../model/product'; // Adjust the import path as necessary
 import type { AxiosResponse } from 'axios';
 
 const API_URL = "http://localhost:8080/api/v1/admin/ProductImage";
 const axiosInstance = axios.create();
+const getAuthToken = (): string | null => {
+    return localStorage.getItem('accessToken');
+};
+
+axiosInstance.interceptors.request.use(
+    (config) => {
+        const token = getAuthToken();
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const ProductImageService = {
     uploadProductImages: async (images: File[]): Promise<number[]> => {

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, defineEmits } from "vue";
-import { SupplierService } from "../../../../service/SupplierService";
+import { SupplierService } from "../../../../service/admin/SupplierService";
 import { useRouter } from "vue-router";
 
 

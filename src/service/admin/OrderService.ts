@@ -1,6 +1,6 @@
 import axios from 'axios';
-import type { ApiResponse } from '../utils/ApiResponse';
-import type { OrderRequest, OrderResponse, CreateInvoiceRequest } from '../model/order';
+import type { ApiResponse } from '../../utils/ApiResponse';
+import type { OrderRequest, OrderResponse, CreateInvoiceRequest } from '../../model/order';
 
 const API_URL = 'http://localhost:8080/api/v1/admin/order';
 const axiosInstance = axios.create({
@@ -9,6 +9,23 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+const getAuthToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+      const token = getAuthToken();
+      if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+      }
+      return config;
+  },
+  (error) => {
+      return Promise.reject(error);
+  }
+);
 
 export const OrderService = {
   

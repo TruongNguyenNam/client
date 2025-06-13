@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, defineEmits } from "vue";
-import { CouponService } from "../../../../service/CouponService";
+import { CouponService } from "../../../../service/admin/CouponService";
 import { useRouter } from "vue-router";
 import type { CouponRequest } from "../../../../model/coupon";
 //Tìm kiếm theo khoảng giá trị giảm

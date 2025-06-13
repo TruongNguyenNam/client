@@ -3,7 +3,7 @@
       v-model:visible="isVisible"
       position="right"
       class="payment-toolbar"
-      :style="{ width: '500px', maxWidth: '100%' }"
+      :style="{ width: '550px', maxWidth: '100%' }"
       :dismissable="false"
       @hide="$emit('close')"
     >
@@ -74,7 +74,7 @@
         <!-- Tính tiền -->
         <div class="mb-4">
           <div class="flex justify-between mb-2">
-            <span>Tổng tiền hàng</span>
+            <span>Tổng tiền hàng: </span>
             <span class="font-medium">{{ formatCurrency(invoice.orderTotal).replace('₫', 'đ') }}</span>
           </div>
           <div class="flex justify-between mb-2">
@@ -92,7 +92,7 @@
           </div>
           <div v-if="invoice.couponUsageIds && invoice.couponUsageIds.length > 0" class="text-sm text-gray-500 mb-2">
             <span v-for="couponId in invoice.couponUsageIds" :key="couponId">
-              Mã {{ getCouponById(couponId)?.couponCode }} giảm {{ formatCurrency(getCouponById(couponId)?.couponDiscountAmount || 0).replace('₫', 'đ') }}
+                Mã {{ getCouponById(couponId)?.couponCode }} giảm {{ formatCurrency(getCouponById(couponId)?.couponDiscountAmount || 0).replace('₫', 'đ') }}
             </span>
           </div>
           <div class="flex justify-between mb-2">
@@ -102,19 +102,19 @@
               :min="0"
               :max="invoice.orderTotal"
               @input="$emit('update-total')"
-              class="w-32"
-              placeholder="Nhập số tiền giảm"
+               class="w-full md:w-80"
+              disabled
             />
           </div>
           <div class="flex justify-between mb-2 font-semibold">
-            <span>Khách cần trả</span>
-            <span>{{ formatCurrency(calculateFinalTotal()).replace('₫', 'đ') }}</span>
+            <span>Khách cần trả: </span>
+            <span class="kct" >{{ formatCurrency(calculateFinalTotal()).replace('₫', 'đ') }}</span>
           </div>
           <div class="flex justify-between mb-2">
-            <span>Khách thanh toán</span>
-            <InputNumber v-model="invoice.paidAmount" @input="$emit('update-change')" class="w-32" />
+            <span>Khách thanh toán: </span>
+            <InputNumber v-model="invoice.paidAmount" @input="$emit('update-change')" class="w-full md:w-80" />
           </div>
-          <div v-if="changeAmount > 0" class="flex justify-between mb-2 text-green-600">
+          <div v-if="changeAmount > 0" class="flex justify-between mb-2 text-green-600" >
             <span>Tiền thừa</span>
             <span>{{ formatCurrency(changeAmount).replace('₫', 'đ') }}</span>
           </div>
@@ -165,7 +165,6 @@
   import type { CouponUsageResponse } from '../../../../model/couponUsage';
   import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
   
-  // Props
   const props = defineProps<{
     invoice: any;
     customers: CustomerResponse[];
@@ -175,7 +174,6 @@
     changeAmount: number;
   }>();
   
-  // Emits
   const emit = defineEmits<{
     (e: 'update-total'): void;
     (e: 'update-change'): void;
@@ -183,13 +181,11 @@
     (e: 'complete-payment'): void;
   }>();
   
-  // State
   const selectedCustomerId = ref<number | null>(props.invoice.userId);
   const toast = useToast();
   const isVisible = ref(true);
   const localCouponUsage = ref<CouponUsageResponse[]>([]);
   
-  // Computed
   const selectedCustomer = computed(() => {
     return props.customers.find(c => c.id === selectedCustomerId.value) || null;
   });
@@ -198,7 +194,6 @@
     return props.couponUsage.find(c => c.id === id) || null;
   };
   
-  // Methods
   const fetchCouponUsage = async () => {
     if (selectedCustomerId.value) {
       try {
@@ -206,10 +201,8 @@
         if (response && response.data) {
           localCouponUsage.value = response.data;
           props.couponUsage.splice(0, props.couponUsage.length, ...localCouponUsage.value);
-          console.log("Đã cập nhật danh sách mã giảm giá cho khách hàng:", localCouponUsage.value);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách mã giảm giá:", error);
         toast.add({ 
           severity: 'error', 
           summary: 'Lỗi', 
@@ -267,8 +260,7 @@
     return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
   };
   
-  // Watch
-  watch(selectedCustomerId, async (newValue) => {
+  watch(selectedCustomerId, async () => {
     onCustomerSelect();
     await fetchCouponUsage();
   }, { immediate: true });
@@ -298,14 +290,3 @@
   }, { immediate: true });
   </script>
   
-  <style scoped>
-  .payment-toolbar {
-    width: 600px;
-  }
-  
-  @media (max-width: 992px) {
-    .payment-toolbar {
-      width: 100%;
-    }
-  }
-  </style> hãy fix lại giao diện này giúp tôi

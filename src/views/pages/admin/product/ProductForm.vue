@@ -2,11 +2,11 @@
 import { ref, reactive, onMounted, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
-import { CategoryService } from '../../../../service/CategoryService';
-import { SupplierService } from '../../../../service/SupplierService';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { ProductTagService } from '../../../../service/ProductTagService';
-import { ProductAttributeService } from '../../../../service/ProductAttribueService';
+import { CategoryService } from '../../../../service/admin/CategoryService';
+import { SupplierService } from '../../../../service/admin/SupplierService';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { ProductTagService } from '../../../../service/admin/ProductTagService';
+import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
 import type { CategoryResponse } from '../../../../model/category';
 import type { SupplierResponse } from '../../../../model/supplier';
 import type { ProductTagResponse } from '../../../../model/ProductTag';
@@ -307,7 +307,7 @@ onMounted(async () => {
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sku">SKU</label>
+            <label for="sku">Mã Sản Phẩm</label>
             <InputText id="sku" v-model="product.sku" placeholder="tự động sinh" disabled />
             <!-- <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small> -->
           </div>

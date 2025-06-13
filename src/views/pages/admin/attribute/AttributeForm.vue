@@ -19,7 +19,7 @@
   
   <script setup lang="ts">
   import { ref } from 'vue';
-  import { ProductAttributeService } from '../../../../service/ProductAttribueService' // Đảm bảo đường dẫn đúng
+  import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService' // Đảm bảo đường dẫn đúng
   
   // Khai báo các biến cần thiết cho form
   const name = ref('');

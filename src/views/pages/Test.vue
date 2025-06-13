@@ -146,7 +146,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import type { ProductResponse } from '../../model/product';
-import { ProductService } from '../../service/ProductServiceLegacy';
+import { ProductService } from '../../service/admin/ProductServiceLegacy';
 
 const listProduct = ref<ProductResponse[]>([]);
 const selectedProducts = ref<any[]>([]); // To manage selection of products

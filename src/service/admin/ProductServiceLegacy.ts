@@ -1,9 +1,38 @@
-import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild} from "../model/product";
+import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild} from "../../model/product";
 import axios from 'axios';
-import type { ApiResponse } from "../utils/ApiResponse";
+import type { ApiResponse } from "../../utils/ApiResponse";         
 const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
+
+const getAuthToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 export const ProductService = {
+
+  
+  getAllParentProducts: async (): Promise<ProductResponse[]> => {
+    try {
+      const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/parent`);
+      if (!response.data.status) {
+        throw new Error(response.data.message || "Không thể lấy được danh sách sản phẩm cha");
+      }
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Get All Parent Products Error:", error);
+      throw new Error("Không thể lấy danh sách sản phẩm. Vui lòng thử lại sau.");
+    }
+  },
 
   addVariantsToProduct: async (
     parentProductId: number,
@@ -11,52 +40,57 @@ export const ProductService = {
     variantImages: File[]
   ): Promise<ApiResponse<void>> => {
     try {
-      // Tạo bản sao của request và loại bỏ images khỏi variants
+      // Kiểm tra parentProductId
+      if (!parentProductId || isNaN(parentProductId)) {
+        console.error("Invalid parentProductId:", parentProductId);
+        throw new Error("ID sản phẩm cha không hợp lệ");
+      }
+
+      // Tạo bản sao của request và loại bỏ images
       const sanitizedRequest: AddProductChild = {
         ...request,
         variants: request.variants.map(variant => ({
           price: variant.price,
           stockQuantity: variant.stockQuantity,
-          // Không gửi images trong JSON
         })),
       };
-  
+
       const formData = new FormData();
       formData.append('request', JSON.stringify(sanitizedRequest));
-  
+
       if (variantImages && variantImages.length > 0) {
         variantImages.forEach((file) => {
           formData.append('variantImages', file);
         });
       }
-  
-      // Log kiểm tra dữ liệu gửi đi
+
+      // Log kiểm tra dữ liệu
       console.log("Sending FormData for addVariantsToProduct:");
       for (const [key, value] of formData.entries()) {
         console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
-  
+
       const response = await fetch(`${API_URL}/${parentProductId}/variants`, {
         method: 'POST',
         body: formData,
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Backend Error Response:", errorData);
-        throw new Error(errorData.message || `Failed to add variants (Status: ${response.status})`);
-      }
-  
+
       const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Backend Error Response:", data);
+        throw new Error(data.message || `Request failed with status code ${response.status}`);
+      }
+
       console.log("Backend Success Response:", data);
       return {
         status: response.status,
         message: data.message || 'Thêm biến thể sản phẩm thành công',
         data: undefined,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Add Variants Error:", error);
-      throw new Error("Lỗi hệ thống, vui lòng thử lại sau");
+      throw error; // Ném lỗi gốc để giữ thông điệp từ backend
     }
   },
 
@@ -113,18 +147,6 @@ export const ProductService = {
     }
   },
 
-  getAllParentProducts: async (): Promise<ProductResponse[]> => {
-    try {
-      const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/parent`);
-      if (!response.data.status) {
-        throw new Error(response.data.message || "Không thể lấy được danh sách sản phẩm cha");
-      }
-      return response.data.data || [];
-    } catch (error) {
-      console.error("Get All Parent Products Error:", error);
-      throw new Error("Không thể lấy danh sách sản phẩm. Vui lòng thử lại sau.");
-    }
-  },
 
   getAllChildProducts: async (): Promise<ApiResponse<ProductResponse[]>> => {
     try {

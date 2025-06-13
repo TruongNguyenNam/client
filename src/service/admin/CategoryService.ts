@@ -1,9 +1,26 @@
 import axios from 'axios';
-import type { CategoryResponse,CategoryRequest } from '../model/category';
-import type { ApiResponse } from "../utils/ApiResponse";
+import type { CategoryResponse,CategoryRequest } from '../../model/category';
+import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/category";
 const axiosInstance = axios.create();
+
+const getAuthToken = (): string | null => {
+    return localStorage.getItem('accessToken');
+};
+
+axiosInstance.interceptors.request.use(
+    (config) => {
+        const token = getAuthToken();
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const CategoryService = {
     getAllCategories: async (): Promise<ApiResponse<CategoryResponse[]>> => {

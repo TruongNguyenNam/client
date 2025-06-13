@@ -1,10 +1,12 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
+import ClientLayout from '@/layout/client/ClientLayout.vue'; 
 
 const router = createRouter({
     history: createWebHashHistory(),
     routes: [
         {
+            //Phía ADMIN
             path: '/',
             component: AppLayout,
             children: [
@@ -90,11 +92,13 @@ const router = createRouter({
                     name: 'discountadd',
                     component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
                 },
-                {
-                    path: '/tet',
-                    name: 'tet',
-                    component: () => import('@/views/pages/admin/discount/Tet.vue')
+
+                 {
+                    path: '/discountupdate/:id',
+                    name: 'discountupdate',
+                    component: () => import('@/views/pages/admin/discount/DiscountFromUpdate.vue')
                 },
+            
                 {
                     path: '/atributeadd',
                     name: 'atributeadd',
@@ -261,6 +265,31 @@ const router = createRouter({
 
             ]
         },
+        // Phía Client
+
+        {
+            path: '/client',
+            component: ClientLayout,
+            children: [
+              {
+                path: '',
+                name: 'client-home',
+                component: () => import('@/views/pages/client/Home.vue')
+              },
+              {
+                path: 'about',
+                name: 'client-about',
+                component: () => import('@/views/pages/client/About.vue')
+              },
+              {
+                path: 'product',
+                name: 'client-product',
+                component: () => import('@/views/pages/client/Product.vue')
+              }
+            ]
+          },
+
+
         {
             path: '/landing',
             name: 'landing',

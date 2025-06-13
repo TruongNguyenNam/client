@@ -15,3 +15,6 @@ export interface CustomerResponse {
     isActive: boolean;
     gender: string;
   }
+
+
+  
