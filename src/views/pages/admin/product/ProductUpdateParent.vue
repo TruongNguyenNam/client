@@ -198,11 +198,11 @@ import { SupplierService } from '../../../../service/admin/SupplierService';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
 import { ProductTagService } from '../../../../service/admin/ProductTagService';
 import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
-import type { CategoryResponse } from '../../../../model/category';
-import type { SupplierResponse } from '../../../../model/supplier';
-import type { ProductTagResponse } from '../../../../model/ProductTag';
-import type { ProductUpdateParent, ProductResponse } from '../../../../model/product';
-import type { ProductAttributeResponse } from '../../../../model/productAttribute';
+import type { CategoryResponse } from '../../../../model/admin/category';
+import type { SupplierResponse } from '../../../../model/admin/supplier';
+import type { ProductTagResponse } from '../../../../model/admin/ProductTag';
+import type { ProductUpdateParent, ProductResponse } from '../../../../model/admin/product';
+import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 

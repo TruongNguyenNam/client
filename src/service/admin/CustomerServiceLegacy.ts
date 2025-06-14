@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
-import type { CustomerResponse } from '../../model/customer';
+import type { CustomerResponse } from '../../model/admin/customer';
 
 const API_URL = "http://localhost:8080/api/v1/admin/customers";
 const axiosInstance = axios.create();

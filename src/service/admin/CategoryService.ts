@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { CategoryResponse,CategoryRequest } from '../../model/category';
+import type { CategoryResponse,CategoryRequest } from '../../model/admin/category';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/category";

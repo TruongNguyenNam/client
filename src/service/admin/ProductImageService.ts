@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ProductResponse } from '../../model/product'; // Adjust the import path as necessary
+import type { ProductResponse } from '../../model/admin/product'; // Adjust the import path as necessary
 import type { AxiosResponse } from 'axios';
 
 const API_URL = "http://localhost:8080/api/v1/admin/ProductImage";

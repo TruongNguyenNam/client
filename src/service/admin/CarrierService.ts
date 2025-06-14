@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { CarrierRequest,CarrierResponse } from '../../model/carrier';
+import type { CarrierRequest,CarrierResponse } from '../../model/admin/carrier';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/carrier";

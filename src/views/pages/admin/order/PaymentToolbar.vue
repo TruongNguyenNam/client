@@ -277,10 +277,10 @@ import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
 import InputText from 'primevue/inputtext';
-import type { CustomerResponse } from '../../../../model/customer';
-import type { PaymentMethodResponse } from '../../../../model/paymentMethod';
-import type { CouponUsageResponse } from '../../../../model/couponUsage';
-import type { CarrierResponse } from '../../../../model/carrier';
+import type { CustomerResponse } from '../../../../model/admin/customer';
+import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
+import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
+import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
 import CustomerDialog from './CustomerDialog.vue';
 

@@ -145,7 +145,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import type { ProductResponse } from '../../model/product';
+import type { ProductResponse } from '../../model/admin/product';
 import { ProductService } from '../../service/admin/ProductServiceLegacy';
 
 const listProduct = ref<ProductResponse[]>([]);

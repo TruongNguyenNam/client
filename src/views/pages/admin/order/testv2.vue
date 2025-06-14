@@ -159,10 +159,10 @@
   import Dropdown from 'primevue/dropdown';
   import Textarea from 'primevue/textarea';
   import Calendar from 'primevue/calendar';
-  import type { CustomerResponse } from '../../../../model/customer';
-  import type { PaymentMethodResponse } from '../../../../model/paymentMethod';
-  import type { ShipmentResponse } from '../../../../model/shipment';
-  import type { CouponUsageResponse } from '../../../../model/couponUsage';
+  import type { CustomerResponse } from '../../../../model/admin/customer';
+  import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
+  import type { ShipmentResponse } from '../../../../model/admin/shipment';
+  import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
   import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
   
   const props = defineProps<{

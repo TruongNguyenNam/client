@@ -42,13 +42,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import type { ProductResponse } from '../../../../model/product';
-import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/order';
-import type { CustomerResponse } from '../../../../model/customer';
-import type { CouponUsageResponse } from '../../../../model/couponUsage';
-import type { PaymentMethodResponse } from '../../../../model/paymentMethod';
-import type { ShipmentResponse } from '../../../../model/shipment';
-import type { CarrierResponse } from '../../../../model/carrier';
+import type { ProductResponse } from '../../../../model/admin/product';
+import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/admin/order';
+import type { CustomerResponse } from '../../../../model/admin/customer';
+import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
+import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
+import type { ShipmentResponse } from '../../../../model/admin/shipment';
+import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
 import { OrderService } from '../../../../service/admin/OrderService';

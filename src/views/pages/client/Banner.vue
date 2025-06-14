@@ -16,7 +16,7 @@
 .banner-image{
     width: 100%;
     height: 100%;
-    margin-top: 10px;
+    margin-top: 95px;
     border: 1px solid red;
 }
 

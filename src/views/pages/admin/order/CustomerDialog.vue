@@ -102,7 +102,7 @@
   import { ref, defineProps, defineEmits, watch, onMounted } from 'vue';
   import { useToast } from 'primevue/usetoast';
   import { FilterMatchMode } from 'primevue/api';
-  import type { CustomerResponse } from '../../../../model/customer';
+  import type { CustomerResponse } from '../../../../model/admin/customer';
   import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
   
   const props = defineProps<{ modelValue: boolean }>();

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = "http://localhost:8080/api/v1/admin/productTag";
 
-import type { ProductTagRequest, ProductTagResponse } from '../../model/ProductTag';
+import type { ProductTagRequest, ProductTagResponse } from '../../model/admin/ProductTag';
 import type { ApiResponse } from "../../utils/ApiResponse";
 const axiosInstance = axios.create();
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { DiscountRequest, DiscountResponse } from "../../model/discount";
+import type { DiscountRequest, DiscountResponse } from "../../model/admin/discount";
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/discount";

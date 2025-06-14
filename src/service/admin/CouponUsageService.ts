@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";
-import type { CouponUsageResponse } from '../../model/couponUsage';
-import type { CouponUsageMultiRequest } from '../../model/couponUsage';
+import type { CouponUsageResponse } from '../../model/admin/couponUsage';
+import type { CouponUsageMultiRequest } from '../../model/admin/couponUsage';
 
 
 const API_URL = "http://localhost:8080/api/v1/admin/coupon_usage";

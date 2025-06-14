@@ -1,6 +1,6 @@
 import axios from 'axios';
-import type { ProductAttributeResponse } from '../../model/productAttribute';
-import type { ProductAttributeRequest } from '../../model/productAttribute';
+import type { ProductAttributeResponse } from '../../model/admin/productAttribute';
+import type { ProductAttributeRequest } from '../../model/admin/productAttribute';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/attribute";

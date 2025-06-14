@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ProductResponse } from '../../model/product';
+import type { ProductResponseClient } from '../../model/client/product';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/client/product";
@@ -23,9 +23,9 @@ axiosInstance.interceptors.request.use(
 );
 
 export const ProductClientService = {
-    getAllChildProducts: async (): Promise<ApiResponse<ProductResponse[]>> => {
+    getAllChildProducts: async (): Promise<ApiResponse<ProductResponseClient[]>> => {
         try {
-            const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}`);
+            const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}`);
             return response.data; 
         } catch (error) {
             console.error("Get All Child Products Error:", error);

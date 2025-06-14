@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from '../../utils/ApiResponse';
-import type { OrderRequest, OrderResponse, CreateInvoiceRequest } from '../../model/order';
+import type { OrderRequest, OrderResponse, CreateInvoiceRequest } from '../../model/admin/order';
 
 const API_URL = 'http://localhost:8080/api/v1/admin/order';
 const axiosInstance = axios.create({

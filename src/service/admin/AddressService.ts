@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";
-import type { AddressResponse } from '../../model/address';
+import type { AddressResponse } from '../../model/admin/address';
 
 const API_URL = "http://localhost:8080/api/v1/admin/address";
 const axiosInstance = axios.create();

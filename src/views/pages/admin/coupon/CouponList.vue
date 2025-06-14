@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, defineEmits } from "vue";
 import { CouponService } from "../../../../service/admin/CouponService";
 import { useRouter } from "vue-router";
-import type { CouponRequest } from "../../../../model/coupon";
+import type { CouponRequest } from "../../../../model/admin/coupon";
 //Tìm kiếm theo khoảng giá trị giảm
 const minDiscount = ref<number | null>(null);
 const maxDiscount = ref<number | null>(null);

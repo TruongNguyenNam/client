@@ -176,14 +176,14 @@ import { CategoryService } from '../../service/admin/CategoryService';
 import { SupplierService } from '../../service/admin/SupplierService';
 import { ProductService } from '../../service/admin/ProductServiceLegacy';
 import { ProductImageService } from '../../service/admin/ProductImageService';
-import type { ProductRequest } from '../../model/product';
-import type { CategoryResponse } from '../../model/category';
-import type { SupplierResponse } from '../../model/supplier';
-import type { ProductTagResponse } from '../../model/ProductTag';
+import type { ProductRequest } from '../../model/admin/product';
+import type { CategoryResponse } from '../../model/admin/category';
+import type { SupplierResponse } from '../../model/admin/supplier';
+import type { ProductTagResponse } from '../../model/admin/ProductTag';
 import { ProductTagService } from '../../service/admin/ProductTagService';
-import type { ProductAttributeResponse } from '../../model/productAttribute';
+import type { ProductAttributeResponse } from '../../model/admin/productAttribute';
 import { ProductAttributeService } from '../../service/admin/ProductAttribueService';
-import type { ProductAttributeValue } from '../../model/product';
+import type { ProductAttributeValue } from '../../model/admin/product';
 
 
 const toast = useToast();

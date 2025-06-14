@@ -1,4 +1,4 @@
-import type { ApiResponse } from "./apiResponse";
+import type { ApiResponse } from "../apiResponse";
 
 export interface ProductRequest {
     name: string;
@@ -44,6 +44,12 @@ export interface ProductResponse {
     imageUrl: string[]; 
     inventories: InventoryResponse[];
 }
+
+
+
+
+
+
 
 export interface ProductAttributeValueResponse {
     id: number;
@@ -96,6 +102,11 @@ export interface AddProductChild {
     productAttributeValues: ProductAttributeValue[];
     variants: ProductVariant[];
 }
+
+
+
+
+  
 
 
 

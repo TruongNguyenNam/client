@@ -79,7 +79,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Button from 'primevue/button';
 import CartItem from './CartItem.vue';
-import type { OrderResponse } from '../../../../model/order';
+import type { OrderResponse } from '../../../../model/admin/order';
 
 const props = defineProps({
   invoiceTabs: {

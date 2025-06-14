@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";
-import type { PaymentMethodResponse } from '../../model/paymentMethod';
+import type { PaymentMethodResponse } from '../../model/admin/paymentMethod';
 
 const API_URL = "http://localhost:8080/api/v1/admin/payment_method";
 const axiosInstance = axios.create();

@@ -284,7 +284,7 @@ const router = createRouter({
               {
                 path: 'product',
                 name: 'client-product',
-                component: () => import('@/views/pages/client/Product.vue')
+                component: () => import('@/views/pages/client/product/ProductList.vue')
               }
             ]
           },

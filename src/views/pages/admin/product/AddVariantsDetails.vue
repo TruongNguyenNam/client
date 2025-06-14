@@ -202,8 +202,8 @@ import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
 import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
-import type { ProductAttributeResponse } from '../../../../model/productAttribute';
-import type { ProductResponse, AddProductChild } from '../../../../model/product';
+import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
+import type { ProductResponse, AddProductChild } from '../../../../model/admin/product';
 
 const toast = useToast();
 const router = useRouter();

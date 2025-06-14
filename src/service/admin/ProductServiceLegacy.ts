@@ -1,4 +1,4 @@
-import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild} from "../../model/product";
+import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild} from "../../model/admin/product";
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";         
 const API_URL = "http://localhost:8080/api/v1/admin/product";

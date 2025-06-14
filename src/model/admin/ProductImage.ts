@@ -1,4 +1,4 @@
-import type { ApiResponse } from "./apiResponse";
+import type { ApiResponse } from "../apiResponse";
 export interface ProductImageRequest {
     productId: number;
     imageUrl: string;

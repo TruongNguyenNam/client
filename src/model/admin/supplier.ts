@@ -1,5 +1,5 @@
 
-import type { ApiResponse } from "./apiResponse";
+import type { ApiResponse } from "../apiResponse";
 export interface SupplierRequest {
     name: string;
     description: string;

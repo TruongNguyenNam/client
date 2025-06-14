@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { SupplierRequest, SupplierResponse } from "../../model/supplier";
+import type { SupplierRequest, SupplierResponse } from "../../model/admin/supplier";
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/supplier";

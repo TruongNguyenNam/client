@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";
-import type { CouponRequest, CouponResponse } from '../../model/coupon';
+import type { CouponRequest, CouponResponse } from '../../model/admin/coupon';
 
 const API_URL = "http://localhost:8080/api/v1/admin/coupon";
 const axiosInstance = axios.create();

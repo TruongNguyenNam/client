@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";
-import type { ShipmentResponse } from '../../model/shipment';
+import type { ShipmentResponse } from '../../model/admin/shipment';
 
 const API_URL = "http://localhost:8080/api/v1/admin/shipment";
 const axiosInstance = axios.create();
