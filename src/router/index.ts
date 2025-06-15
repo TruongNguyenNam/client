@@ -57,6 +57,21 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/category/CategoryForm.vue')
                 },
                 {
+                    path: '/customers',
+                    name: 'customers',
+                    component: () => import('@/views/pages/admin/customer/CustomerList.vue')
+                },
+                {
+                    path: '/customers/edit/:id',
+                    name: 'customerEdit',
+                    component: () => import('@/views/pages/admin/customer/CustomerUpdate.vue')
+                },
+                  {
+                    path: '/customerAdd',
+                    name: 'customerAdd',
+                    component: () => import('@/views/pages/admin/customer/CustomerForm.vue')
+                },
+                {
                     path: '/supplier',
                     name: 'supplier',
                     component: () => import('@/views/pages/admin/supplier/SupplierList.vue')

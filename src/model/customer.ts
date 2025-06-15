@@ -1,4 +1,4 @@
-import type { AddressRequest } from "./address";
+import type { AddressRequest } from "../model/admin/address";
 
 export interface CustomerResponse {
   id: number;

@@ -9,4 +9,13 @@ export interface AddressResponse {
     district: string;   
     province: string;  
   }
-  
+  export interface AddressRequest {
+  street: string;
+  ward: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode: string;
+  district: string;
+  province: string;
+}

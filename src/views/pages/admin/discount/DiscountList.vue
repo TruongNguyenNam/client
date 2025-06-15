@@ -5,6 +5,10 @@ import { useToast } from 'primevue/usetoast';
 import { DiscountService } from '../../../../service/admin/DiscountService';
 import type { DiscountResponse } from '../../../../model/admin/discount';
 import router from '../../../../router';
+import { ref, onMounted, computed } from 'vue';
+import { DiscountService } from '../../../../service/DiscountService';
+import type { DiscountRequest, DiscountResponse } from "../../../../model/discount";
+import { useToast } from 'primevue/usetoast';
 
 const ListDiscount = ref<DiscountResponse[]>([]);
 const loading = ref(false);

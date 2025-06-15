@@ -14,6 +14,7 @@ const model = ref([
             // { label: 'productForm', icon: 'pi pi-fw pi-id-card', to: '/prodductadd' },
             { label: 'Product', icon: 'pi pi-fw pi-id-card', to: '/documentation' },
             { label: 'Category', icon: 'pi pi-fw pi-check-square', to: '/category' },
+            { label: 'Customer', icon: 'pi pi-fw pi-users', to: '/customers' },
             { label: 'Supplier', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },
             { label: 'Attribute', icon: 'pi pi-fw pi-exclamation-circle', to: '/attribute' },
             { label: 'Discount', icon: 'pi pi-fw pi-exclamation-circle', to: '/discount' },
