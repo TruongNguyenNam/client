@@ -300,6 +300,11 @@ const router = createRouter({
                 path: 'product',
                 name: 'client-product',
                 component: () => import('@/views/pages/client/product/ProductList.vue')
+              },
+              {
+                path: 'product/:id',
+                name: 'client-product-details',
+                component: () => import('@/views/pages/client/product/ProductDetails.vue')
               }
             ]
           },

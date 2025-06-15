@@ -159,32 +159,24 @@ export const ProductService = {
   },
 
 
-  updateParentProduct: async (id: number, productRequest: ProductUpdateParent, parentImages: File[]): Promise<string> => {
+  updateParentProduct: async (id: number, formData: FormData): Promise<string> => {
     try {
-      const formData = new FormData();
-      formData.append("product", JSON.stringify(productRequest));
-
-      if (parentImages && parentImages.length > 0) {
-        parentImages.forEach((file) => {
-          formData.append("parentImages", file, file.name);
-        });
-      }
-
       const response = await fetch(`${API_URL}/parent/${id}`, {
         method: 'PUT',
         body: formData
+        // Note: Don't set Content-Type header, let browser set it automatically
       });
-
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        throw new Error(errorResponse.message || 'Cập nhật sản phẩm cha thất bại');
-      }
-
+  
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Cập nhật sản phẩm cha thất bại');
+      }
+  
       return data.message;
     } catch (error) {
       console.error("Update Parent Product Error:", error);
-      throw new Error("Không thể cập nhật sản phẩm cha. Vui lòng thử lại sau.");
+      throw error; // Re-throw to handle in component
     }
   },
 

@@ -1,8 +1,8 @@
 import axios from 'axios';
-import type { ProductResponse } from '../../model/admin/product'; // Adjust the import path as necessary
+import type { ProductResponse } from '../../model/admin/product'; 
 import type { AxiosResponse } from 'axios';
 
-const API_URL = "http://localhost:8080/api/v1/admin/ProductImage";
+const API_URL = "http://localhost:8080/api/v1/admin/product-image";
 const axiosInstance = axios.create();
 const getAuthToken = (): string | null => {
     return localStorage.getItem('accessToken');
@@ -22,6 +22,16 @@ axiosInstance.interceptors.request.use(
 );
 
 export const ProductImageService = {
+
+    deleteProductImagesByProductId: async (productId: number) => {
+        const response = await axiosInstance.delete(`${API_URL}/product/${productId}`);
+        return response.data;
+    },
+
+
+
+    
+
     uploadProductImages: async (images: File[]): Promise<number[]> => {
         const formData = new FormData();
         images.forEach(image => {
