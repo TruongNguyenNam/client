@@ -125,14 +125,20 @@
           <div class="field col-12">
             <label for="images">Hình ảnh</label>
             <div v-if="existingImages.length > 0" class="image-preview">
-              <img 
-                v-for="(img, index) in existingImages" 
-                :key="index" 
-                :src="img.url" 
-                alt="Child Product Image" 
-                style="max-width: 100px; margin: 5px;" 
-                @error="handleImageError(index)"
-              />
+              <div v-for="(img, index) in existingImages" :key="index" class="image-container">
+                <img 
+                  :src="img.url" 
+                  alt="Child Product Image" 
+                  style="max-width: 100px; margin: 5px;" 
+                  @error="handleImageError(index)"
+                />
+                <Button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  class="delete-image-btn"
+                  @click="deleteImages(index)"
+                />
+              </div>
             </div>
             <FileUpload
               name="images"
@@ -214,16 +220,18 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
-import { CategoryService } from '../../../../service/CategoryService';
-import { SupplierService } from '../../../../service/SupplierService';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { ProductTagService } from '../../../../service/ProductTagService';
-import { ProductAttributeService } from '../../../../service/ProductAttribueService';
-import type { CategoryResponse } from '../../../../model/category';
-import type { SupplierResponse } from '../../../../model/supplier';
-import type { ProductTagResponse } from '../../../../model/ProductTag';
-import type { ProductUpdateChild, ProductResponse } from '../../../../model/product';
-import type { ProductAttributeResponse } from '../../../../model/productAttribute';
+import { CategoryService } from '../../../../service/admin/CategoryService';
+import { SupplierService } from '../../../../service/admin/SupplierService';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { ProductTagService } from '../../../../service/admin/ProductTagService';
+import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
+import type { CategoryResponse } from '../../../../model/admin/category';
+import type { SupplierResponse } from '../../../../model/admin/supplier';
+import type { ProductTagResponse } from '../../../../model/admin/ProductTag';
+import type { ProductUpdateChild, ProductResponse } from '../../../../model/admin/product';
+import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
+import { ProductImageService } from '../../../../service/admin/ProductImageService';
+
 
 const product = reactive<ProductUpdateChild>({
   name: '',
@@ -332,6 +340,28 @@ const handleImageError = (index: number) => {
   existingImages.value.splice(index, 1);
 };
 
+const deleteImages = async (index: number) => {
+  try {
+    const productId = Number(route.params.id);
+    await ProductImageService.deleteProductImagesByProductId(productId);
+    existingImages.value = [];
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Thành công', 
+      detail: 'Đã xóa tất cả ảnh của sản phẩm.', 
+      life: 3000 
+    });
+  } catch (error: any) {
+    console.error('Error deleting images:', error);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: error.message || 'Lỗi khi xóa ảnh.', 
+      life: 3000 
+    });
+  }
+};
+
 const addAttribute = () => {
   product.productAttributeValues.push({ attributeId: 0, value: '' });
 };
@@ -428,5 +458,21 @@ onMounted(async () => {
   border-radius: 5px;
   width: 200px;
   height: 40px;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+  margin: 5px;
+}
+
+.delete-image-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
 }
 </style>

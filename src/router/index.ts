@@ -1,10 +1,12 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
+import ClientLayout from '@/layout/client/ClientLayout.vue'; 
 
 const router = createRouter({
     history: createWebHashHistory(),
     routes: [
         {
+            //Phía ADMIN
             path: '/',
             component: AppLayout,
             children: [
@@ -60,31 +62,43 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/supplier/SupplierList.vue')
                 },
                 {
+                    path: '/coupon',
+                    name: 'coupon',
+                    component: () => import('@/views/pages/admin/coupon/CouponList.vue')
+                },
+                {
+                    path: '/admin/coupon/gift/:couponId',
+                    name: 'GiftCoupon',
+                    component: () => import('@/views/pages/admin/coupon/CouponForm.vue')
+                },
+                {
                     path: '/supplieraddadd',
                     name: 'supplieradd',
                     component: () => import('@/views/pages/admin/supplier/SupplierForm.vue')
                 },
-                
+
                 {
                     path: '/attribute',
                     name: 'attribute',
                     component: () => import('@/views/pages/admin/attribute/AttributeList.vue')
                 },
-                  {
+                {
                     path: '/discount',
                     name: 'discount',
                     component: () => import('@/views/pages/admin/discount/DiscountList.vue')
                 },
-                  {
+                {
                     path: '/discountadd',
                     name: 'discountadd',
                     component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
                 },
-                  {
-                    path: '/tet',
-                    name: 'tet',
-                    component: () => import('@/views/pages/admin/discount/Tet.vue')
+
+                 {
+                    path: '/discountupdate/:id',
+                    name: 'discountupdate',
+                    component: () => import('@/views/pages/admin/discount/DiscountFromUpdate.vue')
                 },
+            
                 {
                     path: '/atributeadd',
                     name: 'atributeadd',
@@ -113,7 +127,7 @@ const router = createRouter({
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
                 },
-                
+
                 {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
@@ -248,9 +262,39 @@ const router = createRouter({
                     name: 'producttest',
                     component: () => import('@/views/pages/TestProduct.vue')
                 },
-                
+
             ]
         },
+        // Phía Client
+
+        {
+            path: '/client',
+            component: ClientLayout,
+            children: [
+              {
+                path: '',
+                name: 'client-home',
+                component: () => import('@/views/pages/client/Home.vue')
+              },
+              {
+                path: 'about',
+                name: 'client-about',
+                component: () => import('@/views/pages/client/About.vue')
+              },
+              {
+                path: 'product',
+                name: 'client-product',
+                component: () => import('@/views/pages/client/product/ProductList.vue')
+              },
+              {
+                path: 'product/:id',
+                name: 'client-product-details',
+                component: () => import('@/views/pages/client/product/ProductDetails.vue')
+              }
+            ]
+          },
+
+
         {
             path: '/landing',
             name: 'landing',

@@ -21,6 +21,7 @@
               v-model="product.sku" 
               placeholder="nhập mã sản phẩm" 
               :class="{'p-invalid': submitted && !product.sku}" 
+              disabled
             />
             <!-- <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small> -->
           </div>
@@ -84,13 +85,20 @@
           <div class="field col-12">
             <label for="parentImages">Hình ảnh sản phẩm</label>
             <div v-if="existingImages.length > 0" class="image-preview">
-              <img 
-                v-for="(img, index) in existingImages" 
-                :key="index" 
-                :src="img.url" 
-                alt="Product Image" 
-                style="max-width: 100px; margin: 5px;" 
-              />
+              <div v-for="(img, index) in existingImages" :key="index" class="image-container">
+                <img 
+                  :src="img.url" 
+                  alt="Child Product Image" 
+                  style="max-width: 100px; margin: 5px;" 
+                  @error="handleImageError(index)"
+                />
+                <Button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  class="delete-image-btn"
+                  @click="deleteImages(index)"
+                />
+              </div>
             </div>
             <FileUpload
               name="parentImages"
@@ -192,16 +200,17 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
-import { CategoryService } from '../../../../service/CategoryService';
-import { SupplierService } from '../../../../service/SupplierService';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { ProductTagService } from '../../../../service/ProductTagService';
-import { ProductAttributeService } from '../../../../service/ProductAttribueService';
-import type { CategoryResponse } from '../../../../model/category';
-import type { SupplierResponse } from '../../../../model/supplier';
-import type { ProductTagResponse } from '../../../../model/ProductTag';
-import type { ProductUpdateParent, ProductResponse } from '../../../../model/product';
-import type { ProductAttributeResponse } from '../../../../model/productAttribute';
+import { CategoryService } from '../../../../service/admin/CategoryService';
+import { SupplierService } from '../../../../service/admin/SupplierService';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { ProductTagService } from '../../../../service/admin/ProductTagService';
+import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
+import type { CategoryResponse } from '../../../../model/admin/category';
+import type { SupplierResponse } from '../../../../model/admin/supplier';
+import type { ProductTagResponse } from '../../../../model/admin/ProductTag';
+import type { ProductUpdateParent, ProductResponse } from '../../../../model/admin/product';
+import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
+import { ProductImageService } from '../../../../service/admin/ProductImageService';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 
@@ -228,7 +237,6 @@ const product = reactive<ProductUpdateParent>({
   tagId: [],
   parentImages: []
 });
-
 
 const handleDelete = async (id: number) => {
   try {
@@ -299,6 +307,7 @@ const loadProductData = async () => {
 
 // Xử lý upload hình ảnh mới
 const onParentImageUpload = (event: any) => {
+  
   parentImages.value = event.files;
   product.parentImages = event.files; 
 };
@@ -312,9 +321,37 @@ const onError = (event: any) => {
   });
 };
 
+const handleImageError = (index: number) => {
+  console.log('Lỗi tải hình ảnh:', existingImages.value[index].url);
+};
+
+const deleteImages = async (index: number) => {
+  try {
+    const productId = Number(route.params.id);
+    await ProductImageService.deleteProductImagesByProductId(productId);
+    existingImages.value = [];
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Thành công', 
+      detail: 'Đã xóa tất cả ảnh của sản phẩm.', 
+      life: 3000 
+    });
+  } catch (error: any) {
+    console.error('Error deleting images:', error);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: error.message || 'Lỗi khi xóa ảnh.', 
+      life: 3000 
+    });
+  }
+};
+
 // Submit form cập nhật sản phẩm cha
 const submitProduct = async () => {
   submitted.value = true;
+  
+  // Validate required fields
   if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description) {
     toast.add({ 
       severity: 'warn', 
@@ -325,18 +362,62 @@ const submitProduct = async () => {
     return;
   }
 
+  // Check if at least one image exists (either existing or new)
+  if (existingImages.value.length === 0 && parentImages.value.length === 0) {
+    toast.add({ 
+      severity: 'warn', 
+      summary: 'Lỗi', 
+      detail: 'Vui lòng chọn ít nhất một hình ảnh sản phẩm.', 
+      life: 3000 
+    });
+    return;
+  }
+
   isSubmitting.value = true;
+  
   try {
     const productId = Number(route.params.id);
-    await ProductService.updateParentProduct(productId, product, parentImages.value);
+    const formData = new FormData();
+
+    // Prepare product data
+    const productData = {
+      name: product.name,
+      description: product.description,
+      sportType: product.sportType,
+      sku: product.sku,
+      supplierId: product.supplierId,
+      categoryId: product.categoryId,
+      tagId: Array.isArray(product.tagId) ? product.tagId : [product.tagId].filter(Boolean)
+    };
+
+    // Append product as JSON string
+    formData.append('product', JSON.stringify(productData));
+
+    // Append new images if any
+    if (parentImages.value.length > 0) {
+      parentImages.value.forEach((file) => {
+        formData.append('parentImages', file);
+      });
+    }
+
+    // Debug: Log FormData content
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value instanceof File ? value.name : value);
+    }
+
+    // Call service
+    await ProductService.updateParentProduct(productId, formData);
+    
     toast.add({ 
       severity: 'success', 
       summary: 'Thành công', 
       detail: 'Cập nhật sản phẩm thành công.', 
       life: 3000 
     });
+    
     router.push('/documentation');
   } catch (error: any) {
+    console.error('Error submitting product:', error);
     toast.add({ 
       severity: 'error', 
       summary: 'Lỗi', 
@@ -391,5 +472,21 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 0;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+  margin: 5px;
+}
+
+.delete-image-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
 }
 </style>

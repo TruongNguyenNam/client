@@ -6,7 +6,15 @@
       class="product-image" 
     />
     <div class="product-name">{{ product.name }}</div>
-    <div class="product-price">{{ formatCurrency(product.price).replace('₫', 'đ') }}</div>
+    <div class="product-price">
+      <span v-if="product.originalPrice && product.price < product.originalPrice" class="original-price">
+        <del>{{ formatCurrency(product.originalPrice).replace('₫', 'đ') }}</del>
+      </span>
+      <span class="discounted-price">{{ formatCurrency(product.price).replace('₫', 'đ') }}</span>
+      <span v-if="product.originalPrice && product.price < product.originalPrice" class="discount-percentage">
+        -{{ discountPercentage }}%
+      </span>
+    </div>
     <div class="product-stock" :class="{ 'out-of-stock': stockQuantity === 0 }">
       {{ stockQuantity === 0 ? 'Hết hàng' : `Còn hàng: ${stockQuantity}` }}
     </div>
@@ -28,6 +36,11 @@ const stockQuantity = computed(() => props.product.stockQuantity ?? 0);
 const formatCurrency = (value: number | null) => {
   return (value || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 };
+
+const discountPercentage = computed(() => {
+  if (!props.product.originalPrice || props.product.price >= props.product.originalPrice) return 0;
+  return Math.round((1 - props.product.price / props.product.originalPrice) * 100);
+});
 </script>
 
 <style scoped>
@@ -63,9 +76,28 @@ const formatCurrency = (value: number | null) => {
 
 .product-price {
   padding: 0 8px 8px;
-  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.original-price {
+  color: red;
+}
+
+.original-price del {
+  text-decoration: line-through;
+}
+
+.discounted-price {
   font-weight: 600;
   color: #e53935;
+}
+
+.discount-percentage {
+  color: red;
+  font-weight: bold;
+  font-size: 12px;
 }
 
 .product-stock {
