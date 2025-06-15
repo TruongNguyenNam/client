@@ -32,6 +32,19 @@ export const ProductClientService = {
             throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
         }
       },
+
+
+    findByParentProductId: async (id: number): Promise<ApiResponse<ProductResponseClient[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error("Get Product By Id Error:", error);
+            throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
+        }
+    }
+
     
+
 
 }

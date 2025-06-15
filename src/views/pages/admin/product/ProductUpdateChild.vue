@@ -125,14 +125,20 @@
           <div class="field col-12">
             <label for="images">Hình ảnh</label>
             <div v-if="existingImages.length > 0" class="image-preview">
-              <img 
-                v-for="(img, index) in existingImages" 
-                :key="index" 
-                :src="img.url" 
-                alt="Child Product Image" 
-                style="max-width: 100px; margin: 5px;" 
-                @error="handleImageError(index)"
-              />
+              <div v-for="(img, index) in existingImages" :key="index" class="image-container">
+                <img 
+                  :src="img.url" 
+                  alt="Child Product Image" 
+                  style="max-width: 100px; margin: 5px;" 
+                  @error="handleImageError(index)"
+                />
+                <Button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  class="delete-image-btn"
+                  @click="deleteImages(index)"
+                />
+              </div>
             </div>
             <FileUpload
               name="images"
@@ -224,6 +230,8 @@ import type { SupplierResponse } from '../../../../model/admin/supplier';
 import type { ProductTagResponse } from '../../../../model/admin/ProductTag';
 import type { ProductUpdateChild, ProductResponse } from '../../../../model/admin/product';
 import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
+import { ProductImageService } from '../../../../service/admin/ProductImageService';
+
 
 const product = reactive<ProductUpdateChild>({
   name: '',
@@ -332,6 +340,28 @@ const handleImageError = (index: number) => {
   existingImages.value.splice(index, 1);
 };
 
+const deleteImages = async (index: number) => {
+  try {
+    const productId = Number(route.params.id);
+    await ProductImageService.deleteProductImagesByProductId(productId);
+    existingImages.value = [];
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Thành công', 
+      detail: 'Đã xóa tất cả ảnh của sản phẩm.', 
+      life: 3000 
+    });
+  } catch (error: any) {
+    console.error('Error deleting images:', error);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: error.message || 'Lỗi khi xóa ảnh.', 
+      life: 3000 
+    });
+  }
+};
+
 const addAttribute = () => {
   product.productAttributeValues.push({ attributeId: 0, value: '' });
 };
@@ -428,5 +458,21 @@ onMounted(async () => {
   border-radius: 5px;
   width: 200px;
   height: 40px;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+  margin: 5px;
+}
+
+.delete-image-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
 }
 </style>

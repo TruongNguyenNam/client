@@ -21,6 +21,7 @@
           v-for="group in groupedProducts"
           :key="group.parentProductId ?? 'no-parent'"
           class="product-card"
+          @click="goToDetails(group.parentProductId)"
         >
           <div class="product-image relative">
             <img
@@ -72,11 +73,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { ProductClientService } from '../../../../service/client/ProductClientService';
 import type { ProductResponseClient } from '../../../../model/client/product';
+import { useRouter } from 'vue-router';
 
 const products = ref<ProductResponseClient[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref('');
 const imageError = ref(false);
+const router = useRouter();
 
 const fetchData = async () => {
   isLoading.value = true;
@@ -146,6 +149,18 @@ function getBrandName(name: string): string {
 function onImageError() {
   imageError.value = true;
 }
+
+
+const goToDetails = (id: number | null) => {
+  if (id !== null) {
+    router.push({ name: 'client-product-details', params: { id } });
+  } else {
+    console.error('ID is null');
+  }
+};
+
+
+
 </script>
 
 <style scoped>
