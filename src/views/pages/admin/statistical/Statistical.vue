@@ -1,285 +1,358 @@
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue';
-import ProductService from '@/service/ProductService';
-import { useLayout } from '@/layout/composables/layout';
+import { onMounted, ref } from 'vue';
+import { Statistical } from '@/service/StatisticalService';
 
-const { isDarkTheme } = useLayout();
+// Doanh thu
+const todayRevenue = ref(0);
+const monthlyRevenue = ref(0);
+const yearlyRevenue = ref(0);
+const customRevenue = ref(null);
 
-const products = ref(null);
-const lineData = reactive({
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-        {
-            label: 'First Dataset',
-            data: [65, 59, 80, 81, 56, 55, 40],
-            fill: false,
-            backgroundColor: '#2f4860',
-            borderColor: '#2f4860',
-            tension: 0.4
-        },
-        {
-            label: 'Second Dataset',
-            data: [28, 48, 40, 19, 86, 27, 90],
-            fill: false,
-            backgroundColor: '#00bb7e',
-            borderColor: '#00bb7e',
-            tension: 0.4
+// Sản phẩm & đơn hàng hôm nay
+const todayProductCount = ref(0);
+const todaySuccessOrders = ref(0);
+const todayCancelledOrders = ref(0);
+const todayReturnedOrders = ref(0);
+
+// Tháng này
+const monthlyProductCount = ref(0);
+const monthlySuccessOrders = ref(0);
+const monthlyCancelledOrders = ref(0);
+const monthlyReturnedOrders = ref(0);
+
+// Năm nay
+const yearlyProductCount = ref(0);
+const yearlySuccessOrders = ref(0);
+const yearlyCancelledOrders = ref(0);
+const yearlyReturnedOrders = ref(0);
+
+// Tùy chọn thời gian
+const customStartDate = ref(null);
+const customEndDate = ref(null);
+const customProductCount = ref(0);
+const customSuccessOrders = ref(0);
+const customCancelledOrders = ref(0);
+const customReturnedOrders = ref(0);
+
+// Sản phẩm bán chạy
+const products = ref([]);
+const filterType = ref('day'); // Mặc định lọc theo ngày
+const loading = ref(false);
+// Biến riêng cho lọc sản phẩm theo khoảng thời gian
+const rangeStartDate = ref(null);
+const rangeEndDate = ref(null);
+
+
+// Lọc theo ngày/tháng/năm
+const filterBy = async (type) => {
+    filterType.value = type;
+    loading.value = true;
+    try {
+        let res;
+        if (type === 'day') {
+            res = await Statistical.getSellingToday();
+        } else if (type === 'month') {
+            res = await Statistical.getSellingThisMonth();
+        } else if (type === 'year') {
+            res = await Statistical.getSellingThisYear();
         }
-    ]
-});
-const items = ref([
-    { label: 'Add New', icon: 'pi pi-fw pi-plus' },
-    { label: 'Remove', icon: 'pi pi-fw pi-minus' }
-]);
-const lineOptions = ref(null);
-const productService = new ProductService();
+        products.value = res.data || [];
+    } catch (err) {
+        console.error('Lỗi lọc sản phẩm:', err);
+    } finally {
+        loading.value = false;
+    }
+};
 
-onMounted(() => {
-    productService.getProductsSmall().then((data) => (products.value = data));
-});
+// Lọc theo khoảng thời gian tuỳ chọn
+const filterByCustomRange = async () => {
+    if (!rangeStartDate.value || !rangeEndDate.value) return;
+    const start = rangeStartDate.value.toISOString().split('T')[0];
+    const end = rangeEndDate.value.toISOString().split('T')[0];
+    try {
+        const res = await Statistical.getSellingBetween(start, end);
+        products.value = res.data || [];
+    } catch (err) {
+        console.error('Lỗi lọc theo khoảng thời gian:', err);
+    }
+};
 
+
+// Format tiền tệ
 const formatCurrency = (value) => {
-    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-};
-const applyLightTheme = () => {
-    lineOptions.value = {
-        plugins: {
-            legend: {
-                labels: {
-                    color: '#495057'
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#495057'
-                },
-                grid: {
-                    color: '#ebedef'
-                }
-            },
-            y: {
-                ticks: {
-                    color: '#495057'
-                },
-                grid: {
-                    color: '#ebedef'
-                }
-            }
-        }
-    };
+    return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 };
 
-const applyDarkTheme = () => {
-    lineOptions.value = {
-        plugins: {
-            legend: {
-                labels: {
-                    color: '#ebedef'
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#ebedef'
-                },
-                grid: {
-                    color: 'rgba(160, 167, 181, .3)'
-                }
-            },
-            y: {
-                ticks: {
-                    color: '#ebedef'
-                },
-                grid: {
-                    color: 'rgba(160, 167, 181, .3)'
-                }
-            }
-        }
-    };
+// Thống kê theo khoảng tùy chọn
+const fetchCustomStats = async () => {
+  if (!customStartDate.value || !customEndDate.value) return;
+  const fromDate = customStartDate.value.toISOString().split('T')[0];
+  const toDate = customEndDate.value.toISOString().split('T')[0];
+  try {
+    const data = await Statistical.getCustom(fromDate, toDate);
+    customRevenue.value = data.totalRevenue || 0;
+    customProductCount.value = data.totalSoldQuantity || 0;
+    customSuccessOrders.value = data.completedOrders || 0;
+    customCancelledOrders.value = data.cancelledOrders || 0;
+    customReturnedOrders.value = data.returnedOrders || 0;
+  } catch (err) {
+    console.error('Lỗi khi lọc tùy chọn:', err);
+  }
 };
 
-watch(
-    isDarkTheme,
-    (val) => {
-        if (val) {
-            applyDarkTheme();
-        } else {
-            applyLightTheme();
-        }
-    },
-    { immediate: true }
-);
+// Gọi dữ liệu khi mounted
+onMounted(async () => {
+    try {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const todayString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        const [
+            soldToday, soldMonth, soldYear,
+            dailyRev, monthlyRev, yearlyRev,
+            cancelledToday, completedToday, returnedToday,
+            cancelledMonth, completedMonth, returnedMonth,
+            cancelledYear, completedYear, returnedYear
+        ] = await Promise.all([
+            Statistical.getSoldToday(),
+            Statistical.getSoldThisMonth(),
+            Statistical.getSoldThisYear(),
+            Statistical.getDailyRevenue(),
+            Statistical.getMonthlyRevenue(year, month),
+            Statistical.getYearlyRevenue(year),
+            Statistical.getCancelledToday(),
+            Statistical.getCompletedToday(),
+            Statistical.getReturnedToday(),
+            Statistical.getCancelledThisMonth(),
+            Statistical.getCompletedThisMonth(),
+            Statistical.getReturnedThisMonth(),
+            Statistical.getCancelledThisYear(),
+            Statistical.getCompletedThisYear(),
+            Statistical.getReturnedThisYear()
+        ]);
+
+        todayProductCount.value = soldToday.data?.quantity || 0;
+        monthlyProductCount.value = soldMonth.data?.quantity || 0;
+        yearlyProductCount.value = soldYear.data?.quantity || 0;
+
+        todayRevenue.value = dailyRev.data?.[0]?.totalRevenue || 0;
+        monthlyRevenue.value = monthlyRev.data?.reduce((acc, cur) => acc + cur.totalRevenue, 0) || 0;
+        yearlyRevenue.value = yearlyRev.data?.reduce((acc, cur) => acc + cur.totalRevenue, 0) || 0;
+
+        todayCancelledOrders.value = (cancelledToday.data?.date === todayString) ? cancelledToday.data.totalOrders || 0 : 0;
+        todaySuccessOrders.value = (completedToday.data?.date === todayString) ? completedToday.data.totalOrders || 0 : 0;
+        todayReturnedOrders.value = (returnedToday.data?.date === todayString) ? returnedToday.data.totalOrders || 0 : 0;
+
+        monthlyCancelledOrders.value = cancelledMonth.data?.totalOrders || 0;
+        monthlySuccessOrders.value = completedMonth.data?.totalOrders || 0;
+        monthlyReturnedOrders.value = returnedMonth.data?.totalOrders || 0;
+
+        yearlyCancelledOrders.value = cancelledYear.data?.totalOrders || 0;
+        yearlySuccessOrders.value = completedYear.data?.totalOrders || 0;
+        yearlyReturnedOrders.value = returnedYear.data?.totalOrders || 0;
+
+        await filterBy(filterType.value); // Load top sản phẩm theo ngày (mặc định)
+    } catch (err) {
+        console.error('Lỗi khi tải dữ liệu:', err);
+    }
+});
 </script>
 
+
 <template>
+    <h1>Doanh Thu</h1>
     <div class="grid">
-        <div class="col-12 lg:col-6 xl:col-3">
-            <div class="card mb-0">
-                <div class="flex justify-content-between mb-3">
+        <div class="flex flex-wrap gap-6 justify-center">
+            <!-- Hôm nay -->
+            <div
+                class="card bg-cyan-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                <div class="flex items-center gap-2 mb-6">
+                    <i class="pi pi-calendar text-2xl"></i>
+                    <span class="text-xl font-semibold">Hôm nay</span>
+                </div>
+                <div class="text-4xl font-bold mb-6 break-words">
+                    {{ formatCurrency(todayRevenue) }}
+                </div>
+                <div class="grid grid-cols-4 gap-4 text-center text-base font-medium">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Orders</span>
-                        <div class="text-900 font-medium text-xl">152</div>
+                        <div class="mb-1">Sản phẩm</div>
+                        <div class="text-2xl font-semibold">{{ todayProductCount }}</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-shopping-cart text-blue-500 text-xl"></i>
+                    <div>
+                        <div class="mb-1">Đơn thành công</div>
+                        <div class="text-2xl font-semibold">{{ todaySuccessOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn huỷ</div>
+                        <div class="text-2xl font-semibold">{{ todayCancelledOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn trả</div>
+                        <div class="text-2xl font-semibold">{{ todayReturnedOrders }}</div>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">24 new </span>
-                <span class="text-500">since last visit</span>
             </div>
-        </div>
-        <div class="col-12 lg:col-6 xl:col-3">
-            <div class="card mb-0">
-                <div class="flex justify-content-between mb-3">
+
+            <!-- Tháng này -->
+            <div
+                class="card bg-indigo-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                <div class="flex items-center gap-2 mb-6">
+                    <i class="pi pi-calendar text-2xl"></i>
+                    <span class="text-xl font-semibold">Tháng này</span>
+                </div>
+                <div class="text-4xl font-bold mb-6 break-words">
+                    {{ formatCurrency(monthlyRevenue) }}
+                </div>
+                <div class="grid grid-cols-4 gap-4 text-center text-base font-medium">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Revenue</span>
-                        <div class="text-900 font-medium text-xl">$2.100</div>
+                        <div class="mb-1">Sản phẩm</div>
+                        <div class="text-2xl font-semibold">{{ monthlyProductCount }}</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-map-marker text-orange-500 text-xl"></i>
+                    <div>
+                        <div class="mb-1">Đơn thành công</div>
+                        <div class="text-2xl font-semibold">{{ monthlySuccessOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn huỷ</div>
+                        <div class="text-2xl font-semibold">{{ monthlyCancelledOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn trả</div>
+                        <div class="text-2xl font-semibold">{{ monthlyReturnedOrders }}</div>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">%52+ </span>
-                <span class="text-500">since last week</span>
             </div>
-        </div>
-        <div class="col-12 lg:col-6 xl:col-3">
-            <div class="card mb-0">
-                <div class="flex justify-content-between mb-3">
+
+            <!-- Năm nay -->
+            <div
+                class="card bg-orange-600 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                <div class="flex items-center gap-2 mb-6">
+                    <i class="pi pi-calendar text-2xl"></i>
+                    <span class="text-xl font-semibold">Năm nay</span>
+                </div>
+                <div class="text-4xl font-bold mb-6 break-words">
+                    {{ formatCurrency(yearlyRevenue) }}
+                </div>
+                <div class="grid grid-cols-4 gap-4 text-center text-base font-medium">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Customers</span>
-                        <div class="text-900 font-medium text-xl">28441</div>
+                        <div class="mb-1">Sản phẩm</div>
+                        <div class="text-2xl font-semibold">{{ yearlyProductCount }}</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-inbox text-cyan-500 text-xl"></i>
+                    <div>
+                        <div class="mb-1">Đơn thành công</div>
+                        <div class="text-2xl font-semibold">{{ yearlySuccessOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn huỷ</div>
+                        <div class="text-2xl font-semibold">{{ yearlyCancelledOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn trả</div>
+                        <div class="text-2xl font-semibold">{{ yearlyReturnedOrders }}</div>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">520 </span>
-                <span class="text-500">newly registered</span>
             </div>
-        </div>
-        <div class="col-12 lg:col-6 xl:col-3">
-            <div class="card mb-0">
-                <div class="flex justify-content-between mb-3">
+
+            <!-- Tùy chọn thời gian -->
+            <div
+                class="card bg-gray-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                <div class="flex items-center gap-2 mb-6">
+                    <i class="pi pi-calendar text-2xl"></i>
+                    <span class="text-xl font-semibold">Tùy chọn thời gian</span>
+                </div>
+
+                <div class="flex flex-wrap gap-4 items-center mb-4 text-black">
+                    <Calendar v-model="customStartDate" placeholder="Từ ngày" showIcon class="w-full md:w-1/3"
+                        dateFormat="yy-mm-dd" />
+                    <Calendar v-model="customEndDate" placeholder="Đến ngày" showIcon class="w-full md:w-1/3"
+                        dateFormat="yy-mm-dd" />
+
+                    <Button label="Lọc" icon="pi pi-filter" class="mt-1" @click="fetchCustomStats" />
+                </div>
+
+                <div v-if="customRevenue !== null" class="text-4xl font-bold text-white mb-4">
+                    {{ formatCurrency(customRevenue) }}
+                </div>
+
+                <div v-if="customRevenue !== null" class="grid grid-cols-4 gap-4 text-center text-base font-medium">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Comments</span>
-                        <div class="text-900 font-medium text-xl">152 Unread</div>
+                        <div class="mb-1">Sản phẩm</div>
+                        <div class="text-2xl font-semibold">{{ customProductCount }}</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-comment text-purple-500 text-xl"></i>
+                    <div>
+                        <div class="mb-1">Đơn thành công</div>
+                        <div class="text-2xl font-semibold">{{ customSuccessOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn huỷ</div>
+                        <div class="text-2xl font-semibold">{{ customCancelledOrders }}</div>
+                    </div>
+                    <div>
+                        <div class="mb-1">Đơn trả</div>
+                        <div class="text-2xl font-semibold">{{ customReturnedOrders }}</div>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">85 </span>
-                <span class="text-500">responded</span>
             </div>
         </div>
 
+        <!--  -->
+
         <div class="col-12 xl:col-6">
+            <!-- Bộ lọc thời gian -->
             <div class="card">
                 <h5>Recent Sales</h5>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <Button label="NGÀY" @click="filterBy('day')" />
+                    <Button label="THÁNG" @click="filterBy('month')" />
+                    <Button label="NĂM" @click="filterBy('year')" />
+                </div>
+
+                <!-- Bộ lọc theo khoảng thời gian -->
+                <div class="flex flex-wrap align-items-center gap-2 mb-3">
+                    <Calendar v-model="customStartDate" dateFormat="yy-mm-dd" placeholder="Từ ngày" showIcon />
+                    <Calendar v-model="customEndDate" dateFormat="yy-mm-dd" placeholder="Đến ngày" showIcon />
+                    <Button label="LỌC" icon="pi pi-filter" @click="filterByCustomRange" />
+                </div>
+
+                <!-- Bảng sản phẩm -->
                 <DataTable :value="products" :rows="5" :paginator="true" responsiveLayout="scroll">
+                    <Column field="id" header="ID" :sortable="true" style="width: 10%" />
                     <Column style="width: 15%">
-                        <template #header> Image </template>
+                        <template #header>Hình ảnh</template>
                         <template #body="slotProps">
-                            <img :src="'demo/images/product/' + slotProps.data.image" :alt="slotProps.data.image" width="50" class="shadow-2" />
+                            <img :src="slotProps.data.imgUrl" width="50" class="shadow-2 border-round" />
                         </template>
                     </Column>
-                    <Column field="name" header="Name" :sortable="true" style="width: 35%"></Column>
-                    <Column field="price" header="Price" :sortable="true" style="width: 35%">
-                        <template #body="slotProps">
-                            {{ formatCurrency(slotProps.data.price) }}
-                        </template>
-                    </Column>
-                    <Column style="width: 15%">
-                        <template #header> View </template>
-                        <template #body>
-                            <Button icon="pi pi-search" type="button" class="p-button-text"></Button>
-                        </template>
-                    </Column>
+                    <Column field="productName" header="Tên sản phẩm" :sortable="true" style="width: 35%" />
+                    <Column field="soldQuantity" header="Số lượng bán" :sortable="true" style="width: 30%" />
                 </DataTable>
             </div>
+
+            <!-- Top bán chạy theo % -->
             <div class="card">
                 <div class="flex justify-content-between align-items-center mb-5">
                     <h5>Best Selling Products</h5>
                     <div>
-                        <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded" @click="$refs.menu2.toggle($event)"></Button>
-                        <Menu ref="menu2" :popup="true" :model="items"></Menu>
+                        <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
+                            @click="$refs.menu2.toggle($event)" />
+                        <Menu ref="menu2" :popup="true" :model="[]" />
                     </div>
                 </div>
+
                 <ul class="list-none p-0 m-0">
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                    <li v-for="item in products" :key="item.id"
+                        class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
                         <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Space T-Shirt</span>
-                            <div class="mt-1 text-600">Clothing</div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">{{ item.productName }}</span>
+                            <div class="mt-1 text-600">Sản phẩm bán chạy</div>
                         </div>
                         <div class="mt-2 md:mt-0 flex align-items-center">
                             <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style="height: 8px">
-                                <div class="bg-orange-500 h-full" style="width: 50%"></div>
+                                <div class="bg-indigo-500 h-full" :style="{ width: item.percentage + '%' }"></div>
                             </div>
-                            <span class="text-orange-500 ml-3 font-medium">%50</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Portal Sticker</span>
-                            <div class="mt-1 text-600">Accessories</div>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style="height: 8px">
-                                <div class="bg-cyan-500 h-full" style="width: 16%"></div>
-                            </div>
-                            <span class="text-cyan-500 ml-3 font-medium">%16</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Supernova Sticker</span>
-                            <div class="mt-1 text-600">Accessories</div>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style="height: 8px">
-                                <div class="bg-pink-500 h-full" style="width: 67%"></div>
-                            </div>
-                            <span class="text-pink-500 ml-3 font-medium">%67</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Wonders Notebook</span>
-                            <div class="mt-1 text-600">Office</div>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style="height: 8px">
-                                <div class="bg-green-500 h-full" style="width: 35%"></div>
-                            </div>
-                            <span class="text-green-500 ml-3 font-medium">%35</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Mat Black Case</span>
-                            <div class="mt-1 text-600">Accessories</div>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style="height: 8px">
-                                <div class="bg-purple-500 h-full" style="width: 75%"></div>
-                            </div>
-                            <span class="text-purple-500 ml-3 font-medium">%75</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Robots T-Shirt</span>
-                            <div class="mt-1 text-600">Clothing</div>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style="height: 8px">
-                                <div class="bg-teal-500 h-full" style="width: 40%"></div>
-                            </div>
-                            <span class="text-teal-500 ml-3 font-medium">%40</span>
+                            <span class="text-indigo-500 ml-3 font-medium">{{ item.percentage }}%</span>
                         </div>
                     </li>
                 </ul>
@@ -294,7 +367,8 @@ watch(
                 <div class="flex align-items-center justify-content-between mb-4">
                     <h5>Notifications</h5>
                     <div>
-                        <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded" @click="$refs.menu1.toggle($event)"></Button>
+                        <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
+                            @click="$refs.menu1.toggle($event)"></Button>
                         <Menu ref="menu1" :popup="true" :model="items"></Menu>
                     </div>
                 </div>
@@ -302,55 +376,47 @@ watch(
                 <span class="block text-600 font-medium mb-3">TODAY</span>
                 <ul class="p-0 mx-0 mt-0 mb-4 list-none">
                     <li class="flex align-items-center py-2 border-bottom-1 surface-border">
-                        <div class="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
+                        <div
+                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
                             <i class="pi pi-dollar text-xl text-blue-500"></i>
                         </div>
-                        <span class="text-900 line-height-3"
-                            >Richard Jones
-                            <span class="text-700">has purchased a blue t-shirt for <span class="text-blue-500">79$</span></span>
+                        <span class="text-900 line-height-3">Richard Jones
+                            <span class="text-700">has purchased a blue t-shirt for <span
+                                    class="text-blue-500">79$</span></span>
                         </span>
                     </li>
                     <li class="flex align-items-center py-2">
-                        <div class="w-3rem h-3rem flex align-items-center justify-content-center bg-orange-100 border-circle mr-3 flex-shrink-0">
+                        <div
+                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-orange-100 border-circle mr-3 flex-shrink-0">
                             <i class="pi pi-download text-xl text-orange-500"></i>
                         </div>
-                        <span class="text-700 line-height-3">Your request for withdrawal of <span class="text-blue-500 font-medium">2500$</span> has been initiated.</span>
+                        <span class="text-700 line-height-3">Your request for withdrawal of <span
+                                class="text-blue-500 font-medium">2500$</span> has been initiated.</span>
                     </li>
                 </ul>
 
                 <span class="block text-600 font-medium mb-3">YESTERDAY</span>
                 <ul class="p-0 m-0 list-none">
                     <li class="flex align-items-center py-2 border-bottom-1 surface-border">
-                        <div class="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
+                        <div
+                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
                             <i class="pi pi-dollar text-xl text-blue-500"></i>
                         </div>
-                        <span class="text-900 line-height-3"
-                            >Keyser Wick
-                            <span class="text-700">has purchased a black jacket for <span class="text-blue-500">59$</span></span>
+                        <span class="text-900 line-height-3">Keyser Wick
+                            <span class="text-700">has purchased a black jacket for <span
+                                    class="text-blue-500">59$</span></span>
                         </span>
                     </li>
                     <li class="flex align-items-center py-2 border-bottom-1 surface-border">
-                        <div class="w-3rem h-3rem flex align-items-center justify-content-center bg-pink-100 border-circle mr-3 flex-shrink-0">
+                        <div
+                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-pink-100 border-circle mr-3 flex-shrink-0">
                             <i class="pi pi-question text-xl text-pink-500"></i>
                         </div>
-                        <span class="text-900 line-height-3"
-                            >Jane Davis
+                        <span class="text-900 line-height-3">Jane Davis
                             <span class="text-700">has posted a new questions about your product.</span>
                         </span>
                     </li>
                 </ul>
-            </div>
-            <div
-                class="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3"
-                style="border-radius: 1rem; background: linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1c80cf 47.88%, #ffffff 100.01%)"
-            >
-                <div>
-                    <div class="text-blue-100 font-medium text-xl mt-2 mb-3">TAKE THE NEXT STEP</div>
-                    <div class="text-white font-medium text-5xl">Try PrimeBlocks</div>
-                </div>
-                <div class="mt-4 mr-auto md:mt-0 md:mr-0">
-                    <a href="https://www.primefaces.org/primeblocks-vue" class="p-button font-bold px-5 py-3 p-button-warning p-button-rounded p-button-raised"> Get Started </a>
-                </div>
             </div>
         </div>
     </div>
