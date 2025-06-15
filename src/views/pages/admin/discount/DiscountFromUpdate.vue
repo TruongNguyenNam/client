@@ -180,32 +180,38 @@ const loadInitialData = async () => {
 }
 
 const loadDiscount = async () => {
-  if (!id) return
+  if (!id) return;
+
   try {
-    const res = await axios.get(`http://localhost:8080/api/v1/admin/discount/${id}`)
-    const data = res.data.data || res.data
+    const data = await DiscountService.getDiscountById(Number(id));
 
-    discount.value.name = data.name || ''
-    discount.value.percentValue = parseFloat(String(data.discountPercentage || '').replace(/[^\d.]/g, '')) || 0
-    discount.value.startDate = data.startDate?.slice(0, 16) || ''
-    discount.value.endDate = data.endDate?.slice(0, 16) || ''
-    discount.value.categoryIds = data.categoryIds || []
-    discount.value.priceThreshold = data.priceThreshold || 0
-    discount.value.applyToAll = data.applyToAll || false
-    discount.value.productIds = data.productResponses?.map((p: any) => p.id) || []
+    discount.value.name = data.name || '';
+    discount.value.percentValue = parseFloat(String(data.discountPercentage || '').replace(/[^\d.]/g, '')) || 0;
+    discount.value.startDate = data.startDate?.slice(0, 16) || '';
+    discount.value.endDate = data.endDate?.slice(0, 16) || '';
+    discount.value.categoryIds = data.categoryIds || [];
+    discount.value.priceThreshold = data.priceThreshold || 0;
+    discount.value.applyToAll = data.applyToAll || false;
+    discount.value.productIds = data.productResponses?.map((p: any) => p.id) || [];
 
-    // Khi đã load discount thì giữ lại các sản phẩm đã chọn (nếu có trong products)
-    selectedProducts.value = []
-    // Nếu products chưa load thì load lại danh sách sản phẩm toàn bộ trước rồi set selected
+    // ✅ Nếu danh sách sản phẩm chưa có → phải load xong rồi mới gán selectedProducts
     if (products.value.length === 0) {
-      await loadProductsAll()
+      await loadProductsAll(); // ⚠️ load toàn bộ sản phẩm trước
     }
-    // Lấy sản phẩm đã chọn dựa trên productIds, có thể chưa có trong products hiện tại
-    selectedProducts.value = products.value.filter(p => discount.value.productIds.includes(p.id))
+
+    // ✅ Gán lại selectedProducts dựa trên productIds
+    selectedProducts.value = products.value.filter(p =>
+      discount.value.productIds.includes(p.id)
+    );
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Lỗi tải chi tiết', detail: 'Không tìm thấy khuyến mãi hoặc lỗi server.', life: 4000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi tải chi tiết',
+      detail: 'Không tìm thấy khuyến mãi hoặc lỗi server.',
+      life: 4000
+    });
   }
-}
+};
 
 const loadProductsAll = async () => {
   try {
@@ -231,9 +237,9 @@ const fetchProductsByCategory = async () => {
    
   } else {
     try {
-      const res = await axios.get(`http://localhost:8080/api/v1/admin/product/findChildProductsByCate/${selectedCategoryId.value}`)
-      console.log('API response products:', res.data.data) // Log data trả về
-     products.value = res.data.data || res.data || []
+      const res = await ProductService.getChildProductsByCategoryId(selectedCategoryId.value)
+      console.log('API response products:', res) // Log data trả về
+     products.value = res
 
 
    
@@ -314,11 +320,11 @@ const doSearch = async (keyword: string) => {
   }
 
   try {
-    const res = await axios.get(
-      `http://localhost:8080/api/v1/admin/product/finByNameProductChild/${encodeURIComponent(keyword)}`
-    )
-    const data = Array.isArray(res.data) ? res.data : res.data.data || []
-    products.value = data
+    const res = await ProductService.findChildProductsByName(keyword)
+     const data = Array.isArray(res) 
+    products.value = res
+
+    
     // Giữ nguyên selectedProducts, KHÔNG đổi gì cả
   } catch {
     toast.add({ severity: 'error', summary: 'Lỗi tìm kiếm', detail: 'Không thể tìm sản phẩm.', life: 3000 })

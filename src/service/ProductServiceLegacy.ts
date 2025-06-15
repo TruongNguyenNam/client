@@ -266,11 +266,24 @@ export const ProductService = {
       console.error("Delete Product Error:", error);
       throw new Error("Không thể xóa sản phẩm. Vui lòng thử lại sau.");
     }
-  }
+  },
   
 
-
-
+getChildProductsByCategoryId: async (categoryId: number): Promise<ProductResponse[]> => {
+  const res = await axiosInstance.get<ProductResponse[]>(
+    `${API_URL}/findChildProductsByCate/${categoryId}`
+  );
+  return res.data; // ✅ không có .data
+},
+ findChildProductsByName: async (keyword: string): Promise<ProductResponse[]> => {
+    const encodedKeyword = encodeURIComponent(keyword);
+    const res = await axiosInstance.get<ProductResponse[]>(
+      `${API_URL}/finByNameProductChild/${encodedKeyword}`
+    );
+    return res.data; // ✅ nếu API trả về mảng trực tiếp
+  }
 };
+
+
 
 

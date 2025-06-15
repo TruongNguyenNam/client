@@ -90,16 +90,16 @@ const router = createRouter({
                     name: 'discountadd',
                     component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
                 },
-<<<<<<< HEAD
+
                  {
                     path: '/discountupdate/:id',
                     name: 'discountupdate',
                     component: () => import('@/views/pages/admin/discount/DiscountFromUpdate.vue')
                 },
-                  {
-=======
+                  
+
                 {
->>>>>>> f5d1f40720d06e7440a55c53cbebab7cb988cda5
+
                     path: '/tet',
                     name: 'tet',
                     component: () => import('@/views/pages/admin/discount/Tet.vue')

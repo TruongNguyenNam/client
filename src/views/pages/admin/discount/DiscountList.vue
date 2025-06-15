@@ -64,7 +64,7 @@ const searchDiscountByName = async (name: string) => {
 const filterByStatus = async (status: string) => {
   loading.value = true;
   try {
-    const response = await axios.get(`http://localhost:8080/api/v1/admin/discount/filterStatus/${status}`);
+    const response = await DiscountService.filterDiscountByStatus(status)
     ListDiscount.value = response.data ?? [];
   } catch (error) {
     toast.add({
