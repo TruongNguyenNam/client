@@ -4,7 +4,6 @@ export interface CouponRequest {
     discountAmount: number;
     expirationDate: string | null;
     startDate: string | null;
-
 }
 
 

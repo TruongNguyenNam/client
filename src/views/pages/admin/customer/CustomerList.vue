@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { CustomerService } from "../../../../service/CustomerServiceLegacy";
-import type { CustomerResponse } from "../../../../model/customer";
+import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
+import type { CustomerResponse } from "../../../../model/admin/customer";
 
 const customers = ref<CustomerResponse[]>([]);
 const loading = ref<boolean>(true);
@@ -92,7 +92,7 @@ const formatDate = (date: Date | string | null): string => {
 };
 
 const getCustomerStatus = (customer: CustomerResponse) => {
-  return { text: customer.isActive === true ? 'Hoạt động' : 'Không hoạt động', severity: customer.isActive === false ? 'success' : 'warning' };
+  return { text: customer.active === true ? 'Hoạt động' : 'Không hoạt động', severity: customer.active === false ? 'warning' : 'success' };
 };
 
 const formatGender = (gender: string | null | undefined) => {

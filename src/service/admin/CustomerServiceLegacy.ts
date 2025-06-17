@@ -1,7 +1,8 @@
 import axios from 'axios';
-import type { ApiResponse } from "../utils/ApiResponse";
-import type { CustomerRequest } from '../model/customer';
-import type { CustomerResponse } from '../model/customer';
+import type { ApiResponse } from '../../utils/ApiResponse';
+import type { CustomerRequest } from '../../model/admin/customer';
+import type { CustomerResponse } from '../../model/admin/customer';
+
 const API_URL = "http://localhost:8080/api/v1/admin/customers";
 const axiosInstance = axios.create();
 
@@ -21,7 +22,6 @@ axiosInstance.interceptors.request.use(
         return Promise.reject(error);
     }
 );
-
 export const CustomerService = {
     getAllUsers: async (): Promise<ApiResponse<CustomerResponse[]>> => {
         try {
@@ -32,6 +32,7 @@ export const CustomerService = {
             throw new Error('Failed to fetch Customer. Please try again later.');
         }
     },
+    
     getCustomersNotReceivedCoupon: async (couponId: number): Promise<ApiResponse<CustomerResponse[]>> => {
         try {
             const response = await axiosInstance.get<ApiResponse<CustomerResponse[]>>(

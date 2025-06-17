@@ -2,8 +2,8 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
-import { CustomerService } from "../../../../service/CustomerServiceLegacy";
-import type { Gender } from "../../../../model/customer";
+import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
+import type { Gender } from "../../../../model/admin/customer";
 
 const router = useRouter();
 
@@ -47,7 +47,7 @@ const handleSubmit = async () => {
         ward: wardOptions.value.find(w => w.level3_id === customer.value.ward)?.name || "",
         district: districtOptions.value.find(d => d.level2_id === customer.value.district)?.name || "",
         province: provinceOptions.find(p => p.level1_id === customer.value.province)?.name || "",
-        city: "",    
+        city: "",
         state: "",
         country: "",
         zipcode: ""
@@ -59,7 +59,7 @@ const handleSubmit = async () => {
             phoneNumber: customer.value.phoneNumber,
             gender: customer.value.gender as Gender,
             role: "CUSTOMER",                 // <-- thêm role mặc định
-            isActive: true,                   // <-- luôn active mặc định khi tạo mới
+            active: true,                   // <-- luôn active mặc định khi tạo mới
             address
         });
         router.push("/customers");

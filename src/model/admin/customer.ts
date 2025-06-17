@@ -1,7 +1,7 @@
 import type { AddressRequest } from "./address";
 
 export interface CustomerResponse {
-  id: number;
+  id?: number;
   email: string;
   username: string;
   phoneNumber: string;
@@ -14,16 +14,16 @@ export interface CustomerResponse {
   addressZipcode: string;     // Mã bưu điện
   addressDistrict: string;    // Quận/Huyện (Huyện Vĩnh Tuy)
   addressProvince: string;    // Tỉnh/Thành phố (Quận Long Biên)
-  isActive: boolean;          // Trạng thái hoạt động
+  active: boolean;          // Trạng thái hoạt động
   gender: string;             // Giới tính (MALE/FEMALE/OTHER)
 }
+
 export interface CustomerRequest {
-  id: number;
   email: string;
   username: string;
   phoneNumber: string;
   role: string;
-  isActive: boolean;
+  active: boolean;
   gender: string;
   address: AddressRequest;
 }

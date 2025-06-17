@@ -20,14 +20,6 @@ interface Coupon {
     deleted: boolean;
 }
 
-// Interface request gửi lên backend (kiểu string)
-interface CouponRequest {
-    couponName: string;
-    discountAmount: number;
-    expirationDate: string | null;
-    startDate: string | null;
-}
-
 const coupons = ref<Coupon[]>([]);
 const loading = ref<boolean>(true);
 const totalRecords = ref<number>(0);
@@ -202,7 +194,7 @@ const saveCoupon = async (): Promise<void> => {
             await CouponService.saveCoupon(toCouponRequest(coupon.value));
         }
         couponUpdateDialog.value = false;
-        await loadCoupons();        
+        await loadCoupons();
     } catch (error) { }
 };
 
@@ -337,8 +329,9 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <!-- Giá trị giảm -->
                         <div class="field">
                             <label for="add-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
-                            <InputNumber id="add-couponAmount" v-model="newCoupon.discountAmount" :min="0" mode="currency"
-                                currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
+                            <InputNumber id="add-couponAmount" v-model="newCoupon.discountAmount" :min="0"
+                                mode="currency" currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm"
+                                class="field-input" />
                         </div>
 
                         <!-- Ngày bắt đầu -->
