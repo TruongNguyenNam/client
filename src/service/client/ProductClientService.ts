@@ -42,7 +42,25 @@ export const ProductClientService = {
             console.error("Get Product By Id Error:", error);
             throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
         }
+    },
+
+    findByCategoryName: async (name: string): Promise<ApiResponse<ProductResponseClient[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/collection`, {
+                params: {
+                    category: name
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Get Product By Category Error:", error);
+            throw new Error("Không thể lấy danh sách sản phẩm theo danh mục. Vui lòng thử lại sau.");
+        }
     }
+    
+
+    
+
 
     
 

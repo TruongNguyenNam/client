@@ -23,7 +23,6 @@
               :class="{'p-invalid': submitted && !product.sku}" 
               disabled
             />
-            <!-- <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small> -->
           </div>
           <div class="field col-12 md:col-6">
             <label for="productCategory">Danh mục</label>   
@@ -80,7 +79,7 @@
               placeholder="nhập mô tả sản phẩm"
               :class="{'p-invalid': submitted && !product.description}"
             />
-              <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
+            <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
           <div class="field col-12">
             <label for="parentImages">Hình ảnh sản phẩm</label>
@@ -130,14 +129,13 @@
             :rowsPerPageOptions="[5, 10, 20]"
             responsiveLayout="scroll"
           >
-            <!-- <Column field="id" header="ID" sortable></Column> -->
             <Column field="sku" header="Mã sản phẩm" sortable></Column>
             <Column field="name" header="Tên sản phẩm" sortable></Column>
             <Column field="sportType" header="Loại sản phẩm" sortable></Column>
             <Column header="Hình ảnh">
               <template #body="slotProps">
                 <div class="image-preview">
-                    <span v-if="!slotProps.data.images || slotProps.data.images.length === 0">Không có hình ảnh</span>
+                  <span v-if="!slotProps.data.images || slotProps.data.images.length === 0">Không có hình ảnh</span>
                   <img 
                     v-else
                     v-for="(img, index) in slotProps.data.images" 
@@ -151,29 +149,23 @@
                 </div>
               </template>
             </Column>
-
             <Column header="Thao tác" style="min-width: 120px">
-            <template #body="{ data }">
-              <div class="flex align-items-center gap-2">
-                <RouterLink :to="`/productupdatechild/${data.id}`">
-                  <Button icon="pi pi-pencil" 
-                        class="p-button-rounded p-button-success" 
-                        v-tooltip.top="'Sửa'" />
-                </RouterLink>
-                <RouterLink :to="`/productdelete/${data.id}`">
+              <template #body="{ data }">
+                <div class="flex align-items-center gap-2">
+                  <RouterLink :to="`/productupdatechild/${data.id}`">
+                    <Button icon="pi pi-pencil" 
+                          class="p-button-rounded p-button-success" 
+                          v-tooltip.top="'Sửa'" />
+                  </RouterLink>
                   <Button icon="pi pi-trash" 
                           class="p-button-rounded p-button-danger"
-                          @click="handleDelete(data.id)" 
+                          @click="confirmDelete(data.id)" 
                           v-tooltip.top="'Xóa'" />
-                </RouterLink>
-              </div>
-            </template>
-          </Column>
+                </div>
+              </template>
+            </Column>
           </DataTable>
         </div>
-
-      
-
 
         <div class="flex justify-content-end mt-4">
           <Button 
@@ -193,6 +185,16 @@
       </div>
     </div>
     <Toast />
+    <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" header="Xác nhận xóa" :modal="true">
+      <div class="confirmation-content">
+        <i class="pi pi-exclamation-triangle" style="font-size: 2rem" />
+        <span>Bạn có chắc chắn muốn xóa sản phẩm này không?</span>
+      </div>
+      <template #footer>
+        <Button label="Không" icon="pi pi-times" @click="deleteDialog = false" text />
+        <Button label="Có" icon="pi pi-check" @click="handleDelete" text :loading="isDeleting" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -213,6 +215,8 @@ import type { ProductAttributeResponse } from '../../../../model/admin/productAt
 import { ProductImageService } from '../../../../service/admin/ProductImageService';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
 
 const categories = ref<CategoryResponse[]>([]);
 const suppliers = ref<SupplierResponse[]>([]);
@@ -226,6 +230,9 @@ const route = useRoute();
 const submitted = ref(false);
 const parentImages = ref<File[]>([]);
 const existingImages = ref<{ id: number; url: string }[]>([]);
+const deleteDialog = ref(false);
+const deleteId = ref<number | null>(null);
+const isDeleting = ref(false);
 
 const product = reactive<ProductUpdateParent>({
   name: '',
@@ -238,17 +245,27 @@ const product = reactive<ProductUpdateParent>({
   parentImages: []
 });
 
-const handleDelete = async (id: number) => {
-  try {
-        const message = await ProductService.deleteProduct(id);
+const confirmDelete = (id: number) => {
+  deleteId.value = id;
+  deleteDialog.value = true;
+};
 
-        toast.add({ severity: 'success', summary: 'Thành công', detail: message, life: 3000 });
-      } catch (error) {
-        toast.add({ severity: 'error', summary: 'Lỗi', detail:error, life: 3000 });
-      }
-      await loadProductData();
-    }
-  
+const handleDelete = async () => {
+  if (deleteId.value === null) return;
+
+  isDeleting.value = true;
+  try {
+    const message = await ProductService.deleteProduct(deleteId.value);
+    await loadProductData(); // Làm mới dữ liệu sau khi xóa
+    toast.add({ severity: 'success', summary: 'Thành công', detail: message, life: 3000 });
+    deleteDialog.value = false;
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: error|| 'Lỗi khi xóa sản phẩm', life: 3000 });
+  } finally {
+    isDeleting.value = false;
+    deleteId.value = null;
+  }
+};
 
 const loadProductData = async () => {
   const productId = Number(route.params.id);
@@ -286,13 +303,10 @@ const loadProductData = async () => {
       }
 
       const childProductsData = await ProductService.getProductsByParentId(productId);
-      console.log('childProductsData:', childProductsData); 
       childProducts.value = childProductsData.map(child => ({
         ...child,
         images: child.imageUrl || []
       })) || [];
-      console.log('childProducts:', childProducts.value);
-
     } catch (error) {
       console.error('Error loading product:', error);
       toast.add({ 
@@ -307,7 +321,6 @@ const loadProductData = async () => {
 
 // Xử lý upload hình ảnh mới
 const onParentImageUpload = (event: any) => {
-  
   parentImages.value = event.files;
   product.parentImages = event.files; 
 };
@@ -351,7 +364,6 @@ const deleteImages = async (index: number) => {
 const submitProduct = async () => {
   submitted.value = true;
   
-  // Validate required fields
   if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description) {
     toast.add({ 
       severity: 'warn', 
@@ -362,7 +374,6 @@ const submitProduct = async () => {
     return;
   }
 
-  // Check if at least one image exists (either existing or new)
   if (existingImages.value.length === 0 && parentImages.value.length === 0) {
     toast.add({ 
       severity: 'warn', 
@@ -379,7 +390,6 @@ const submitProduct = async () => {
     const productId = Number(route.params.id);
     const formData = new FormData();
 
-    // Prepare product data
     const productData = {
       name: product.name,
       description: product.description,
@@ -390,22 +400,18 @@ const submitProduct = async () => {
       tagId: Array.isArray(product.tagId) ? product.tagId : [product.tagId].filter(Boolean)
     };
 
-    // Append product as JSON string
     formData.append('product', JSON.stringify(productData));
 
-    // Append new images if any
     if (parentImages.value.length > 0) {
       parentImages.value.forEach((file) => {
         formData.append('parentImages', file);
       });
     }
 
-    // Debug: Log FormData content
     for (let [key, value] of formData.entries()) {
       console.log(key, value instanceof File ? value.name : value);
     }
 
-    // Call service
     await ProductService.updateParentProduct(productId, formData);
     
     toast.add({ 
@@ -465,8 +471,6 @@ onMounted(async () => {
 .short-add-btn {
   width: 195px;
   border-radius: 10px;
-  /* min-width: 50px;
-  max-width: 60px; */
   height: 40px;
   display: flex;
   align-items: center;

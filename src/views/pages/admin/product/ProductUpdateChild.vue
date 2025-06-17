@@ -191,6 +191,7 @@
               severity="secondary" 
               class="add-attribute-btn"
               @click="addAttribute" 
+              disabled
             />
           </div>
         </div>
@@ -373,13 +374,27 @@ const removeAttribute = (index: number) => {
 const submitChildProduct = async () => {
   submitted.value = true;
 
-  if (!product.description || product.price === null || product.stockQuantity === null || 
-      product.productAttributeValues.some(attr => !attr.attributeId || !attr.value) || 
-      (!existingImages.value.length && !newImages.value.length)) {
+  // Tách logic validate rõ ràng để dễ bảo trì
+  const isDescriptionValid = !!product.description;
+  const isPriceValid = product.price != null && product.price >= 20000;
+  const isStockValid = product.stockQuantity != null && product.stockQuantity > 0;
+  const isAttributeValid = product.productAttributeValues.every(attr => attr.attributeId && attr.value);
+  const hasImages = existingImages.value.length > 0 || newImages.value.length > 0;
+
+  if (!isDescriptionValid || !isPriceValid || !isStockValid || !isAttributeValid || !hasImages) {
+    let errorDetail = 'Vui lòng điền đầy đủ các trường bắt buộc.';
+    
+    if (!isPriceValid) {
+      errorDetail += ' Giá sản phẩm phải lớn hơn hoặc bằng 20,000.';
+    }
+    if (!isStockValid) {
+      errorDetail += ' Số lượng tồn phải lớn hơn 0.';
+    }
+
     toast.add({ 
       severity: 'warn', 
       summary: 'Lỗi kiểm tra', 
-      detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', 
+      detail: errorDetail, 
       life: 3000 
     });
     return;
@@ -388,6 +403,7 @@ const submitChildProduct = async () => {
   isSubmitting.value = true;
   try {
     const productId = Number(route.params.id);
+
     console.log('Submitting child product:', {
       description: product.description,
       price: product.price,
@@ -395,13 +411,16 @@ const submitChildProduct = async () => {
       productAttributeValues: product.productAttributeValues,
       images: newImages.value
     });
+
     await ProductService.updateChildProduct(productId, product, newImages.value);
+
     toast.add({ 
       severity: 'success', 
       summary: 'Thành công', 
       detail: 'Cập nhật sản phẩm con thành công.', 
       life: 3000 
     });
+
     router.push('/documentation');
   } catch (error: any) {
     toast.add({ 
@@ -414,6 +433,7 @@ const submitChildProduct = async () => {
     isSubmitting.value = false;
   }
 };
+
 
 onMounted(async () => {
   try {

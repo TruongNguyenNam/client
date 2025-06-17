@@ -98,20 +98,20 @@ export const ProductService = {
   addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
     try {
       console.log("Create Product Request:", productRequest);
-
+  
       const formData = new FormData();
       const requests = [productRequest];
-
+  
       // Gửi products dưới dạng chuỗi JSON (không chứa parentImages và images)
       formData.append("products", JSON.stringify(requests));
-
+  
       // Thêm parentImages
       if (parentUploadedFiles && parentUploadedFiles.length > 0) {
         parentUploadedFiles.forEach((file) => {
           formData.append("parentImages", file, file.name);
         });
       }
-
+  
       // Thêm images (ảnh của các biến thể)
       if (variantUploadedFiles && variantUploadedFiles.length > 0) {
         variantUploadedFiles.forEach((files) => {
@@ -120,30 +120,42 @@ export const ProductService = {
           });
         });
       }
-
+  
       // Log kiểm tra dữ liệu gửi đi
       console.log("FormData entries:");
       for (const [key, value] of formData.entries()) {
         console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
-
-      // Gửi API với fetch để đảm bảo xử lý FormData đúng
+  
+      // Gửi API với fetch
       const response = await fetch(API_URL, {
         method: 'POST',
         body: formData
       });
-
+  
       if (!response.ok) {
-        const errorResponse = await response.json();
-        throw new Error(`Failed to add product: ${errorResponse.message || 'Unknown error'}`);
+        // Kiểm tra Content-Type của phản hồi
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Unknown error';
+  
+        if (contentType && contentType.includes('application/json')) {
+          // Nếu phản hồi là JSON
+          const errorResponse = await response.json();
+          errorMessage = errorResponse.message || 'Unknown error';
+        } else {
+          // Nếu phản hồi là text (như trường hợp ErrorException)
+          errorMessage = await response.text();
+        }
+  
+        throw new Error(errorMessage);
       }
-
+  
       const data = await response.json();
       console.log("Create Product Response:", data);
       return data.message;
     } catch (error) {
       console.error("Unexpected Error:", error);
-      throw new Error("Không thể tạo sản phẩm. Vui lòng thử lại sau.");
+      throw error; // Ném lại lỗi để submitProduct xử lý
     }
   },
 
@@ -180,34 +192,46 @@ export const ProductService = {
     }
   },
 
-  updateChildProduct: async (childId: number, childProduct: ProductUpdateChild, images: File[]): Promise<ProductResponse> => {
-    const formData = new FormData();
+  updateChildProduct: async (
+  childId: number,
+  childProduct: ProductUpdateChild,
+  images: File[]
+): Promise<ProductResponse> => {
+  const formData = new FormData();
 
-    const payload = {
-      description: childProduct.description,
-      price: childProduct.price,
-      stockQuantity: childProduct.stockQuantity,
-      productAttributeValues: childProduct.productAttributeValues,
+  const payload = {
+    description: childProduct.description,
+    price: childProduct.price,
+    stockQuantity: childProduct.stockQuantity,
+    productAttributeValues: childProduct.productAttributeValues,
+  };
+
+  formData.append('product', JSON.stringify(payload));
+  images.forEach((image) => {
+    formData.append('images', image);
+  });
+
+  const response = await fetch(`${API_URL}/child/${childId}`, {
+    method: 'PUT',
+    body: formData,
+  });
+
+  const responseData = await response.json(); // 👈 luôn parse JSON dù response.ok hay không
+
+  if (!response.ok) {
+    // Ném lỗi chi tiết để frontend xử lý được
+    const error = new Error(responseData.message || 'Lỗi hệ thống') as Error & {
+      status?: number;
+      data?: any;
     };
+    error.status = response.status;
+    error.data = responseData.data;
+    throw error;
+  }
 
-    formData.append('product', JSON.stringify(payload));
-    images.forEach((image) => {
-      formData.append('images', image);
-    });
-
-    const response = await fetch(`${API_URL}/child/${childId}`, {
-      method: 'PUT',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update child product');
-    }
-
-    const responseData = await response.json();
-    return responseData.data || {};
+  return responseData.data || {};
   },
+
 
   searchProducts: async (
     name?: string,
