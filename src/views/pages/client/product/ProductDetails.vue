@@ -122,23 +122,31 @@
   };
   
   const fetchProductDetails = async () => {
-    const id = Number(route.params.id);
-    try {
-      const response = await ProductClientService.findByParentProductId(id);
-      if (response.status === 200 && response.data) {
-        products.value = response.data;
-        selectedProduct.value = products.value[0];
-        selectedProduct.value.productAttributeValueResponses.forEach(attr => {
-          selectedAttributes.value[attr.attributeName] = attr.value;
-        });
-      } else {
-        errorMessage.value = response.message || 'Không thể lấy chi tiết sản phẩm.';
-      }
-    } catch (error) {
-      errorMessage.value = (error as Error).message || 'Lỗi không xác định khi tải dữ liệu.';
+  const id = Number(route.params.id);
+
+  // Kiểm tra id trước khi gọi API
+  if (isNaN(id)) {
+    errorMessage.value = "ID sản phẩm không hợp lệ.";
+    return;
+  }
+
+  try {
+    const response = await ProductClientService.findByParentProductId(id);
+    if (response.status === 200 && response.data) {
+      products.value = response.data;
+      selectedProduct.value = products.value[0];
+
+      selectedProduct.value.productAttributeValueResponses.forEach(attr => {
+        selectedAttributes.value[attr.attributeName] = attr.value;
+      });
+    } else {
+      errorMessage.value = response.message || 'Không thể lấy chi tiết sản phẩm.';
     }
-  };
-  
+  } catch (error) {
+    errorMessage.value = (error as Error).message || 'Lỗi không xác định khi tải dữ liệu.';
+  }
+};
+
   onMounted(fetchProductDetails);
   
   const uniqueAttributes = computed(() => {

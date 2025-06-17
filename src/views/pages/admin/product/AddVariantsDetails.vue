@@ -391,7 +391,6 @@ const validateForm = () => {
   hasDuplicateError.value = false;
   duplicateErrorMessage.value = '';
 
-  // Tập hợp các lỗi
   const errors: string[] = [];
 
   // Kiểm tra hình ảnh
@@ -401,17 +400,17 @@ const validateForm = () => {
     errors.push(imageErrorMessage.value);
   }
 
-  // Kiểm tra giá
-  if (!variant.price || variant.price <= 0) {
+  // Kiểm tra giá (>= 20000)
+  if (variant.price === undefined || variant.price < 20000) {
     hasPriceError.value = true;
-    priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá lớn hơn 0.';
+    priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 trở lên.';
     errors.push(priceErrorMessage.value);
   }
 
-  // Kiểm tra số lượng
-  if (variant.stockQuantity === undefined || variant.stockQuantity < 0) {
+  // Kiểm tra số lượng (> 0)
+  if (variant.stockQuantity === undefined || variant.stockQuantity <= 0) {
     hasStockError.value = true;
-    stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số lớn hơn hoặc bằng 0.';
+    stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số lớn hơn 0.';
     errors.push(stockErrorMessage.value);
   }
 
@@ -453,6 +452,7 @@ const validateForm = () => {
 
   return true;
 };
+
 const submitVariant = async () => {
   if (!validateForm()) {
     return;
