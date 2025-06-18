@@ -1,14 +1,30 @@
 import axios from 'axios';
-import type { DailyRevenueResponse, MonthlyRevenueResponse, YearlyRevenueResponse } from '../model/statistical';
-import type { OrderStatusMonthResponse, OrderStatusTodayResponse, OrderStatusYearResponse, CustomStatisticalResponse } from '../model/statistical';
-import type { SoldQuantityResponse, SoldQuantityByMonthResponse, SoldQuantityByYearResponse, SellingProductsResponse } from '../model/statistical';
-import type { ApiResponse } from "../utils/ApiResponse";
+import type { DailyRevenueResponse, MonthlyRevenueResponse, YearlyRevenueResponse, MonthlyOrderTypeResponse } from '../../model/admin/statistical';
+import type { OrderStatusMonthResponse, OrderStatusTodayResponse, OrderStatusYearResponse, CustomStatisticalResponse } from '../../model/admin/statistical';
+import type { SoldQuantityResponse, SoldQuantityByMonthResponse, SoldQuantityByYearResponse, SellingProductsResponse } from '../../model/admin/statistical';
+import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/order";
 const API_URLS = "http://localhost:8080/api/v1/admin/orderItems";
 
 const axiosInstance = axios.create();
 
+const getAuthToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 export const Statistical = {
   getDailyRevenue: async (): Promise<ApiResponse<DailyRevenueResponse[]>> => {
     try {
@@ -249,7 +265,19 @@ export const Statistical = {
       console.error('Error fetching custom statistics:', error);
       throw new Error('Failed to fetch custom statistics.');
     }
+  },
+  getChart: async (): Promise<ApiResponse<MonthlyOrderTypeResponse[]>> => {
+    try {
+      const response = await axiosInstance.get<ApiResponse<MonthlyOrderTypeResponse[]>>(
+        `${API_URL}/chart/monthly-orders`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching monthly orders:', error);
+      throw new Error('Failed to fetch monthly orders.');
+    }
   }
+
 
 
 

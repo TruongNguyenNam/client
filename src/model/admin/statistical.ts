@@ -1,4 +1,4 @@
-import type { ApiResponse } from "./apiResponse";
+import type { ApiResponse } from "../apiResponse";
 export interface DailyRevenueResponse {
     day: string; 
     totalRevenue: number; 
@@ -53,6 +53,11 @@ export interface CustomStatisticalResponse{
     completedOrders : number;
     cancelledOrders : number;
     returnedOrders : number;
+}
+export interface MonthlyOrderTypeResponse{
+    month : number;
+    posOrders : number;
+    shipOrders : number;
 }
 
 

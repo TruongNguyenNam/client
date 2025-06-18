@@ -1,6 +1,32 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { Statistical } from '@/service/StatisticalService';
+import { Statistical } from '@/service/admin/StatisticalService';
+
+// Chart data: Đơn hàng theo tháng (Ship + POS)
+const monthlyOrderData = ref({
+    labels: [],
+    datasets: []
+});
+const lineData = ref({});
+const lineOptions = ref({});
+
+const monthlyOrderOptions = ref({
+    responsive: true,
+    plugins: {
+        legend: {
+            position: 'top'
+        },
+        title: {
+            display: true,
+            text: 'Số lượng đơn hàng theo tháng (POS & SHIP)'
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true
+        }
+    }
+});
 
 // Doanh thu
 const todayRevenue = ref(0);
@@ -42,7 +68,6 @@ const loading = ref(false);
 const rangeStartDate = ref(null);
 const rangeEndDate = ref(null);
 
-
 // Lọc theo ngày/tháng/năm
 const filterBy = async (type) => {
     filterType.value = type;
@@ -77,7 +102,6 @@ const filterByCustomRange = async () => {
     }
 };
 
-
 // Format tiền tệ
 const formatCurrency = (value) => {
     return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
@@ -85,20 +109,70 @@ const formatCurrency = (value) => {
 
 // Thống kê theo khoảng tùy chọn
 const fetchCustomStats = async () => {
-  if (!customStartDate.value || !customEndDate.value) return;
-  const fromDate = customStartDate.value.toISOString().split('T')[0];
-  const toDate = customEndDate.value.toISOString().split('T')[0];
-  try {
-    const data = await Statistical.getCustom(fromDate, toDate);
-    customRevenue.value = data.totalRevenue || 0;
-    customProductCount.value = data.totalSoldQuantity || 0;
-    customSuccessOrders.value = data.completedOrders || 0;
-    customCancelledOrders.value = data.cancelledOrders || 0;
-    customReturnedOrders.value = data.returnedOrders || 0;
-  } catch (err) {
-    console.error('Lỗi khi lọc tùy chọn:', err);
-  }
+    if (!customStartDate.value || !customEndDate.value) return;
+    const fromDate = customStartDate.value.toISOString().split('T')[0];
+    const toDate = customEndDate.value.toISOString().split('T')[0];
+    try {
+        const data = await Statistical.getCustom(fromDate, toDate);
+        customRevenue.value = data.totalRevenue || 0;
+        customProductCount.value = data.totalSoldQuantity || 0;
+        customSuccessOrders.value = data.completedOrders || 0;
+        customCancelledOrders.value = data.cancelledOrders || 0;
+        customReturnedOrders.value = data.returnedOrders || 0;
+    } catch (err) {
+        console.error('Lỗi khi lọc tùy chọn:', err);
+    }
 };
+
+// Load dữ liệu thống kê đơn hàng theo tháng
+const loadMonthlyOrderChart = async () => {
+    try {
+        const res = await Statistical.getChart();
+        const chartData = res.data;
+
+        // Xử lý dữ liệu cho biểu đồ
+        const labels = chartData.map(item => `Tháng ${item.month}`);
+        const posData = chartData.map(item => item.posOrders);
+        const shipData = chartData.map(item => item.shipOrders);
+
+        lineData.value = {
+            labels,
+            datasets: [
+                {
+                    label: 'Đơn bán tại chỗ',
+                    data: posData,
+                    fill: false,
+                    borderColor: '#42A5F5',
+                    tension: 0.4
+                },
+                {
+                    label: 'Đơn giao hàng',
+                    data: shipData,
+                    fill: false,
+                    borderColor: '#66BB6A',
+                    tension: 0.4
+                }
+            ]
+        };
+
+        lineOptions.value = {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: ''
+                }
+            }
+        };
+    } catch (error) {
+        console.error('Lỗi load biểu đồ đơn hàng tháng:', error);
+    }
+};
+
+
 
 // Gọi dữ liệu khi mounted
 onMounted(async () => {
@@ -154,11 +228,13 @@ onMounted(async () => {
         yearlyReturnedOrders.value = returnedYear.data?.totalOrders || 0;
 
         await filterBy(filterType.value); // Load top sản phẩm theo ngày (mặc định)
+        await loadMonthlyOrderChart(); // Tải biểu đồ đơn hàng
     } catch (err) {
         console.error('Lỗi khi tải dữ liệu:', err);
     }
 });
 </script>
+
 
 
 <template>
@@ -311,10 +387,11 @@ onMounted(async () => {
 
                 <!-- Bộ lọc theo khoảng thời gian -->
                 <div class="flex flex-wrap align-items-center gap-2 mb-3">
-                    <Calendar v-model="customStartDate" dateFormat="yy-mm-dd" placeholder="Từ ngày" showIcon />
-                    <Calendar v-model="customEndDate" dateFormat="yy-mm-dd" placeholder="Đến ngày" showIcon />
+                    <Calendar v-model="rangeStartDate" dateFormat="yy-mm-dd" placeholder="Từ ngày" showIcon />
+                    <Calendar v-model="rangeEndDate" dateFormat="yy-mm-dd" placeholder="Đến ngày" showIcon />
                     <Button label="LỌC" icon="pi pi-filter" @click="filterByCustomRange" />
                 </div>
+
 
                 <!-- Bảng sản phẩm -->
                 <DataTable :value="products" :rows="5" :paginator="true" responsiveLayout="scroll">
@@ -363,61 +440,7 @@ onMounted(async () => {
                 <h5>Sales Overview</h5>
                 <Chart type="line" :data="lineData" :options="lineOptions" />
             </div>
-            <div class="card">
-                <div class="flex align-items-center justify-content-between mb-4">
-                    <h5>Notifications</h5>
-                    <div>
-                        <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
-                            @click="$refs.menu1.toggle($event)"></Button>
-                        <Menu ref="menu1" :popup="true" :model="items"></Menu>
-                    </div>
-                </div>
 
-                <span class="block text-600 font-medium mb-3">TODAY</span>
-                <ul class="p-0 mx-0 mt-0 mb-4 list-none">
-                    <li class="flex align-items-center py-2 border-bottom-1 surface-border">
-                        <div
-                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
-                            <i class="pi pi-dollar text-xl text-blue-500"></i>
-                        </div>
-                        <span class="text-900 line-height-3">Richard Jones
-                            <span class="text-700">has purchased a blue t-shirt for <span
-                                    class="text-blue-500">79$</span></span>
-                        </span>
-                    </li>
-                    <li class="flex align-items-center py-2">
-                        <div
-                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-orange-100 border-circle mr-3 flex-shrink-0">
-                            <i class="pi pi-download text-xl text-orange-500"></i>
-                        </div>
-                        <span class="text-700 line-height-3">Your request for withdrawal of <span
-                                class="text-blue-500 font-medium">2500$</span> has been initiated.</span>
-                    </li>
-                </ul>
-
-                <span class="block text-600 font-medium mb-3">YESTERDAY</span>
-                <ul class="p-0 m-0 list-none">
-                    <li class="flex align-items-center py-2 border-bottom-1 surface-border">
-                        <div
-                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
-                            <i class="pi pi-dollar text-xl text-blue-500"></i>
-                        </div>
-                        <span class="text-900 line-height-3">Keyser Wick
-                            <span class="text-700">has purchased a black jacket for <span
-                                    class="text-blue-500">59$</span></span>
-                        </span>
-                    </li>
-                    <li class="flex align-items-center py-2 border-bottom-1 surface-border">
-                        <div
-                            class="w-3rem h-3rem flex align-items-center justify-content-center bg-pink-100 border-circle mr-3 flex-shrink-0">
-                            <i class="pi pi-question text-xl text-pink-500"></i>
-                        </div>
-                        <span class="text-900 line-height-3">Jane Davis
-                            <span class="text-700">has posted a new questions about your product.</span>
-                        </span>
-                    </li>
-                </ul>
-            </div>
         </div>
     </div>
 </template>
