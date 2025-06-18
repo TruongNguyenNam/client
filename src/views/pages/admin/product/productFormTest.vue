@@ -1,241 +1,3 @@
-<template>
-  <div class="grid">
-    <div class="col-12">
-      <div class="card">
-        <h5>Thêm sản phẩm</h5>
-        <div class="p-fluid formgrid grid">
-          <div class="field col-12 md:col-6">
-            <label for="productName">Tên sản phẩm</label>
-            <InputText id="productName" v-model="product.name" placeholder="nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" />
-            <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
-          </div>
-          <div class="field col-12 md:col-6">
-            <label for="sku">Mã Sản Phẩm</label>
-            <InputText id="sku" v-model="product.sku" placeholder="tự động sinh" disabled />
-          </div>
-          <div class="field col-12 md:col-6">
-            <label for="productCategory">Danh mục</label>
-            <Dropdown
-              id="productCategory"
-              v-model="product.categoryId"
-              :options="categories"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="chọn danh mục"
-              :class="{'p-invalid': submitted && !product.categoryId}"
-            />
-            <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
-          </div>
-          <div class="field col-12 md:col-6">
-            <label for="sportType">Loại thể thao</label>
-            <InputText id="sportType" v-model="product.sportType" placeholder="Enter sport type" />
-          </div>
-          <div class="field col-12 md:col-6">
-            <label for="productTag">Nhãn</label>
-            <MultiSelect
-              id="productTag"
-              v-model="product.tagId"
-              :options="productTags"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="chọn nhãn"
-              :multiple="true"
-            />
-          </div>
-          <div class="field col-12 md:col-6">
-            <label for="supplier">Nhà cung cấp</label>
-            <Dropdown
-              id="supplier"
-              v-model="product.supplierId"
-              :options="suppliers"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="chọn nhà cung cấp"
-              :class="{'p-invalid': submitted && !product.supplierId}"
-            />
-            <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
-          </div>
-          <div class="field col-12">
-            <label for="productDescription">Mô tả</label>
-            <Textarea 
-              id="productDescription" 
-              v-model="product.description" 
-              rows="4" 
-              placeholder="nhập mô tả"
-              :class="{'p-invalid': submitted && !product.description}"
-            />
-            <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
-          </div>
-          <div class="field col-12">
-            <label for="parentImages">Hình ảnh sản phẩm</label>
-            <FileUpload
-              name="parentImages"
-              :multiple="true"
-              accept="image/*"
-              :auto="false"
-              chooseLabel="chọn hình ảnh"
-              @select="onParentImageUpload"
-              :maxFileSize="1000000"
-              @error="onError"
-              :class="{'p-invalid': submitted && (!parentImages || parentImages.length === 0)}"
-            />
-            <small class="p-error" v-if="submitted && (!parentImages || parentImages.length === 0)">Ít nhất một hình ảnh sản phẩm là bắt buộc.</small>
-          </div>
-        </div>
-
-        <div class="variants mt-4">
-          <h3>Thuộc tính sản phẩm</h3>
-          <div class="variant-row" v-for="(variant, index) in variants" :key="index">
-            <Dropdown
-              v-model="variant.attributeId"
-              :options="availableAttributes"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Chọn thuộc tính"
-              class="variant-select"
-              @change="updateAvailableAttributes"
-            >
-              <template #value="slotProps">
-                <div v-if="slotProps.value">
-                  {{ getAttributeName(slotProps.value) }}
-                </div>
-                <span v-else>{{ slotProps.placeholder }}</span>
-              </template>
-              <template #footer>
-                <div style="text-align: start; padding: 0.5rem;">
-                  <Button
-                    label="+Thêm thuộc tính mới"
-                    @click="openAddAttributeDialog"
-                    class="p-button-text"
-                  />
-                </div>
-              </template>
-            </Dropdown>
-            <div class="variant-values">
-              <div class="p-inputgroup">
-                <InputText
-                  v-model="variant.currentValue"
-                  placeholder="nhập giá trị và nhấn Enter"
-                  class="variant-input"
-                  @keydown.enter="addVariantValue(index)"
-                />
-                <Button 
-                  icon="pi pi-plus" 
-                  @click="addVariantValue(index)"
-                  :disabled="!variant.currentValue.trim()"
-                />
-              </div>
-              <div class="value-chips mt-2">
-                <Chip
-                  v-for="(value, valueIndex) in variant.values"
-                  :key="valueIndex"
-                  :label="value"
-                  removable
-                  @remove="removeVariantValue(index, valueIndex)"
-                  class="mr-2 mb-2"
-                />
-              </div>
-            </div>
-            <Button 
-              icon="pi pi-trash" 
-              severity="danger" 
-              @click="removeVariant(index)"
-              class="align-self-start"
-            />
-          </div>
-
-          <Button 
-            label="Thêm thuộc tính" 
-            icon="pi pi-plus" 
-            @click="addVariant" 
-            class="mt-2"
-            severity="secondary"
-            :disabled="availableAttributes.length === 0"
-          />
-        </div>
-
-        <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
-          <h3>Danh sách biến thể</h3>
-          <DataTable :value="variantCombinations" responsiveLayout="scroll">
-            <Column header="Hình ảnh">
-              <template #body="slotProps">
-                <div class="variant-image-upload">
-                  <FileUpload
-                    :name="'variantImages' + slotProps.index"
-                    :multiple="true"
-                    accept="image/*"
-                    :auto="false"
-                    chooseLabel="chọn hình ảnh"
-                    @select="onVariantImageUpload(slotProps.index, $event)"
-                    :maxFileSize="1000000"
-                    @error="onError"
-                    :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
-                  />
-                </div>
-              </template>
-            </Column>
-            <Column header="Tên">
-              <template #body="slotProps">
-                {{ slotProps.data.name }}
-              </template>
-            </Column>
-            <Column header="Giá">
-              <template #body="slotProps">
-                <InputNumber 
-                  v-model="slotProps.data.price"
-                  mode="currency"
-                  currency="VND"
-                  :minFractionDigits="0"
-                  :class="{'p-invalid': submitted && slotProps.data.price === undefined}"
-                />
-              </template>
-            </Column>
-            <Column header="Kho">
-              <template #body="slotProps">
-                <InputNumber 
-                  v-model="slotProps.data.stockQuantity"
-                  :min="0"
-                  :class="{'p-invalid': submitted && slotProps.data.stockQuantity === undefined}"
-                />
-              </template>
-            </Column>
-            <Column>
-              <template #body="slotProps">
-                <Button 
-                  icon="pi pi-trash" 
-                  severity="danger" 
-                  @click="variantCombinations.splice(slotProps.index, 1)"
-                  :class="{'p-button-sm': true}"
-                />
-              </template>
-            </Column>
-          </DataTable>
-        </div>
-
-        <div class="flex justify-content-end mt-4">
-          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/documentation')" />
-          <Button
-            label="Thêm Sản Phẩm"
-            icon="pi pi-check"
-            @click="submitProduct"
-            :loading="isSubmitting"
-            :disabled="variants.length === 0"
-          />
-        </div>
-
-        <!-- Sử dụng component dialog -->
-        <AddAttribute
-          v-model:visible="addAttributeDialogVisible"
-          :product-attributes="productAttributes"
-          :available-attributes="availableAttributes"
-          @attribute-added="handleAttributeAdded"
-        />
-      </div>
-    </div>
-    <Toast />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
@@ -250,16 +12,13 @@ import type { SupplierResponse } from '../../../../model/admin/supplier';
 import type { ProductTagResponse } from '../../../../model/admin/ProductTag';
 import type { ProductRequest, ProductAttributeValue } from '../../../../model/admin/product';
 import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
-import AddAttribute from './AddAttribute.vue';
 
 const toast = useToast();
 const submitted = ref(false);
 const isSubmitting = ref(false);
 const router = useRouter();
-const addAttributeDialogVisible = ref(false);
 
 const parentImages = ref<File[]>([]);
-const productAttributes = ref<ProductAttributeResponse[]>([]);
 const availableAttributes = ref<ProductAttributeResponse[]>([]);
 
 const product = reactive<ProductRequest>({
@@ -286,7 +45,9 @@ const variantCombinations = ref<Array<{
 }>>([]);
 const categories = ref<CategoryResponse[]>([]);
 const suppliers = ref<SupplierResponse[]>([]);
+const productAttributes = ref<ProductAttributeResponse[]>([]);
 const productTags = ref<ProductTagResponse[]>([]);
+
 
 const getAttributeName = (attributeId: number) => {
   const attribute = productAttributes.value.find(attr => attr.id === attributeId);
@@ -304,13 +65,18 @@ const onError = (error: any) => {
 };
 
 const updateAvailableAttributes = () => {
+  // Lấy danh sách các attributeId đã được chọn, loại bỏ các giá trị không hợp lệ
   const selectedAttributeIds = variants.value
     .map(v => v.attributeId)
     .filter(id => id !== 0 && id !== undefined && id !== null);
 
+  // Cập nhật availableAttributes dựa trên productAttributes
   availableAttributes.value = productAttributes.value.filter(attr => 
     !selectedAttributeIds.includes(attr.id)
   );
+
+  console.log('Selected attribute IDs:', selectedAttributeIds);
+  console.log('Available attributes after update:', availableAttributes.value);
 };
 
 const addVariant = () => {
@@ -420,7 +186,7 @@ const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  if (!product.name || !product.categoryId || !product.supplierId || !product.description) {
+  if (!product.name ||  !product.categoryId || !product.supplierId || !product.description) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
@@ -500,16 +266,6 @@ const submitProduct = async () => {
   }
 };
 
-const openAddAttributeDialog = () => {
-  addAttributeDialogVisible.value = true;
-};
-
-const handleAttributeAdded = (newAttribute: ProductAttributeResponse) => {
-  productAttributes.value.push(newAttribute);
-  availableAttributes.value.push(newAttribute);
-  updateAvailableAttributes(); // Cập nhật lại danh sách availableAttributes
-};
-
 onMounted(async () => {
   try {
     const [categoriesResponse, supplierResponse, productAttributeResponse, productTagResponse] = 
@@ -525,6 +281,9 @@ onMounted(async () => {
     productAttributes.value = productAttributeResponse.data || [];
     availableAttributes.value = [...productAttributes.value];
     productTags.value = productTagResponse.data || [];
+
+    console.log('Initial product  attributes:', productAttributes.value);
+    console.log('Initial available attributes:', availableAttributes.value);
   } catch (error: any) {
     toast.add({ 
       severity: 'error', 
@@ -535,6 +294,230 @@ onMounted(async () => {
   }
 });
 </script>
+
+<template>
+  <div class="grid">
+    <div class="col-12">
+      <div class="card">
+        <h5>Thêm sản phẩm</h5>
+        <div class="p-fluid formgrid grid">
+          <div class="field col-12 md:col-6">
+            <label for="productName">Tên sản phẩm</label>
+            <InputText id="productName" v-model="product.name" placeholder="nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" />
+            <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label for="sku">Mã Sản Phẩm</label>
+            <InputText id="sku" v-model="product.sku" placeholder="tự động sinh" disabled />
+            <!-- <small class="p-error" v-if="submitted && !product.sku">SKU is required.</small> -->
+          </div>
+          <div class="field col-12 md:col-6">
+            <label for="productCategory">Danh mục</label>
+            <Dropdown
+              id="productCategory"
+              v-model="product.categoryId"
+              :options="categories"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="chọn danh mục"
+              :class="{'p-invalid': submitted && !product.categoryId}"
+            />
+            <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label for="sportType">Loại thể thao</label>
+            <InputText id="sportType" v-model="product.sportType" placeholder="Enter sport type" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label for="productTag">Nhãn</label>
+            <MultiSelect
+              id="productTag"
+              v-model="product.tagId"
+              :options="productTags"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="chọn nhãn"
+              :multiple="true"
+            />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label for="supplier">Nhà cung cấp</label>
+            <Dropdown
+              id="supplier"
+              v-model="product.supplierId"
+              :options="suppliers"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="chọn nhà cung cấp"
+              :class="{'p-invalid': submitted && !product.supplierId}"
+            />
+            <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
+          </div>
+          <div class="field col-12">
+            <label for="productDescription">Mô tả</label>
+            <Textarea 
+              id="productDescription" 
+              v-model="product.description" 
+              rows="4" 
+              placeholder="nhập mô tả"
+              :class="{'p-invalid': submitted && !product.description}"
+            />
+            <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
+          </div>
+          <div class="field col-12">
+            <label for="parentImages">Hình ảnh sản phẩm</label>
+            <FileUpload
+              name="parentImages"
+              :multiple="true"
+              accept="image/*"
+              :auto="false"
+              chooseLabel="chọn hình ảnh"
+              @select="onParentImageUpload"
+              :maxFileSize="1000000"
+              @error="onError"
+              :class="{'p-invalid': submitted && (!parentImages || parentImages.length === 0)}"
+            />
+            <small class="p-error" v-if="submitted && (!parentImages || parentImages.length === 0)">Ít nhất một hình ảnh sản phẩm là bắt buộc.</small>
+          </div>
+        </div>
+
+        <div class="variants mt-4">
+          <h3>Thuộc tính sản phẩm</h3>
+          <div class="variant-row" v-for="(variant, index) in variants" :key="index">
+            <Dropdown
+              v-model="variant.attributeId"
+              :options="availableAttributes"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Chọn thuộc tính"
+              
+              class="variant-select"
+              @change="updateAvailableAttributes"
+            >
+              <template #value="slotProps">
+                <div v-if="slotProps.value">
+                  {{ getAttributeName(slotProps.value) }}
+                </div>
+                <span v-else>{{ slotProps.placeholder }}</span>
+              </template>
+            </Dropdown>
+            <div class="variant-values">
+              <div class="p-inputgroup">
+                <InputText
+                  v-model="variant.currentValue"
+                  placeholder="nhập giá trị và nhấn Enter"
+                  class="variant-input"
+                  @keydown.enter="addVariantValue(index)"
+                />
+                <Button 
+                  icon="pi pi-plus" 
+                  @click="addVariantValue(index)"
+                  :disabled="!variant.currentValue.trim()"
+                />
+              </div>
+              <div class="value-chips mt-2">
+                <Chip
+                  v-for="(value, valueIndex) in variant.values"
+                  :key="valueIndex"
+                  :label="value"
+                  removable
+                  @remove="removeVariantValue(index, valueIndex)"
+                  class="mr-2 mb-2"
+                />
+              </div>
+            </div>
+            <Button 
+              icon="pi pi-trash" 
+              severity="danger" 
+              @click="removeVariant(index)"
+              class="align-self-start"
+            />
+          </div>
+
+          
+          <Button 
+            label="Thêm thuộc tính" 
+            icon="pi pi-plus" 
+            @click="addVariant" 
+            class="mt-2"
+            severity="secondary"
+            :disabled="availableAttributes.length === 0"
+          />
+        </div>
+
+        <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
+          <h3>Danh sách biến thể</h3>
+          <DataTable :value="variantCombinations" responsiveLayout="scroll">
+            <Column header="Hình ảnh">
+              <template #body="slotProps">
+                <div class="variant-image-upload">
+                  <FileUpload
+                    :name="'variantImages' + slotProps.index"
+                    :multiple="true"
+                    accept="image/*"
+                    :auto="false"
+                    chooseLabel="chọn hình ảnh"
+                    @select="onVariantImageUpload(slotProps.index, $event)"
+                    :maxFileSize="1000000"
+                    @error="onError"
+                    :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
+                  />
+                </div>
+              </template>
+            </Column>
+            <Column header="Tên">
+              <template #body="slotProps">
+                {{ slotProps.data.name }}
+              </template>
+            </Column>
+            <Column header="Giá">
+              <template #body="slotProps">
+                <InputNumber 
+                  v-model="slotProps.data.price"
+                  mode="currency"
+                  currency="VND"
+                  :minFractionDigits="0"
+                  :class="{'p-invalid': submitted && slotProps.data.price === undefined}"
+                />
+              </template>
+            </Column>
+            <Column header="Kho">
+              <template #body="slotProps">
+                <InputNumber 
+                  v-model="slotProps.data.stockQuantity"
+                  :min="0"
+                  :class="{'p-invalid': submitted && slotProps.data.stockQuantity === undefined}"
+                />
+              </template>
+            </Column>
+            <Column>
+              <template #body="slotProps">
+                <Button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  @click="variantCombinations.splice(slotProps.index, 1)"
+                  :class="{'p-button-sm': true}"
+                />
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+
+        <div class="flex justify-content-end mt-4">
+          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/documentation')" />
+          <Button
+            label="Thêm Sản Phẩm"
+            icon="pi pi-check"
+            @click="submitProduct"
+            :loading="isSubmitting"
+            :disabled="variants.length === 0"
+          />
+        </div>
+      </div>
+    </div>
+    <Toast />
+  </div>
+</template>
 
 <style scoped>
 .variants {

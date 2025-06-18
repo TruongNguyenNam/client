@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { DiscountService } from '../../../../service/admin/DiscountService';
 import type { DiscountResponse } from '../../../../model/admin/discount';
-import router from '../../../../router';
 
 const ListDiscount = ref<DiscountResponse[]>([]);
 const loading = ref(false);

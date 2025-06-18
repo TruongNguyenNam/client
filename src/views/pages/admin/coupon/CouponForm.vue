@@ -30,7 +30,7 @@ const loadingCoupon = ref(true);
 const loadingCustomers = ref(true);
 
 
-// DataTable selection cho phép chọn từng khách hoặc tất cả
+// DataTable selection chọn từng khách hoặc tất cả
 const selectedCustomers = ref<Customer[]>([]);
 const giftStatus = ref<{ [customerId: string]: string }>({});
 const notification = ref<{ type: "success" | "error", message: string } | null>(null);
@@ -71,6 +71,7 @@ const reloadCoupon = async () => {
     coupon.value = res.data;
   }
 };
+
 // Trạng thái hiển thị của coupon
 const getCouponDisplayStatus = (coupon: any) => {
   const now = new Date();
@@ -105,11 +106,6 @@ const handleGift = async (customer: Customer) => {
 // Tặng cho nhiều khách
 const handleGiftSelected = async () => {
   const userIds = selectedCustomers.value.map(cus => cus.id);
-  const remaining = coupon.value.quantity - (coupon.value.usedCount ?? 0);
-  if (userIds.length > remaining) {
-    showNotification("error", `Chỉ còn ${remaining} coupon, bạn không thể tặng quá số lượng này!`);
-    return;
-  }
   try {
     await CouponUsageService.giveCouponToManyCustomers({ couponId, userIds });
     userIds.forEach(id => {
@@ -158,9 +154,7 @@ const filteredCustomers = computed(() =>
     : customers.value
 );
 
-const remaining = computed(() => coupon.value.quantity - (coupon.value.usedCount ?? 0));
 const selectedCount = computed(() => selectedCustomers.value.length);
-const exceeded = computed(() => selectedCount.value - remaining.value);
 
 </script>
 
@@ -179,18 +173,11 @@ const exceeded = computed(() => selectedCount.value - remaining.value);
             <div class="coupon-left">
               <div class="coupon-circle"></div>
               <div class="coupon-code">{{ coupon.codeCoupon }}</div>
-              <div class="coupon-amount">{{ formatCurrency(coupon.couponAmount) }}</div>
+              <div class="coupon-amount">{{ formatCurrency(coupon.discountAmount) }}</div>
             </div>
             <div class="coupon-right">
               <div class="coupon-name">{{ coupon.couponName }}</div>
-              <div class="coupon-info-row">
-                <span>Số lượng:</span>
-                <span>{{ coupon.quantity }}</span>
-              </div>
-              <div class="coupon-info-row">
-                <span>Số lượng còn lại:</span>
-                <span>{{ coupon.quantity - (coupon.usedCount ?? 0) }}</span>
-              </div>
+              <!-- Đã loại bỏ hiển thị số lượng và số lượng còn lại -->
               <div class="coupon-info-row">
                 <span>Ngày bắt đầu:</span>
                 <span>{{ formatDate(coupon.startDate) }}</span>
@@ -202,6 +189,10 @@ const exceeded = computed(() => selectedCount.value - remaining.value);
               <div class="coupon-info-row">
                 <span>Trạng thái:</span>
                 <span>{{ getCouponDisplayStatus(coupon) }}</span>
+              </div>
+              <div class="coupon-info-row">
+                <span>Đã tặng:</span>
+                <span>{{ coupon.usedCount ?? 0 }}</span>
               </div>
             </div>
           </div>
@@ -225,11 +216,8 @@ const exceeded = computed(() => selectedCount.value - remaining.value);
           <div class="flex justify-content-between align-items-center mb-3">
             <input v-model="searchEmail" type="text" placeholder="Nhập email khách hàng..." class="search-box" />
           </div>
-          <div class="selected-count" :class="{ 'over-limit': selectedCount > remaining }">
+          <div class="selected-count">
             Đã chọn: {{ selectedCount }} khách hàng
-            <template v-if="selectedCount > remaining">
-              (<span class="over-number">{{ exceeded }}</span> vượt quá)
-            </template>
           </div>
           <DataTable v-model:selection="selectedCustomers" :value="filteredCustomers" selectionMode="multiple"
             dataKey="id" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" responsiveLayout="scroll"
@@ -251,7 +239,7 @@ const exceeded = computed(() => selectedCount.value - remaining.value);
             <Column header="Hành động" headerClass="center-header" bodyClass="center-cell">
               <template #body="slotProps">
                 <Button label="Tặng" icon="pi pi-gift" class="p-button-success p-button-sm"
-                  :disabled="giftStatus[slotProps.data.id] === 'success' || remaining <= 0"
+                  :disabled="giftStatus[slotProps.data.id] === 'success'"
                   @click="handleGift(slotProps.data)" />
                 <span v-if="giftStatus[slotProps.data.id] === 'success'" style="color:green;margin-left:8px;">✔️</span>
                 <span v-if="giftStatus[slotProps.data.id] === 'error'" style="color:red;margin-left:8px;">Lỗi</span>

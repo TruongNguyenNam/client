@@ -254,29 +254,29 @@ const getAllCarriers = async () => {
 };
 
 // Load danh sách vận chuyển
-const getAllShipments = async () => {
-  loading.value = true;
-  try {
-    const response = await ShipmentService.getAllshipment();
-    if (response && response.data) {
-      shipments.value = response.data;
-      console.log("Lấy thành công danh sách vận chuyển:", shipments.value);
-    } else {
-      shipments.value = [];
-    }
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách vận chuyển:", error);
-    shipments.value = [];
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách vận chuyển', 
-      life: 3000 
-    });
-  } finally {
-    loading.value = false;
-  }
-};
+// const getAllShipments = async () => {
+//   loading.value = true;
+//   try {
+//     const response = await ShipmentService.getAllshipment();
+//     if (response && response.data) {
+//       shipments.value = response.data;
+//       console.log("Lấy thành công danh sách vận chuyển:", shipments.value);
+//     } else {
+//       shipments.value = [];
+//     }
+//   } catch (error) {
+//     console.error("Lỗi khi lấy danh sách vận chuyển:", error);
+//     shipments.value = [];
+//     toast.add({ 
+//       severity: 'error', 
+//       summary: 'Lỗi', 
+//       detail: 'Không thể tải danh sách vận chuyển', 
+//       life: 3000 
+//     });
+//   } finally {
+//     loading.value = false;
+//   }
+// };
 
 // Gọi tất cả API khi component được mount
 onMounted(async () => {
@@ -288,7 +288,7 @@ onMounted(async () => {
       getAllPaymentMethods(),
       getAllCouponUsage(1),
       getAllCarriers(),
-      getAllShipments()
+      // getAllShipments()
     ]);
     loadInvoicesFromStorage(); // Khôi phục hóa đơn từ localStorage
     console.log("Tải dữ liệu thành công");

@@ -10,7 +10,6 @@ export interface CouponUsageMultiRequest {
   userIds: number[];
 }
 
-
 export interface CouponUsageResponse {
   id: number;
   userUserName: string;
@@ -20,3 +19,4 @@ export interface CouponUsageResponse {
   couponStatus: string;
   usedDate: string | null;
 }
+

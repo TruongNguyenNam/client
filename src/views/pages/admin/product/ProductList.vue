@@ -38,6 +38,7 @@ const clearSearch = () => {
   getAllParentProduct(); // Reset về danh sách ban đầu
 };
 
+// Tìm kiếm nâng cao với một ô input
 const searchProducts = async () => {
   if (!searchTerm.value.trim()) {
     await getAllParentProduct();
@@ -46,18 +47,18 @@ const searchProducts = async () => {
   
   loading.value = true;
   try {
-    const products = await ProductService.searchProducts(searchTerm.value);
+    // Giả sử ProductService có phương thức tìm kiếm nâng cao
+    const products = await ProductService.searchProducts(searchTerm.value); // Thay bằng API phù hợp
     listProduct.value = products;
     totalRecords.value = products.length;
   } catch (error) {
-    console.error("Lỗi khi tìm kiếm sản phẩm:", error);
+    console.error("Lỗi khi tìm kiếm sản phẩm nâng cao:", error);
     listProduct.value = [];
     totalRecords.value = 0;
   } finally {
     loading.value = false;
   }
 };
-
 
 const onPageChange = (event: any) => {
   first.value = event.first;
@@ -91,7 +92,7 @@ const onPageChange = (event: any) => {
           </template>
         </Toolbar>
 
-        <!-- Thêm phần tìm kiếm ở đây -->
+        <!-- Thay thế phần tìm kiếm bằng ô input nâng cao -->
         <div class="flex justify-content-between align-items-center mb-4">
           <Button 
             icon="pi pi-filter-slash" 
@@ -103,7 +104,7 @@ const onPageChange = (event: any) => {
             <i class="pi pi-search" />
             <InputText 
               v-model="searchTerm" 
-              placeholder="Tìm kiếm..." 
+              placeholder="Tìm kiếm nâng cao (tên, danh mục, nhà cung cấp, loại thể thao)..." 
               @input="searchProducts"
               class="w-full"
             />

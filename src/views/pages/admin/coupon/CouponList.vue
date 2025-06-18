@@ -12,7 +12,6 @@ interface Coupon {
     id: number | null;
     codeCoupon: string;
     couponName: string;
-    quantity: number;
     usedCount?: number;
     discountAmount: number;
     expirationDate: Date | null;
@@ -20,15 +19,6 @@ interface Coupon {
     couponStatus: string;
     deleted: boolean;
 }
-
-// Interface request gửi lên backend (kiểu string)
-// interface CouponRequest {
-//     couponName: string;
-//     quantity: number;
-//     discountAmount: number;
-//     expirationDate: string | null;
-//     startDate: string | null;
-// }
 
 const coupons = ref<Coupon[]>([]);
 const loading = ref<boolean>(true);
@@ -46,7 +36,6 @@ const coupon = ref<Coupon>({
     id: null,
     codeCoupon: '',
     couponName: '',
-    quantity: 0,
     discountAmount: 0.0,
     expirationDate: null,
     startDate: null,
@@ -57,7 +46,6 @@ const newCoupon = ref<Coupon>({
     id: null,
     codeCoupon: '',
     couponName: '',
-    quantity: 1,
     discountAmount: 0.0,
     expirationDate: null,
     startDate: new Date(),
@@ -79,7 +67,6 @@ const pagedCoupons = computed(() =>
 function toCouponRequest(c: Coupon): CouponRequest {
     return {
         couponName: c.couponName,
-        quantity: c.quantity,
         discountAmount: c.discountAmount,
         expirationDate: c.expirationDate ? toLocalISOString(c.expirationDate) : null,
         startDate: c.startDate ? toLocalISOString(c.startDate) : null,
@@ -95,7 +82,6 @@ function toLocalISOString(date: Date): string {
 function toCouponRequestUpdate(c: Coupon): CouponRequest & { couponStatus: string } {
     return {
         couponName: c.couponName,
-        quantity: c.quantity,
         discountAmount: typeof c.discountAmount === "string"
             ? parseInt(String(c.discountAmount).replace(/[^\d]/g, ""), 10)
             : c.discountAmount,
@@ -113,7 +99,6 @@ const loadCoupons = async (): Promise<void> => {
                 id: item.id ?? null,
                 codeCoupon: item.codeCoupon ?? "",
                 couponName: item.couponName ?? "",
-                quantity: item.quantity ?? 0,
                 usedCount: item.usedCount ?? 0,
                 discountAmount: item.discountAmount ?? 0.0,
                 expirationDate: item.expirationDate ? new Date(item.expirationDate) : null,
@@ -139,7 +124,6 @@ const openAddDialog = () => {
         id: null,
         codeCoupon: '',
         couponName: '',
-        quantity: 1,
         discountAmount: 0.0,
         expirationDate: null,
         startDate: new Date(),
@@ -177,7 +161,7 @@ const openEdit = async (couponId: number | null): Promise<void> => {
             id: response.data.id ?? null,
             codeCoupon: response.data.codeCoupon ?? "",
             couponName: response.data.couponName ?? "",
-            quantity: response.data.quantity ?? 0,
+            usedCount: response.data.usedCount ?? 0,
             discountAmount: response.data.discountAmount ?? 0.0,
             expirationDate: response.data.expirationDate ? new Date(response.data.expirationDate) : null,
             startDate: response.data.startDate ? new Date(response.data.startDate) : null,
@@ -194,7 +178,6 @@ const hideUpdateDialog = () => {
         id: null,
         codeCoupon: '',
         couponName: '',
-        quantity: 0,
         discountAmount: 0.0,
         expirationDate: null,
         startDate: null,
@@ -211,7 +194,7 @@ const saveCoupon = async (): Promise<void> => {
             await CouponService.saveCoupon(toCouponRequest(coupon.value));
         }
         couponUpdateDialog.value = false;
-        await loadCoupons();        
+        await loadCoupons();
     } catch (error) { }
 };
 
@@ -240,7 +223,6 @@ const searchCoupons = async (): Promise<void> => {
                 id: item.id ?? null,
                 codeCoupon: item.codeCoupon ?? "",
                 couponName: item.couponName ?? "",
-                quantity: item.quantity ?? 0,
                 usedCount: item.usedCount ?? 0,
                 discountAmount: item.discountAmount ?? 0.0,
                 expirationDate: item.expirationDate ? new Date(item.expirationDate) : null,
@@ -310,14 +292,12 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     <template v-slot:start>
                         <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2"
                             @click="openAddDialog" />
-
                     </template>
                     <template v-slot:end>
                         <Button label="Nhập" icon="pi pi-upload" class="p-button-help mr-2" @click="importCoupons" />
                         <Button label="Xuất" icon="pi pi-download" class="p-button-info" @click="exportCoupons" />
                     </template>
                 </Toolbar>
-
                 <!-- Phần tìm kiếm -->
                 <div class="flex align-items-center justify-content-between mb-4">
                     <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2"
@@ -346,18 +326,12 @@ const goToGiftCoupon = (coupon: Coupon) => {
                                 placeholder="Nhập tên phiếu giảm giá" required class="field-input" />
                         </div>
 
-                        <!-- Số lượng -->
-                        <div class="field">
-                            <label for="add-quantity" class="field-label">Số lượng *</label>
-                            <InputNumber id="add-quantity" v-model="newCoupon.quantity" :min="1"
-                                placeholder="Nhập số lượng" class="field-input" />
-                        </div>
-
                         <!-- Giá trị giảm -->
                         <div class="field">
-                            <label for="add-discountAmount" class="field-label">Giá trị giảm (đ) *</label>
-                            <InputNumber id="add-discountAmount" v-model="newCoupon.discountAmount" :min="0" mode="currency"
-                                currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
+                            <label for="add-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
+                            <InputNumber id="add-couponAmount" v-model="newCoupon.discountAmount" :min="0"
+                                mode="currency" currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm"
+                                class="field-input" />
                         </div>
 
                         <!-- Ngày bắt đầu -->
@@ -400,18 +374,11 @@ const goToGiftCoupon = (coupon: Coupon) => {
                                 placeholder="Nhập tên phiếu giảm giá" required class="field-input" />
                         </div>
 
-                        <!-- Số lượng -->
-                        <div class="field">
-                            <label for="edit-quantity" class="field-label">Số lượng *</label>
-                            <InputNumber id="edit-quantity" v-model="coupon.quantity" :min="1"
-                                placeholder="Nhập số lượng" class="field-input" />
-                        </div>
-
                         <!-- Giá trị giảm -->
                         <div class="field">
-                            <label for="edit-discountAmount" class="field-label">Giá trị giảm (đ) *</label>
-                                <InputNumber id="edit-discountAmount" v-model="coupon.discountAmount" :min="0" mode="currency"
-                                    currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
+                            <label for="edit-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
+                            <InputNumber id="edit-couponAmount" v-model="coupon.discountAmount" :min="0" mode="currency"
+                                currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
                         </div>
 
                         <!-- Ngày bắt đầu -->
@@ -449,20 +416,14 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     <Column selectionMode="multiple" headerStyle="width: 3em" />
                     <Column field="codeCoupon" header="Mã phiếu" />
                     <Column field="couponName" header="Tên phiếu" />
-                    <Column field="quantity" header="Tổng số lượng" />
                     <Column header="Đã tặng">
                         <template #body="slotProps">
                             {{ slotProps.data.usedCount ?? 0 }}
                         </template>
                     </Column>
-                    <Column header="Số lượng còn lại">
-                        <template #body="slotProps">
-                            {{ (slotProps.data.quantity ?? 0) - (slotProps.data.usedCount ?? 0) }}
-                        </template>
-                    </Column>
                     <Column field="discountAmount" header="Giá trị giảm" sortable>
                         <template #body="slotProps">
-                                            {{ formatCurrency(slotProps.data.discountAmount) }}
+                            {{ formatCurrency(slotProps.data.discountAmount) }}
                         </template>
                     </Column>
                     <Column field="startDate" header="Ngày bắt đầu" sortable>
@@ -488,7 +449,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                                     @click="editCoupon(slotProps.data)" />
                                 <Button icon="pi pi-gift" class="p-button-rounded p-button-info" :label="''"
                                     @click="goToGiftCoupon(slotProps.data)" v-tooltip="'Tặng coupon cho khách hàng'"
-                                    :disabled="(slotProps.data.quantity ?? 0) - (slotProps.data.usedCount ?? 0) <= 0" />
+                                    :disabled="false" />
                             </div>
                         </template>
                     </Column>
@@ -497,6 +458,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
         </div>
     </div>
 </template>
+
 
 <style scoped lang="scss">
 .couponCode {
@@ -520,12 +482,10 @@ const goToGiftCoupon = (coupon: Coupon) => {
     }
 }
 
-/* SEARCH BAR TÁCH DÒNG */
 .search-bar-vertical {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    /* width: 100%; hoặc bỏ width đi */
 }
 
 .search-bar-row {
@@ -534,10 +494,10 @@ const goToGiftCoupon = (coupon: Coupon) => {
     gap: 12px;
 }
 
-/* Bo tròn và tách biệt từng input (PrimeVue) */
 .search-bar-vertical :deep(.p-inputtext),
 .search-bar-vertical :deep(.p-inputnumber-input),
-.search-bar-vertical :deep(.p-inputwrapper) {
+.search-bar-vertical :deep(.p-inputwrapper),
+.search-bar-vertical :deep(.p-calendar) {
     border-radius: 8px !important;
     border: 1px solid #ccc !important;
     background: #fff !important;
@@ -546,16 +506,17 @@ const goToGiftCoupon = (coupon: Coupon) => {
 }
 
 .search-bar-vertical :deep(.p-inputtext:focus),
-.search-bar-vertical :deep(.p-inputnumber-input:focus) {
+.search-bar-vertical :deep(.p-inputnumber-input:focus),
+.search-bar-vertical :deep(.p-calendar:focus) {
     border-color: #007ad9 !important;
     box-shadow: 0 0 0 2px rgba(0, 122, 217, 0.08) !important;
     outline: none !important;
 }
 
 .filter-input {
-    width: 110px;
-    min-width: 80px;
-    max-width: 120px;
+    width: 140px;
+    min-width: 90px;
+    max-width: 170px;
 }
 
 .filter-separator {
@@ -612,22 +573,6 @@ const goToGiftCoupon = (coupon: Coupon) => {
     box-shadow: 0 0 5px rgba(0, 122, 217, 0.5);
 }
 
-.field-textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    resize: none;
-    transition: border-color 0.2s ease;
-}
-
-.field-textarea:focus {
-    border-color: #007ad9;
-    outline: none;
-    box-shadow: 0 0 5px rgba(0, 122, 217, 0.5);
-}
-
 .cancel-button {
     color: #f44336;
 }
@@ -641,11 +586,5 @@ const goToGiftCoupon = (coupon: Coupon) => {
 .save-button:hover {
     background-color: #005bb5;
     border-color: #005bb5;
-}
-
-.confirmation-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 </style>

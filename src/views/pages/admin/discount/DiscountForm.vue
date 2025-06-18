@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import {DiscountService} from "../../../../service/DiscountService"
+import { ProductService } from '../../../../service/ProductServiceLegacy';
+</script>
+
 <template>
   <div class="p-4 max-w-4xl mx-auto bg-white rounded shadow">
     <h2 class="text-xl font-semibold mb-4">Tạo khuyến mãi</h2>
