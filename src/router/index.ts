@@ -113,7 +113,15 @@ const router = createRouter({
                     name: 'discountupdate',
                     component: () => import('@/views/pages/admin/discount/DiscountFromUpdate.vue')
                 },
-            
+                  
+
+                {
+
+                    path: '/tet',
+                    name: 'tet',
+                    component: () => import('@/views/pages/admin/discount/Tet.vue')
+                },
+
                 {
                     path: '/atributeadd',
                     name: 'atributeadd',

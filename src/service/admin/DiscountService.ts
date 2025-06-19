@@ -88,15 +88,23 @@ updateDiscount: async (
   throw error; // ✅ giữ nguyên để component xử lý chi tiết lỗi
 }
 },
- getDiscountById: async (id: number): Promise<ApiResponse<DiscountResponse>> => {
+  getDiscountById: async (id: number): Promise<DiscountResponse> => {
     try {
-      const response = await axiosInstance.get<ApiResponse<DiscountResponse>>(`${API_URL}/${id}`);
+      const response = await axiosInstance.get<DiscountResponse>(`${API_URL}/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching discount with id ${id}:`, error);
       throw new Error('Failed to fetch discount details. Please try again later.');
     }
   },
+
+  filterDiscountByStatus: async (status: string) => {
+  return await axiosInstance.get<DiscountResponse[]>(
+    `${API_URL}/filterStatus/${status}`
+  );
+}
+
+
 
 
 };
