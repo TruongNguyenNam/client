@@ -29,22 +29,18 @@ const router = useRouter();
 const items = ref([
   { label: 'TRANG CHỦ', icon: 'pi pi-home', command: () => router.push('/client') },
   { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
+  // { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/home') },
   {
-    label: 'NAM',
+    label: 'NEW ARRIVAL',
     icon: 'pi pi-user',
     items: [
       { label: 'Áo Nam', command: () => router.push('/client/product') },
-      { label: 'Quần Nam', command: () => router.push('/client/product/men/pants') }
+      { label: 'Giày', command: () => router.push({ path: '/client/product/collection', query: { category: 'Giày' } }) },
+      { label: 'Dép', command: () => router.push({ path: '/client/product/collection', query: { category: 'Dép' } }) },
+      { label: 'Khác', command: () => router.push({ path: '/client/product/collection', query: { category: 'Khác' } }) }
     ]
   },
-  {
-    label: 'NỮ',
-    icon: 'pi pi-user',
-    items: [
-      { label: 'Áo Nữ', command: () => router.push('/client/product/women/shirts') },
-      { label: 'Quần Nữ', command: () => router.push('/client/product/women/pants') }
-    ]
-  },
+
   { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
   { label: 'MIX & MATCH', icon: 'pi pi-sliders-h' },
   { label: 'ICONIC', icon: 'pi pi-star' },
