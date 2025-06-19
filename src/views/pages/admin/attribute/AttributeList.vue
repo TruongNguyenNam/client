@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue';
-  import { ProductAttributeService } from '../../../../service/ProductAttribueService';
-  import type { ProductAttributeResponse, ProductAttributeRequest } from '../../../../model/productAttribute';
+  import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
+  import type { ProductAttributeResponse, ProductAttributeRequest } from '../../../../model/admin/productAttribute';
   import { useToast } from 'primevue/usetoast';
 
   const listProduct = ref<ProductAttributeResponse[]>([]);

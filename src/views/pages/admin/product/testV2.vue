@@ -197,10 +197,10 @@
   import { ref, reactive, onMounted } from 'vue';
   import { useToast } from 'primevue/usetoast';
   import { useRouter, useRoute } from 'vue-router';
-  import { ProductService } from '../../../../service/ProductServiceLegacy';
-  import { ProductAttributeService } from '../../../../service/ProductAttribueService';
-  import type { ProductAttributeResponse } from '../../../../model/productAttribute';
-  import type { ProductResponse, AddProductChild } from '../../../../model/product';
+  import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+  import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
+  import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
+  import type { ProductResponse, AddProductChild } from '../../../../model/admin/product';
   
   const toast = useToast();
   const router = useRouter();
@@ -213,18 +213,19 @@
   const parentProductId = Number(route.params.id);
   const parentProduct = ref<ProductResponse>({
     id: 0,
-    name: '',
-    description: '',
-    price: null,
-    stockQuantity: null,
-    sportType: '',
-    sku: '',
-    supplierName: '',
-    categoryName: '',
-    productAttributeValueResponses: [],
-    tagName: [],
-    imageUrl: [],
-    inventories: []
+  name: '',
+  description: '',
+  price: null,
+  stockQuantity: null,
+  sportType: '',
+  originalPrice: null,
+  sku: '',
+  supplierName: '',
+  categoryName: '',
+  productAttributeValueResponses: [],
+  tagName: [],
+  imageUrl: [],
+  inventories: []
   });
   
   const variant = reactive({

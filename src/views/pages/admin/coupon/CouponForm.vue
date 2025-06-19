@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { CouponService } from "../../../../service/CouponService";
-import { CustomerService } from "../../../../service/CustomerServiceLegacy";
-import { CouponUsageService } from "../../../../service/CouponUsageService";
+import { CouponService } from "../../../../service/admin/CouponService";
+import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
+import { CouponUsageService } from "../../../../service/admin/CouponUsageService";
 
 
 interface Customer {

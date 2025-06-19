@@ -1,6 +1,6 @@
 <script setup>
 import { FilterMatchMode } from "primevue/api";
-import { CategoryService } from "../../../../service/CategoryService";
+import { CategoryService } from "../../../../service/admin/CategoryService";
 import { ref, onBeforeMount, watch, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import Toast from 'primevue/toast';

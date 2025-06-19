@@ -29,7 +29,7 @@
       :customers="customers"
       :paymentMethods="paymentMethods"
       :couponUsage="couponUsage"
-      :shipments="shipments"
+      :carriers="carriers" 
       :changeAmount="changeAmount"
       @update-total="updateTotal"
       @update-change="updateChange"
@@ -40,20 +40,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import type { ProductResponse } from '../../../../model/product';
-import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/order';
-import type { CustomerResponse } from '../../../../model/customer';
-import type { CouponUsageResponse } from '../../../../model/couponUsage';
-import type { PaymentMethodResponse } from '../../../../model/paymentMethod';
-import type { ShipmentResponse } from '../../../../model/shipment';
-import { CustomerService } from '../../../../service/CustomerServiceLegacy';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import { OrderService } from '../../../../service/OrderService';
-import { PaymentMethodService } from '../../../../service/PaymentMethodService';
-import { ShipmentService } from '../../../../service/ShipmentService';
-import { CouponUsageService } from '../../../../service/CouponUsageService';
+import type { ProductResponse } from '../../../../model/admin/product';
+import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/admin/order';
+import type { CustomerResponse } from '../../../../model/admin/customer';
+import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
+import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
+import type { ShipmentResponse } from '../../../../model/admin/shipment';
+import type { CarrierResponse } from '../../../../model/admin/carrier';
+import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import { OrderService } from '../../../../service/admin/OrderService';
+import { PaymentMethodService } from '../../../../service/admin/PaymentMethodService';
+import { ShipmentService } from '../../../../service/admin/ShipmentService';
+import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
+import { CarrierService } from '../../../../service/admin/CarrierService';
 import InvoiceHeader from './InvoiceHeader.vue';
 import ProductList from './ProductList.vue';
 import CartSection from './CartSection.vue';
@@ -73,7 +75,69 @@ const customers = ref<CustomerResponse[]>([]);
 const paymentMethods = ref<PaymentMethodResponse[]>([]);
 const couponUsage = ref<CouponUsageResponse[]>([]);
 const shipments = ref<ShipmentResponse[]>([]);
+const carriers = ref<CarrierResponse[]>([]);
 const changeAmount = ref(0);
+const invoiceTimeouts = ref<{ [key: string]: number }>({}); // Lưu trữ timeout cho mỗi hóa đơn
+
+// Lưu invoiceTabs vào localStorage
+const saveInvoicesToStorage = () => {
+  localStorage.setItem('invoiceTabs', JSON.stringify(invoiceTabs.value));
+};
+
+// Khôi phục invoiceTabs từ localStorage
+const loadInvoicesFromStorage = () => {
+  const storedInvoices = localStorage.getItem('invoiceTabs');
+  if (storedInvoices) {
+    invoiceTabs.value = JSON.parse(storedInvoices);
+    // Khôi phục timeout cho các hóa đơn hiện có
+    invoiceTabs.value.forEach(invoice => {
+      const timeElapsed = Date.now() - new Date(invoice.createdAt).getTime();
+      const timeRemaining = 300000 - timeElapsed; // 5 phút = 300000ms
+      if (timeRemaining > 0) {
+        startAutoRemoveTimer(invoice, timeRemaining);
+      } else {
+        removeTabByOrderCode(invoice.orderCode);
+      }
+    });
+  }
+};
+
+// Bắt đầu đếm ngược 5 phút để xóa hóa đơn
+const startAutoRemoveTimer = (invoice: any, duration: number = 300000) => {
+  if (invoiceTimeouts.value[invoice.orderCode]) {
+    clearTimeout(invoiceTimeouts.value[invoice.orderCode]); // Xóa timeout cũ nếu có
+  }
+  invoiceTimeouts.value[invoice.orderCode] = setTimeout(() => {
+    removeTabByOrderCode(invoice.orderCode);
+  }, duration) as any;
+};
+
+// Xóa tab theo orderCode
+const removeTabByOrderCode = (orderCode: string) => {
+  const index = invoiceTabs.value.findIndex(tab => tab.orderCode === orderCode);
+  if (index !== -1) {
+    invoiceTabs.value.splice(index, 1);
+    saveInvoicesToStorage();
+    if (activeTabIndex.value >= invoiceTabs.value.length) {
+      activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
+    }
+    delete invoiceTimeouts.value[orderCode];
+    toast.add({
+      severity: 'info',
+      summary: 'Hóa đơn tự động xóa',
+      detail: `Hóa đơn ${orderCode} đã tự động bị xóa sau 5 phút`,
+      life: 3000
+    });
+  }
+};
+
+// Reset timer khi có tương tác
+const resetTimerOnInteraction = (invoice: any) => {
+  if (invoiceTimeouts.value[invoice.orderCode]) {
+    clearTimeout(invoiceTimeouts.value[invoice.orderCode]);
+    startAutoRemoveTimer(invoice);
+  }
+};
 
 // Load dữ liệu sản phẩm
 const getAllChildProduct = async () => {
@@ -96,7 +160,6 @@ const getAllChildProduct = async () => {
   }
 };
 
-// Load danh sách khách hàng
 const getAllCustomers = async () => {
   loading.value = true;
   try {
@@ -165,6 +228,31 @@ const getAllCouponUsage = async (customerId: number) => {
   }
 };
 
+// Load danh sách đơn vị vận chuyển
+const getAllCarriers = async () => {
+  loading.value = true;
+  try {
+    const response = await CarrierService.getAllCarriers();
+    if (response && response.data) {
+      carriers.value = response.data;
+      console.log("Lấy thành công danh sách đơn vị vận chuyển:", carriers.value);
+    } else {
+      carriers.value = [];
+    }
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách đơn vị vận chuyển:", error);
+    carriers.value = [];
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: 'Không thể tải danh sách đơn vị vận chuyển', 
+      life: 3000 
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
 // Load danh sách vận chuyển
 const getAllShipments = async () => {
   loading.value = true;
@@ -199,8 +287,10 @@ onMounted(async () => {
       getAllCustomers(),
       getAllPaymentMethods(),
       getAllCouponUsage(1),
+      getAllCarriers(),
       getAllShipments()
     ]);
+    loadInvoicesFromStorage(); // Khôi phục hóa đơn từ localStorage
     console.log("Tải dữ liệu thành công");
   } catch (error) {
     console.error("Lỗi khi tải dữ liệu:", error);
@@ -213,6 +303,13 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+});
+
+// Dọn dẹp timeout khi component bị hủy
+onUnmounted(() => {
+  Object.keys(invoiceTimeouts.value).forEach(orderCode => {
+    clearTimeout(invoiceTimeouts.value[orderCode]);
+  });
 });
 
 // Lọc sản phẩm
@@ -248,6 +345,7 @@ const addInvoiceTab = async () => {
         deleted: orderData.deleted,
         orderDate: orderData.orderDate,
         createdDate: orderData.createdDate,
+        createdAt: new Date().toISOString(), // Thêm thời gian tạo để theo dõi
         items: [],
         customerName: '',
         discount: 0,
@@ -255,12 +353,14 @@ const addInvoiceTab = async () => {
         paymentMethod: paymentMethods.value[0]?.name || 'Tiền mặt',
         paymentMethodId: paymentMethods.value[0]?.id || 1,
         notes: '',
-        shipmentId: shipments.value[0]?.id || null,
+        carrierId: carriers.value[0]?.id || null,
         estimatedDeliveryDate: null,
         couponUsageIds: [] 
       };
       invoiceTabs.value.push(newInvoice);
       activeTabIndex.value = invoiceTabs.value.length - 1;
+      saveInvoicesToStorage(); // Lưu vào localStorage
+      startAutoRemoveTimer(newInvoice); // Bắt đầu đếm ngược 5 phút
       toast.add({ 
         severity: 'success', 
         summary: 'Thành công', 
@@ -282,10 +382,14 @@ const addInvoiceTab = async () => {
 };
 
 const removeTab = (index: number) => {
+  const orderCode = invoiceTabs.value[index].orderCode;
   invoiceTabs.value.splice(index, 1);
+  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
   if (activeTabIndex.value >= invoiceTabs.value.length) {
     activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
   }
+  clearTimeout(invoiceTimeouts.value[orderCode]); // Xóa timeout
+  delete invoiceTimeouts.value[orderCode];
 };
 
 const addProductToActiveInvoice = (product: any) => {
@@ -310,6 +414,8 @@ const addProductToActiveInvoice = (product: any) => {
     });
   }
   recalculateTotal(activeInvoice);
+  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+  resetTimerOnInteraction(activeInvoice); // Reset timer khi có tương tác
 };
 
 const incrementQuantity = (invoice: any, index: number) => {
@@ -321,6 +427,8 @@ const incrementQuantity = (invoice: any, index: number) => {
   }
   invoice.items[index].quantity += 1;
   recalculateTotal(invoice);
+  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+  resetTimerOnInteraction(invoice); // Reset timer khi có tương tác
 };
 
 const decrementQuantity = (invoice: any, index: number) => {
@@ -330,11 +438,15 @@ const decrementQuantity = (invoice: any, index: number) => {
   } else {
     removeItem(invoice, index);
   }
+  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+  resetTimerOnInteraction(invoice); // Reset timer khi có tương tác
 };
 
 const removeItem = (invoice: any, index: number) => {
   invoice.items.splice(index, 1);
   recalculateTotal(invoice);
+  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+  resetTimerOnInteraction(invoice); // Reset timer khi có tương tác
 };
 
 const recalculateTotal = (invoice: any) => {
@@ -348,9 +460,13 @@ const openPaymentToolbar = (invoice: any) => {
   selectedInvoice.value = { ...invoice };
   selectedInvoice.value.paidAmount = 0; // Khởi tạo paidAmount ban đầu
   updateChange();
+  resetTimerOnInteraction(invoice); // Reset timer khi mở thanh toán
 };
 
 const closePaymentToolbar = () => {
+  if (selectedInvoice.value) {
+    resetTimerOnInteraction(selectedInvoice.value); // Reset timer khi đóng thanh toán
+  }
   selectedInvoice.value = null;
 };
 
@@ -365,6 +481,8 @@ const updateTotal = () => {
     selectedInvoice.value.discount = 0;
   }
   updateChange();
+  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+  resetTimerOnInteraction(selectedInvoice.value); // Reset timer khi cập nhật tổng
 };
 
 const updateChange = () => {
@@ -378,6 +496,8 @@ watch(() => selectedInvoice.value?.paymentMethod, (newValue) => {
   if (selectedInvoice.value) {
     const method = paymentMethods.value.find(m => m.name === newValue);
     selectedInvoice.value.paymentMethodId = method?.id || 1;
+    saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+    resetTimerOnInteraction(selectedInvoice.value); // Reset timer khi thay đổi phương thức thanh toán
   }
 });
 
@@ -391,7 +511,7 @@ const completePayment = async () => {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn khách hàng', life: 3000 });
     return;
   }
-  if (!selectedInvoice.value.isPos && !selectedInvoice.value.shipmentId) {
+  if (!selectedInvoice.value.isPos && !selectedInvoice.value.carrierId) {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn nhà vận chuyển', life: 3000 });
     return;
   }
@@ -405,21 +525,24 @@ const completePayment = async () => {
   const payload: OrderRequest = {
     orderCode: selectedInvoice.value.orderCode,
     userId: selectedInvoice.value.userId || undefined,
+    notes : selectedInvoice.value.notes,
     items: selectedInvoice.value.items.map((item: any) => ({
       productId: item.id,
       quantity: item.quantity
     })),
     payment: {
       paymentMethodId: selectedInvoice.value.paymentMethodId || 1,
-      amount: selectedInvoice.value.paidAmount || 0 // Sử dụng paidAmount (400) thay vì finalTotal (300)
+      amount: selectedInvoice.value.paidAmount || 0
     },
     couponUsageIds: selectedInvoice.value.couponUsageIds || undefined
   };
   if (!selectedInvoice.value.isPos && customer) {
     const orderItemIds = selectedInvoice.value.items.map((item: any) => item.id);
     payload.shipments = [{
-      shipmentId: selectedInvoice.value.shipmentId || undefined,
-      estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate || new Date().toISOString(),
+      carrierId: selectedInvoice.value.carrierId || undefined,
+      estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate 
+        ? new Date(selectedInvoice.value.estimatedDeliveryDate).toISOString() 
+        : new Date().toISOString(),
       orderItemIds: orderItemIds
     }];
   }
@@ -443,16 +566,19 @@ const completePayment = async () => {
         detail: `Đã thanh toán ${formatCurrency(finalTotal).replace('₫', 'đ')}. Tiền thừa: ${formatCurrency(changeAmount.value).replace('₫', 'đ')}`,
         life: 5000 
       });
+      const orderCode = selectedInvoice.value.orderCode;
       setTimeout(() => {
         closePaymentToolbar();
       }, 300);
-
-      const index = invoiceTabs.value.findIndex(tab => tab.orderCode === selectedInvoice.value.orderCode);
+      const index = invoiceTabs.value.findIndex(tab => tab.orderCode === orderCode);
       if (index !== -1) {
         invoiceTabs.value.splice(index, 1);
+        saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
         if (activeTabIndex.value >= invoiceTabs.value.length) {
           activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
         }
+        clearTimeout(invoiceTimeouts.value[orderCode]); // Xóa timeout khi thanh toán hoàn tất
+        delete invoiceTimeouts.value[orderCode];
       }
       return;
     }

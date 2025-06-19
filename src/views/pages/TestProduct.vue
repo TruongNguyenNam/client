@@ -172,18 +172,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { CategoryService } from '../../service/CategoryService';
-import { SupplierService } from '../../service/SupplierService';
-import { ProductService } from '../../service/ProductServiceLegacy';
-import { ProductImageService } from '../../service/ProductImageService';
-import type { ProductRequest } from '../../model/product';
-import type { CategoryResponse } from '../../model/category';
-import type { SupplierResponse } from '../../model/supplier';
-import type { ProductTagResponse } from '../../model/ProductTag';
-import { ProductTagService } from '../../service/ProductTagService';
-import type { ProductAttributeResponse } from '../../model/productAttribute';
-import { ProductAttributeService } from '../../service/ProductAttribueService';
-import type { ProductAttributeValue } from '../../model/product';
+import { CategoryService } from '../../service/admin/CategoryService';
+import { SupplierService } from '../../service/admin/SupplierService';
+import { ProductService } from '../../service/admin/ProductServiceLegacy';
+import { ProductImageService } from '../../service/admin/ProductImageService';
+import type { ProductRequest } from '../../model/admin/product';
+import type { CategoryResponse } from '../../model/admin/category';
+import type { SupplierResponse } from '../../model/admin/supplier';
+import type { ProductTagResponse } from '../../model/admin/ProductTag';
+import { ProductTagService } from '../../service/admin/ProductTagService';
+import type { ProductAttributeResponse } from '../../model/admin/productAttribute';
+import { ProductAttributeService } from '../../service/admin/ProductAttribueService';
+import type { ProductAttributeValue } from '../../model/admin/product';
 
 
 const toast = useToast();

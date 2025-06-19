@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-import type { ProductResponse } from '../../../../model/product';
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
+import type { ProductResponse } from '../../../../model/admin/product';
 import { RouterLink } from 'vue-router';
 
 const listProduct = ref<ProductResponse[]>([]);

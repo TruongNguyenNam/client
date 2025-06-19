@@ -3,7 +3,7 @@
     v-model:visible="isVisible"
     position="right"
     class="payment-toolbar"
-    :style="{ width: '500px', maxWidth: '100%' }"
+    :style="{ width: '550px', maxWidth: '100%' }"
     :dismissable="false"
     @hide="$emit('close')"
   >
@@ -13,54 +13,171 @@
       <!-- Chọn khách hàng -->
       <div class="mb-4">
         <label class="block mb-1 font-medium">Khách hàng</label>
-        <Dropdown
-          v-model="selectedCustomerId"
-          :options="customers"
-          optionLabel="username"
-          optionValue="id"
-          placeholder="Chọn khách hàng"
-          class="w-full"
-          @change="fetchCouponUsage"
-        />
+        <div class="flex items-center gap-2">
+          <InputText
+            v-model="selectedCustomerName"
+            placeholder="Chọn khách hàng"
+            class="flex-1"
+            :disabled="true"
+            @click="showDialog = true"
+          />
+          <Button 
+            icon="pi pi-plus" 
+            text 
+            severity="secondary" 
+            @click="showDialog = true" 
+          />
+        </div>
       </div>
 
+      <CustomerDialog v-model="showDialog" @selected="handleCustomerSelect" />
+
+
+      
       <!-- Thông tin khách hàng -->
-      <div v-if="selectedCustomer" class="mb-4 bg-gray-50 rounded-lg p-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <div class="text-sm text-gray-500 mb-1">Họ tên</div>
-            <div class="font-medium">{{ selectedCustomer.username }}</div>
+     <!-- Thông tin khách hàng -->
+    <div v-if="selectedCustomer" class="mb-4 bg-gray-50 rounded-lg p-5 shadow-sm">
+      <div class="space-y-4">
+        <!-- Họ tên & SĐT -->
+        <label class="block text-sm text-gray-600 mb-2">Thông Tin Khách Hàng</label>
+        <div class="flex gap-4">
+          <div class="flex-1">
+            <label class="block text-sm text-gray-600 mb-1">Họ tên</label>
+            <InputText
+              v-model="selectedCustomer.username"
+              class="w-full bg-gray-100"
+              :disabled="true"
+              placeholder="Họ tên"
+            />
           </div>
-          <div>
-            <div class="text-sm text-gray-500 mb-1">Số điện thoại</div>
-            <div class="font-medium">{{ selectedCustomer.phoneNumber }}</div>
-          </div>
-          <div>
-            <div class="text-sm text-gray-500 mb-1">Email</div>
-            <div class="font-medium">{{ selectedCustomer.email }}</div>
+          <div class="flex-1">
+            <label class="block text-sm text-gray-600 mb-1">Số điện thoại</label>
+            <InputText
+              v-model="selectedCustomer.phoneNumber"
+              class="w-full bg-gray-100"
+              :disabled="true"
+              placeholder="Số điện thoại"
+            />
           </div>
         </div>
-        <div class="border-t pt-3">
-          <div class="text-sm text-gray-500 mb-1">Địa chỉ giao hàng</div>
-          <div class="font-medium">{{ selectedCustomer.addressStreet }}</div>
-          <div>
-            <span v-if="selectedCustomer.addressWard">{{ selectedCustomer.addressWard }}, </span>
-            <span v-if="selectedCustomer.addressDistrict">{{ selectedCustomer.addressDistrict }}, </span>
-            <span v-if="selectedCustomer.addressProvince">{{ selectedCustomer.addressProvince }}</span>
+
+        <!-- Email -->
+        <!-- <div>
+          <label class="block text-sm text-gray-600 mb-1">Email</label>
+          <InputText
+            v-model="selectedCustomer.email"
+            class="w-full bg-gray-100"
+            :disabled="true"
+            placeholder="Email"
+          />
+        </div> -->
+
+        <!-- Địa chỉ giao hàng -->
+        <div>
+          <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
+          
+          <!-- Đường -->
+          <div class="mb-3">
+            <label class="block text-sm text-gray-600 mb-2">số nhà </label>
+            <InputText
+              v-model="selectedCustomer.addressStreet"
+              class="w-full bg-gray-100"
+              :disabled="true"
+              placeholder="Số nhà, tên đường"
+            />
           </div>
-          <div v-if="selectedCustomer.addressZipcode" class="text-sm">
-            Mã bưu chính: {{ selectedCustomer.addressZipcode }}
+
+          <!-- <div class="mb-3">
+            <InputText
+                v-model="selectedCustomer.addressWard"
+                class="w-full bg-gray-100"
+                :disabled="true"
+                placeholder="Phường/Xã"
+              />
           </div>
+
+          <div class="mb-3">
+            <InputText
+                v-model="selectedCustomer.addressDistrict"
+                class="w-full bg-gray-100"
+                :disabled="true"
+                placeholder="Quận/Huyện"
+              />
+          </div>
+
+          <div class="mb-3">
+            <InputText
+              v-model="selectedCustomer.addressProvince"
+              class="w-full bg-gray-100"
+              :disabled="true"
+              placeholder="Tỉnh/Thành phố"
+            />
+          </div>
+
+          <div class="mb-3">
+              <InputText
+              v-model="selectedCustomer.addressZipcode"
+              class="w-full bg-gray-100"
+              :disabled="true"
+              placeholder="Mã bưu chính"
+            />
+          </div> -->
+
+          <!-- Phường / Quận -->
+          <div class="flex gap-4 mb-3">
+            <div class="flex-1">
+              <label class="block text-sm text-gray-600 mb-2">Phường / Quận</label>
+              <InputText
+                v-model="selectedCustomer.addressWard"
+                class="w-full bg-gray-100"
+                :disabled="true"               
+                placeholder="Phường/Xã"
+              />
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm text-gray-600 mb-2">Quận/Huyện</label>
+              <InputText
+                v-model="selectedCustomer.addressDistrict"
+                class="w-full bg-gray-100"
+                :disabled="true"
+                placeholder="Quận/Huyện"
+              />
+            </div>
+          </div>
+
+      <!-- Tỉnh / Mã bưu chính -->
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="block text-sm text-gray-600 mb-2">Tỉnh/Thành phố</label>
+          <InputText
+            v-model="selectedCustomer.addressProvince"
+            class="w-full bg-gray-100"
+            :disabled="true"
+            placeholder="Tỉnh/Thành phố"
+          />
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm text-gray-600 mb-2">Mã Code</label>
+          <InputText
+            v-model="selectedCustomer.addressZipcode"
+            class="w-full bg-gray-100"
+            :disabled="true"
+            placeholder="Mã bưu chính"
+          />
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
 
       <!-- Thông tin vận chuyển (nếu không phải POS) -->
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Nhà vận chuyển</label>
         <Dropdown
-          v-model="invoice.shipmentId"
-          :options="shipments"
-          optionLabel="carrier"
+          v-model="invoice.carrierId"
+          :options="carriers"
+          optionLabel="name" 
           optionValue="id"
           placeholder="Chọn nhà vận chuyển"
           class="w-full"
@@ -73,12 +190,12 @@
 
       <!-- Tính tiền -->
       <div class="mb-4">
-        <div class="flex justify-between mb-2">
-          <span>Tổng tiền hàng</span>
-          <span class="font-medium">{{ formatCurrency(invoice.orderTotal).replace('₫', 'đ') }}</span>
+        <div class="flex justify-between mb-2 items-center">
+          <span class="label">Tổng tiền hàng:</span>
+          <span class="value font-medium">{{ formatCurrency(invoice.orderTotal).replace('₫', 'đ') }}</span>
         </div>
-        <div class="flex justify-between mb-2">
-          <span>Mã giảm giá</span>
+        <div class="flex justify-between mb-2 items-center">
+          <span class="label">Mã giảm giá:</span>
           <MultiSelect
             v-model="invoice.couponUsageIds"
             :options="couponUsage"
@@ -86,37 +203,37 @@
             optionValue="id"
             placeholder="Chọn mã giảm giá"
             :maxSelectedLabels="3"
-            class="w-full md:w-80"
+            class="value w-full md:w-80"
             @change="$emit('update-total')"
           />
         </div>
-        <div v-if="invoice.couponUsageIds && invoice.couponUsageIds.length > 0" class="text-sm text-gray-500 mb-2">
+        <div v-if="invoice.couponUsageIds && invoice.couponUsageIds.length > 0" class="text-sm text-gray-500 mb-2 ml-[140px]">
           <span v-for="couponId in invoice.couponUsageIds" :key="couponId">
             Mã {{ getCouponById(couponId)?.couponCode }} giảm {{ formatCurrency(getCouponById(couponId)?.couponDiscountAmount || 0).replace('₫', 'đ') }}
           </span>
         </div>
-        <div class="flex justify-between mb-2">
-          <span>Số tiền giảm</span>
+        <div class="flex justify-between mb-2 items-center">
+          <span class="label">Số tiền giảm:</span>
+          <span class="value font-medium">{{ formatCurrency(invoice.discount || 0).replace('₫', 'đ') }}</span>
+        </div>
+        <div class="flex justify-between mb-2 items-center font-semibold">
+          <span class="label">Khách cần trả:</span>
+          <span class="value kct">{{ formatCurrency(calculateFinalTotal()).replace('₫', 'đ') }}</span>
+        </div>
+        <div class="flex justify-between mb-2 items-center">
+          <span class="label">Khách thanh toán:</span>
           <InputNumber
-            v-model="invoice.discount"
+            v-model="invoice.paidAmount"
+            @input="handlePaidAmountChange"
+            class="value w-full md:w-80"
             :min="0"
-            :max="invoice.orderTotal"
-            @input="$emit('update-total')"
-            class="w-32"
-            placeholder="Nhập số tiền giảm"
+            :useGrouping="true"
+            placeholder="Nhập số tiền"
           />
         </div>
-        <div class="flex justify-between mb-2 font-semibold">
-          <span>Khách cần trả</span>
-          <span>{{ formatCurrency(calculateFinalTotal()).replace('₫', 'đ') }}</span>
-        </div>
-        <div class="flex justify-between mb-2">
-          <span>Khách thanh toán</span>
-          <InputNumber v-model="invoice.paidAmount" @input="$emit('update-change')" class="w-32" />
-        </div>
-        <div v-if="changeAmount > 0" class="flex justify-between mb-2 text-green-600">
-          <span>Tiền thừa</span>
-          <span>{{ formatCurrency(changeAmount).replace('₫', 'đ') }}</span>
+        <div v-if="changeAmount !== null && changeAmount >= 0" class="flex justify-between mb-2 items-center text-green-600">
+          <span class="label">Tiền thừa:</span>
+          <span class="value">{{ formatCurrency(changeAmount).replace('₫', 'đ') }}</span>
         </div>
       </div>
 
@@ -159,23 +276,46 @@ import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
-import type { CustomerResponse } from '../../../../model/customer';
-import type { PaymentMethodResponse } from '../../../../model/paymentMethod';
-import type { ShipmentResponse } from '../../../../model/shipment';
-import type { CouponUsageResponse } from '../../../../model/couponUsage';
-import { CouponUsageService } from '../../../../service/CouponUsageService';
+import InputText from 'primevue/inputtext';
+import type { CustomerResponse } from '../../../../model/admin/customer';
+import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
+import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
+import type { CarrierResponse } from '../../../../model/admin/carrier';
+import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
+import CustomerDialog from './CustomerDialog.vue';
 
-// Props
 const props = defineProps<{
-  invoice: any;
+  invoice: {
+    orderCode: string;
+    userId: number | null;
+    customerName: string;
+    phoneNumber: string;
+    email: string;
+    addressStreet: string;
+    addressWard: string;
+    addressDistrict: string;
+    addressProvince: string;
+    addressCity: string;
+    addressZipcode: string;
+    isPos: boolean;
+    carrierId: number | null;
+    estimatedDeliveryDate: Date | null;
+    orderTotal: number;
+    discount: number;
+    couponUsageIds: number[];
+    paidAmount: number | null;
+    paymentMethodId: number | null;
+    paymentMethod: string;
+    notes: string;
+  };
   customers: CustomerResponse[];
   paymentMethods: PaymentMethodResponse[];
   couponUsage: CouponUsageResponse[];
-  shipments: ShipmentResponse[];
-  changeAmount: number;
+  carriers: CarrierResponse[];
+  changeAmount: number | null;
 }>();
 
-// Emits
+const showDialog = ref(false);
 const emit = defineEmits<{
   (e: 'update-total'): void;
   (e: 'update-change'): void;
@@ -183,13 +323,12 @@ const emit = defineEmits<{
   (e: 'complete-payment'): void;
 }>();
 
-// State
 const selectedCustomerId = ref<number | null>(props.invoice.userId);
+const selectedCustomerName = ref<string>(props.invoice.customerName || '');
 const toast = useToast();
 const isVisible = ref(true);
 const localCouponUsage = ref<CouponUsageResponse[]>([]);
 
-// Computed
 const selectedCustomer = computed(() => {
   return props.customers.find(c => c.id === selectedCustomerId.value) || null;
 });
@@ -198,7 +337,6 @@ const getCouponById = (id: number) => {
   return props.couponUsage.find(c => c.id === id) || null;
 };
 
-// Methods
 const fetchCouponUsage = async () => {
   if (selectedCustomerId.value) {
     try {
@@ -206,10 +344,8 @@ const fetchCouponUsage = async () => {
       if (response && response.data) {
         localCouponUsage.value = response.data;
         props.couponUsage.splice(0, props.couponUsage.length, ...localCouponUsage.value);
-        console.log("Đã cập nhật danh sách mã giảm giá cho khách hàng:", localCouponUsage.value);
       }
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách mã giảm giá:", error);
       toast.add({ 
         severity: 'error', 
         summary: 'Lỗi', 
@@ -223,8 +359,13 @@ const fetchCouponUsage = async () => {
   }
 };
 
-const onCustomerSelect = () => {
-  if (!selectedCustomer.value) {
+// Xử lý khi khách hàng được chọn từ CustomerDialog
+const handleCustomerSelect = (customer: CustomerResponse) => {
+  selectedCustomerId.value = customer.id;
+  selectedCustomerName.value = customer.username; // Cập nhật tên hiển thị trong InputText
+  showDialog.value = false; // Đóng dialog sau khi chọn
+  // Cập nhật thông tin hóa đơn
+  if (!customer) {
     props.invoice.userId = null;
     props.invoice.customerName = '';
     props.invoice.phoneNumber = '';
@@ -237,20 +378,22 @@ const onCustomerSelect = () => {
       props.invoice.addressCity = '';
       props.invoice.addressZipcode = '';
     }
-    return;
+  } else {
+    props.invoice.userId = customer.id;
+    props.invoice.customerName = customer.username;
+    props.invoice.phoneNumber = customer.phoneNumber;
+    props.invoice.email = customer.email;
+    if (!props.invoice.isPos) {
+      props.invoice.addressStreet = customer.addressStreet;
+      props.invoice.addressWard = customer.addressWard;
+      props.invoice.addressDistrict = customer.addressDistrict;
+      props.invoice.addressProvince = customer.addressProvince;
+      props.invoice.addressCity = customer.addressCity;
+      props.invoice.addressZipcode = customer.addressZipcode;
+    }
   }
-  props.invoice.userId = selectedCustomer.value.id;
-  props.invoice.customerName = selectedCustomer.value.username;
-  props.invoice.phoneNumber = selectedCustomer.value.phoneNumber;
-  props.invoice.email = selectedCustomer.value.email;
-  if (!props.invoice.isPos) {
-    props.invoice.addressStreet = selectedCustomer.value.addressStreet;
-    props.invoice.addressWard = selectedCustomer.value.addressWard;
-    props.invoice.addressDistrict = selectedCustomer.value.addressDistrict;
-    props.invoice.addressProvince = selectedCustomer.value.addressProvince;
-    props.invoice.addressCity = selectedCustomer.value.addressCity;
-    props.invoice.addressZipcode = selectedCustomer.value.addressZipcode;
-  }
+  // Gọi fetchCouponUsage sau khi chọn khách hàng
+  fetchCouponUsage();
 };
 
 const updatePaymentMethod = () => {
@@ -267,10 +410,14 @@ const formatCurrency = (value: number) => {
   return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 };
 
-// Watch
-watch(selectedCustomerId, async (newValue) => {
-  onCustomerSelect();
-  await fetchCouponUsage();
+const handlePaidAmountChange = () => {
+  emit('update-change');
+};
+
+watch(selectedCustomerId, async () => {
+  if (selectedCustomerId.value) {
+    await fetchCouponUsage();
+  }
 }, { immediate: true });
 
 watch(() => props.invoice.paymentMethodId, () => {
@@ -296,16 +443,46 @@ watch(() => props.invoice.couponUsageIds, (newCouponIds) => {
   }
   emit('update-total');
 }, { immediate: true });
+
+watch(() => props.invoice.paidAmount, () => {
+  handlePaidAmountChange();
+}, { immediate: true });
 </script>
 
 <style scoped>
-.payment-toolbar {
-  width: 600px;
+.label {
+  width: 140px;
+  text-align: left;
+  font-size: 1rem;
 }
-
-@media (max-width: 992px) {
-  .payment-toolbar {
-    width: 100%;
-  }
+.value {
+  flex: 1;
+  text-align: right;
 }
-</style> 
+.flex {
+  display: flex;
+  align-items: center;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.kct {
+  color: #1e90ff; /* Màu xanh cho "Khách cần trả" để nổi bật */
+}
+/* Tùy chỉnh InputText để trông đẹp hơn */
+:deep(.p-inputtext) {
+  cursor: pointer;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+}
+:deep(.p-inputtext:disabled) {
+  opacity: 1;
+  color: #495057;
+  background-color: #f1f5f9;
+}
+:deep(.p-inputtext:focus) {
+  border-color: #4dabf7;
+  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+}
+</style>

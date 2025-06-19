@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onBeforeMount, watch, defineEmits } from "vue";
-import { ProductTagService } from "../../../../service/ProductTagService";
+import { ProductTagService } from "../../../../service/admin/ProductTagService";
 import { FilterMatchMode } from "primevue/api";
 import { useRouter } from "vue-router";
 import Toast from "primevue/toast";

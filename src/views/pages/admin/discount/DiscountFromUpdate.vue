@@ -111,9 +111,9 @@ import InputText from 'primevue/inputtext'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { useRoute } from 'vue-router'
-import { CategoryService } from '../../../../service/CategoryService'
-import { ProductService } from '../../../../service/ProductServiceLegacy'
-import { DiscountService } from '../../../../service/DiscountService'
+import { CategoryService } from '../../../../service/admin/CategoryService'
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy'
+import { DiscountService } from '../../../../service/admin/DiscountService'
 
 interface Category {
   id: number

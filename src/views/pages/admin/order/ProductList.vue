@@ -23,7 +23,7 @@
 import { ref, computed } from 'vue';
 import InputText from 'primevue/inputtext';
 import ProductCard from './ProductCard.vue';
-import type { ProductResponse } from '../../../../model/product';
+import type { ProductResponse } from '../../../../model/admin/product';
 
 
 const props = defineProps({
