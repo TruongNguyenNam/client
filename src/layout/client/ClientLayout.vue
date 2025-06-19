@@ -1,7 +1,7 @@
 <template>
   <div>
     <ClientHeader />
-    <Banner />
+    <!-- <Banner /> -->
     <main>
       <RouterView />
     </main>
