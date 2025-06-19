@@ -94,7 +94,6 @@ export const ProductService = {
     }
   },
 
-
   addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
     try {
       console.log("Create Product Request:", productRequest);
