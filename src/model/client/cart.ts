@@ -1,18 +1,36 @@
-export interface ProductResponseClient {
+export interface ShoppingCartRequest {
+    userId: number;
+    productId: number;
+    quantity: number;
+    // totalPrice: number;
+    // deleted: boolean;
+  }
+
+  
+  export interface ShoppingCartResponse {
+    id: number;
+    userName: string;
+    product: ShoppingCartProduct;
+    quantity: number;
+    totalPrice: number;
+    deleted: boolean;
+  }
+  
+  export interface ShoppingCartProduct {
     id: number;
     name: string;
     description: string;
     price: number;
     originalPrice: number;
     stockQuantity: number;
-    parentProductId: number | null;
+    parentProductId: number;
     sportType: string;
     sku: string;
     supplierName: string;
     categoryName: string;
     productAttributeValueResponses: ProductAttributeValueResponse[];
     tagName: string[];
-    imageUrl: string[];
+    ImageUrl: string[];
   }
   
   export interface ProductAttributeValueResponse {
@@ -22,13 +40,4 @@ export interface ProductResponseClient {
     productId: number;
     value: string;
   }
-
-  export interface ProductSearchClientRequest{
-    sportType:string;
-    supplierName:string;
-    categoryName:string;
-    minPrice:number;
-    maxPrice:number;
-  }
-
-
+  
