@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
-import type { CustomerResponse } from "../../../../model/admin/customer";
+import type { CustomerResponse,CustomerRequest } from "../../../../model/admin/customer";
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
 
 const route = useRoute();
@@ -68,7 +68,7 @@ const handleSubmit = async () => {
         username: customer.value.username,
         phoneNumber: customer.value.phoneNumber,
         role: customer.value.role,
-        isActive: customer.value.isActive,
+        isActive: customer.value.active,
         gender: customer.value.gender,
         address: {
             street: customer.value.addressStreet,

@@ -7,19 +7,18 @@ const axiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-  },
-  withCredentials: true, 
+  }
 });
 
 export const getAuthToken = (): string | null => {
-  return sessionStorage.getItem('accessToken');
+  return localStorage.getItem('accessToken');
 };
 
 export const logout = (): void => {
-  sessionStorage.removeItem('accessToken');
-  sessionStorage.removeItem('refreshToken');
-  sessionStorage.removeItem('userId');
-  sessionStorage.removeItem('userInfo');
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('userInfo');
 };
 
 axiosInstance.interceptors.request.use(
@@ -40,12 +39,12 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = sessionStorage.getItem('refreshToken');
+        const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
           const refreshResponse = await AuthService.RefreshToken(refreshToken);
           if (refreshResponse.data) {
-            sessionStorage.setItem('accessToken', refreshResponse.data.token);
-            sessionStorage.setItem('refreshToken', refreshResponse.data.refreshToken);
+            localStorage.setItem('accessToken', refreshResponse.data.token);
+            localStorage.setItem('refreshToken', refreshResponse.data.refreshToken);
             originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
             return axiosInstance(originalRequest);
           }
@@ -77,8 +76,8 @@ export const AuthService = {
     return response.data;
   },
 
-  findByUserId: async (userId: number): Promise<ApiResponse<UserResponse>> => {
-    const response = await axiosInstance.get<ApiResponse<UserResponse>>(`/${userId}`);
+  findByUserId: async (id: number): Promise<ApiResponse<UserResponse>> => {
+    const response = await axiosInstance.get<ApiResponse<UserResponse>>(`/${id}`);
     return response.data;
   },
 
@@ -103,6 +102,7 @@ export interface RegisterForm {
 export interface LoginInfoDto {
   userId: number;
   username: string;
+  password: string;
   phoneNumber: string | null;
   email: string;
   token: string;
@@ -120,7 +120,7 @@ export interface UserAddress {
   addressCity: string;
   addressState: string;
   addressCountry: string;
-  addressZipcode: string;
+  addressZipcode: string; // Sửa thành chữ thường
   addressDistrict: string;
   addressProvince: string;
 }
@@ -134,8 +134,9 @@ export interface UserResponse {
   userId: number;
   username: string;
   email: string;
-  message?: string;
+  message: string;
   role: string;
+  password: string;
   phoneNumber: string | null;
   gender: string | null;
   isActive: boolean;

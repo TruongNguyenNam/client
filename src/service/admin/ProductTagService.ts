@@ -7,7 +7,7 @@ import type { ApiResponse } from "../../utils/ApiResponse";
 const axiosInstance = axios.create();
 
 const getAuthToken = (): string | null => {
-    return localStorage.getItem('accessToken');
+    return sessionStorage.getItem('accessToken');
 };
 
 axiosInstance.interceptors.request.use(

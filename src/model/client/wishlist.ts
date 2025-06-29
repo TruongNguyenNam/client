@@ -1,11 +1,27 @@
-export interface ProductResponseClient {
+export interface WishlistRequest {
+    userId: number;
+    productId: number;
+    addedDate: Date;
+    deleted: boolean;
+  }
+
+  
+  export interface WishlistResponse {
+    id: number;
+    userName: string;
+    product: Product[];
+    addedDate: Date;
+    deleted: boolean;
+  }
+  
+  export interface Product {
     id: number;
     name: string;
     description: string;
     price: number;
+    parentProductId:number;
     originalPrice: number;
     stockQuantity: number;
-    parentProductId: number | null;
     sportType: string;
     sku: string;
     supplierName: string;
@@ -22,13 +38,15 @@ export interface ProductResponseClient {
     productId: number;
     value: string;
   }
+  
 
-  export interface ProductSearchClientRequest{
-    sportType:string;
-    supplierName:string;
-    categoryName:string;
-    minPrice:number;
-    maxPrice:number;
-  }
+
+
+
+
+
+
+
+
 
 

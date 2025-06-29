@@ -1,3 +1,4 @@
+// src/service/auth/AuthService.ts
 import axios from 'axios';
 import type { ApiResponse } from '../../utils/ApiResponse';
 
@@ -8,18 +9,16 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, 
 });
 
+
 export const getAuthToken = (): string | null => {
-  return sessionStorage.getItem('accessToken');
+  return localStorage.getItem('accessToken'); 
 };
 
 export const logout = (): void => {
-  sessionStorage.removeItem('accessToken');
-  sessionStorage.removeItem('refreshToken');
-  sessionStorage.removeItem('userId');
-  sessionStorage.removeItem('userInfo');
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
 };
 
 axiosInstance.interceptors.request.use(
@@ -31,32 +30,6 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
-);
-
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = sessionStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const refreshResponse = await AuthService.RefreshToken(refreshToken);
-          if (refreshResponse.data) {
-            sessionStorage.setItem('accessToken', refreshResponse.data.token);
-            sessionStorage.setItem('refreshToken', refreshResponse.data.refreshToken);
-            originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
-            return axiosInstance(originalRequest);
-          }
-        }
-      } catch (refreshError) {
-        logout();
-        window.location.href = '/auth/login';
-      }
-    }
-    return Promise.reject(error);
-  }
 );
 
 export const AuthService = {
@@ -77,15 +50,15 @@ export const AuthService = {
     return response.data;
   },
 
-  findByUserId: async (userId: number): Promise<ApiResponse<UserResponse>> => {
-    const response = await axiosInstance.get<ApiResponse<UserResponse>>(`/${userId}`);
-    return response.data;
+  findByUserId: async(id:number): Promise<ApiResponse<UserResponse>> => {
+    const response = await axiosInstance.get<ApiResponse<UserResponse>>(`${API_URL}/${id}`);
+      return response.data;
   },
-
   updateUserAddress: async (userId: number, data: UpdateUserForm): Promise<ApiResponse<UserResponse>> => {
-    const response = await axiosInstance.put<ApiResponse<UserResponse>>(`/${userId}/address`, data);
+    const response = await axiosInstance.put<ApiResponse<UserResponse>>(`${API_URL}/${userId}/address`, data);
     return response.data;
-  },
+  }
+
 };
 
 // DTOs
@@ -101,14 +74,15 @@ export interface RegisterForm {
 }
 
 export interface LoginInfoDto {
-  userId: number;
+  id: number;
   username: string;
-  phoneNumber: string | null;
+  password: string;
+  phoneNumber: string;
   email: string;
   token: string;
   refreshToken: string;
   role: string;
-  gender: string | null;
+  gender: string;
   isActive: boolean;
   address: UserAddress | null;
 }
@@ -125,22 +99,25 @@ export interface UserAddress {
   addressProvince: string;
 }
 
+
 export interface TokenDTO {
   token: string;
   refreshToken: string;
 }
 
 export interface UserResponse {
-  userId: number;
+  id: number;
   username: string;
   email: string;
-  message?: string;
+  message: string;
   role: string;
-  phoneNumber: string | null;
-  gender: string | null;
+  password: string;
+  phoneNumber: string | null; // Cho phép null
+  gender: string | null; // Cho phép null
   isActive: boolean;
   address: UserAddress | null;
 }
+
 
 export interface UpdateUserForm {
   email: string;
@@ -148,3 +125,5 @@ export interface UpdateUserForm {
   gender: string;
   address: UserAddress;
 }
+
+

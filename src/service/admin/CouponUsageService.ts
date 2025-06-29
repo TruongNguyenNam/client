@@ -8,7 +8,7 @@ const API_URL = "http://localhost:8080/api/v1/admin/coupon_usage";
 const axiosInstance = axios.create();
 
 const getAuthToken = (): string | null => {
-  return localStorage.getItem('accessToken');
+  return sessionStorage.getItem('accessToken');
 };
 
 axiosInstance.interceptors.request.use(
