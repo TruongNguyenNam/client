@@ -20,7 +20,7 @@
 
           <div>
             <label class="block font-medium">Phần trăm giảm (%)</label>
-            <input v-model.number="discount.percentValue" type="number" :class="{ 'border-red-500': errors.percentValue }" class="w-full border px-2 py-1 rounded" min="1" max="100" />
+            <input v-model.number="discount.percentValue" type="number" :class="{ 'border-red-500': errors.percentValue }" class="w-full border px-2 py-1 rounded"/>
             <small v-if="errors.percentValue" class="text-red-600 mt-1 block text-sm">{{ errors.percentValue }}</small>
           </div>
 
@@ -80,7 +80,13 @@
               <Column selectionMode="multiple" style="width: 3em" />
               <Column field="id" header="ID" sortable />
               <Column field="name" header="Tên sản phẩm" sortable />
-              <Column field="price" header="Giá" :body="formatPrice" sortable />
+              <!-- <Column field="price" header="Giá" :body="formatPrice" sortable /> -->
+               <Column field="price" header="Giá" sortable>
+  <template #body="{ data }">
+    {{ formatPrice(data.price) }}
+  </template>
+</Column>
+
             </DataTable>
 
             <!-- Hiển thị danh sách sản phẩm đã chọn để chắc chắn người dùng biết -->
@@ -158,9 +164,23 @@ const toast = useToast()
 const route = useRoute()
 const id = route.params.id as string | undefined
 
-const formatPrice = (product: Product) => {
-  if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
-  return product.price.toLocaleString('vi-VN', {
+// const formatPrice = (product: Product) => {
+//   console.log(product.price)
+//   if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
+//   return product.price.toLocaleString('vi-VN', {
+//     style: 'currency',
+//     currency: 'VND'
+//   });
+// }
+const formatPrice = (price: number | string | null): string => {
+  if (price === null || price === undefined || price === '') return '0 ₫';
+  
+  // Convert string to number nếu cần
+  const numericPrice = typeof price === 'string' 
+    ? parseFloat(price.replace(/[^\d.]/g, '')) 
+    : price;
+
+  return numericPrice.toLocaleString('vi-VN', {
     style: 'currency',
     currency: 'VND'
   });
@@ -255,12 +275,9 @@ const validate = () => {
   errors.value = {}
 
   if (!discount.value.name.trim()) errors.value.name = 'Tên khuyến mãi không được để trống.'
-  if (!discount.value.percentValue || discount.value.percentValue < 1 || discount.value.percentValue > 100)
-    errors.value.percentValue = 'Phần trăm giảm phải từ 1 đến 100.'
+  
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'
-  else if (discount.value.endDate < discount.value.startDate)
-    errors.value.endDate = 'Ngày kết thúc phải sau ngày bắt đầu.'
 
   return Object.keys(errors.value).length === 0
 }

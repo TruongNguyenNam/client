@@ -101,11 +101,16 @@
               <Column selectionMode="multiple" style="width: 3em" />
               <Column field="id" header="ID" sortable />
               <Column field="name" header="Tên sản phẩm" sortable />
-              <Column field="price" header="Giá" :body="formatPrice" sortable />
+          <Column field="price" header="Giá" sortable>
+  <template #body="{ data }">
+    {{ formatPrice(data.price) }}
+  </template>
+</Column>
             </DataTable>
           </div>
         </div>
       </div>
+      
 
       <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4">
         Lưu khuyến mãi
@@ -230,9 +235,22 @@ watch(selectedProducts, (val) => {
   discount.value.productIds = val.map(p => p.id)
 })
 
-const formatPrice = (product: Product) => {
-  if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
-  return product.price.toLocaleString('vi-VN', {
+// const formatPrice = (product: Product) => {
+//   if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
+//   return product.price.toLocaleString('vi-VN', {
+//     style: 'currency',
+//     currency: 'VND'
+//   });
+// }
+const formatPrice = (price: number | string | null): string => {
+  if (price === null || price === undefined || price === '') return '0 ₫';
+  
+  // Convert string to number nếu cần
+  const numericPrice = typeof price === 'string' 
+    ? parseFloat(price.replace(/[^\d.]/g, '')) 
+    : price;
+
+  return numericPrice.toLocaleString('vi-VN', {
     style: 'currency',
     currency: 'VND'
   });
@@ -247,9 +265,7 @@ const validate = () => {
   }
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'
-  else if (discount.value.endDate < discount.value.startDate) {
-    errors.value.endDate = 'Ngày kết thúc phải sau ngày bắt đầu.'
-  }
+ 
 
   return Object.keys(errors.value).length === 0
 }
@@ -288,8 +304,13 @@ const handleSubmit = async () => {
     
     // Load lại toàn bộ sản phẩm con sau khi reset form
     await loadAllChildProducts()
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể lưu khuyến mãi.', life: 4000 })
+  } catch (err: any) {
+    let msg = 'Đã xảy ra lỗi khi gửi dữ liệu.'
+    if (err.response?.status === 400 && err.response.data?.message) msg = err.response.data.message
+    else if (err.response?.status === 405) msg = 'Phương thức không được hỗ trợ (405).'
+    else if (err.response?.data?.error) msg = err.response.data.error
+
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 5000 })
   }
 }
 const doSearch = async (keyword: string) => {
