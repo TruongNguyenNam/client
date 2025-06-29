@@ -238,12 +238,12 @@ onMounted(async () => {
 
 
 <template>
-    <h1>Doanh Thu</h1>
+    <h1>Doanh Thu</h1> <br>
     <div class="grid">
         <div class="flex flex-wrap gap-6 justify-center">
             <!-- Hôm nay -->
             <div
-                class="card bg-cyan-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                class="card bg-cyan-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[20px] overflow-hidden" style="margin-left: 100px; margin-top: 20px;">
                 <div class="flex items-center gap-2 mb-6">
                     <i class="pi pi-calendar text-2xl"></i>
                     <span class="text-xl font-semibold">Hôm nay</span>
@@ -273,7 +273,7 @@ onMounted(async () => {
 
             <!-- Tháng này -->
             <div
-                class="card bg-indigo-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                class="card bg-indigo-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden" style="margin-top: 20px;">
                 <div class="flex items-center gap-2 mb-6">
                     <i class="pi pi-calendar text-2xl"></i>
                     <span class="text-xl font-semibold">Tháng này</span>
@@ -303,7 +303,7 @@ onMounted(async () => {
 
             <!-- Năm nay -->
             <div
-                class="card bg-orange-600 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
+                class="card bg-orange-600 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden" style="margin-top: 20px;">
                 <div class="flex items-center gap-2 mb-6">
                     <i class="pi pi-calendar text-2xl"></i>
                     <span class="text-xl font-semibold">Năm nay</span>
@@ -330,8 +330,13 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
+            <div></div>
 
-            <!-- Tùy chọn thời gian -->
+        </div>
+
+        <!--  -->
+
+        <div class="col-12 xl:col-6">
             <div
                 class="card bg-gray-700 text-white p-6 rounded-xl shadow-lg w-[600px] max-w-[600px] min-h-[220px] overflow-hidden">
                 <div class="flex items-center gap-2 mb-6">
@@ -371,14 +376,9 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!--  -->
-
-        <div class="col-12 xl:col-6">
             <!-- Bộ lọc thời gian -->
             <div class="card">
-                <h5>Recent Sales</h5>
+                <h5>Bán hàng gần đây</h5>
                 <div class="flex flex-wrap gap-2 mb-3">
                     <Button label="NGÀY" @click="filterBy('day')" />
                     <Button label="THÁNG" @click="filterBy('month')" />
@@ -386,11 +386,9 @@ onMounted(async () => {
                 </div>
 
                 <!-- Bộ lọc theo khoảng thời gian -->
-                <div class="flex flex-wrap align-items-center gap-2 mb-3">
-                    <Calendar v-model="rangeStartDate" dateFormat="yy-mm-dd" placeholder="Từ ngày" showIcon />
-                    <Calendar v-model="rangeEndDate" dateFormat="yy-mm-dd" placeholder="Đến ngày" showIcon />
-                    <Button label="LỌC" icon="pi pi-filter" @click="filterByCustomRange" />
-                </div>
+                <Calendar v-model="rangeStartDate" dateFormat="yy-mm-dd" placeholder="Từ ngày" showIcon />
+                <Calendar v-model="rangeEndDate" dateFormat="yy-mm-dd" placeholder="Đến ngày" showIcon />
+                <Button label="LỌC" icon="pi pi-filter" @click="filterByCustomRange" />
 
 
                 <!-- Bảng sản phẩm -->
@@ -407,10 +405,17 @@ onMounted(async () => {
                 </DataTable>
             </div>
 
+
+        </div>
+        <div class="col-12 xl:col-6">
+            <div class="card">
+                <h5>Tổng quan doanh số bán hàng</h5>
+                <Chart type="line" :data="lineData" :options="lineOptions" />
+            </div>
             <!-- Top bán chạy theo % -->
             <div class="card">
                 <div class="flex justify-content-between align-items-center mb-5">
-                    <h5>Best Selling Products</h5>
+                    <h5>Sản phẩm bán chạy</h5>
                     <div>
                         <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
                             @click="$refs.menu2.toggle($event)" />
@@ -434,12 +439,7 @@ onMounted(async () => {
                     </li>
                 </ul>
             </div>
-        </div>
-        <div class="col-12 xl:col-6">
-            <div class="card">
-                <h5>Sales Overview</h5>
-                <Chart type="line" :data="lineData" :options="lineOptions" />
-            </div>
+
 
         </div>
     </div>

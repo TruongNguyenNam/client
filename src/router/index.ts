@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
-import ClientLayout from '@/layout/client/ClientLayout.vue'; 
+import ClientLayout from '@/layout/client/ClientLayout.vue';
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -66,7 +66,7 @@ const router = createRouter({
                     name: 'customerEdit',
                     component: () => import('@/views/pages/admin/customer/CustomerUpdate.vue')
                 },
-                  {
+                {
                     path: '/customerAdd',
                     name: 'customerAdd',
                     component: () => import('@/views/pages/admin/customer/CustomerForm.vue')
@@ -108,12 +108,12 @@ const router = createRouter({
                     component: () => import('@/views/pages/admin/discount/DiscountForm.vue')
                 },
 
-                 {
+                {
                     path: '/discountupdate/:id',
                     name: 'discountupdate',
                     component: () => import('@/views/pages/admin/discount/DiscountFromUpdate.vue')
                 },
-            
+
                 {
                     path: '/atributeadd',
                     name: 'atributeadd',
@@ -136,7 +136,16 @@ const router = createRouter({
                     name: 'home',
                     component: () => import('@/views/pages/admin/statistical/Statistical.vue')
                 },
-
+                {
+                    path: '/management',
+                    name: 'management',
+                    component: () => import('@/views/pages/admin/management/ManagementList.vue')
+                },
+                {
+                    path: '/management/order/:id',
+                    name: 'order-detail',
+                    component: () => import('@/views/pages/admin/management/Management.vue')
+                },
                 {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
@@ -286,33 +295,33 @@ const router = createRouter({
             path: '/client',
             component: ClientLayout,
             children: [
-              {
-                path: '',
-                name: 'client-home',
-                component: () => import('@/views/pages/client/Home.vue')
-              },
-              {
-                path: 'about',
-                name: 'client-about',
-                component: () => import('@/views/pages/client/About.vue')
-              },
-              {
-                path: 'product',
-                name: 'client-product',
-                component: () => import('@/views/pages/client/product/ProductList.vue')
-              },
-              {
-                path: 'product/collection',
-                name: 'client-product-collection',
-                component: () => import('@/views/pages/client/product/ProductCollection.vue')
-              },
-              {
-                path: 'product/:id',
-                name: 'client-product-details',
-                component: () => import('@/views/pages/client/product/ProductDetails.vue')
-              }
+                {
+                    path: '',
+                    name: 'client-home',
+                    component: () => import('@/views/pages/client/Home.vue')
+                },
+                {
+                    path: 'about',
+                    name: 'client-about',
+                    component: () => import('@/views/pages/client/About.vue')
+                },
+                {
+                    path: 'product',
+                    name: 'client-product',
+                    component: () => import('@/views/pages/client/product/ProductList.vue')
+                },
+                {
+                    path: 'product/collection',
+                    name: 'client-product-collection',
+                    component: () => import('@/views/pages/client/product/ProductCollection.vue')
+                },
+                {
+                    path: 'product/:id',
+                    name: 'client-product-details',
+                    component: () => import('@/views/pages/client/product/ProductDetails.vue')
+                }
             ]
-          },
+        },
 
 
         {

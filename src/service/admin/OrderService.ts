@@ -62,5 +62,15 @@ export const OrderService = {
       throw new Error('Không thể lấy danh sách đơn hàng. Vui lòng thử lại sau.');
     }
   },
+  getOrderById: async (id: number): Promise<ApiResponse<OrderResponse>> => {
+  try {
+    const response = await axiosInstance.get<ApiResponse<OrderResponse>>(`/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching order with id ${id}:`, error);
+    throw new Error('Không thể lấy thông tin đơn hàng. Vui lòng thử lại sau.');
+  }
+}
+
 
 };

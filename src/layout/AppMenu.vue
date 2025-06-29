@@ -21,7 +21,8 @@ const model = ref([
             { label: 'Coupon', icon: 'pi pi-fw pi-ticket', to: '/coupon' }, 
             { label: 'Tag', icon: 'pi pi-fw pi-mobile', to: '/tag', class: 'rotated-icon' },
             { label: 'Order', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
-            { label: 'Statistical', icon: 'pi pi-fw pi-table', to: '/home',class:'rotated-icon' },
+            { label: 'Statistical', icon: 'pi pi-fw pi-chart-line', to: '/home',class:'rotated-icon' },
+            { label: 'Management', icon: 'pi pi-fw pi-inbox', to: '/management' }, 
             {
                 label: 'User',
                 icon: 'pi pi-fw pi-user',
