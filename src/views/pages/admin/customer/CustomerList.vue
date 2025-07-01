@@ -162,7 +162,7 @@ const formatGender = (gender: string | null | undefined) => {
                 :severity="getCustomerStatus(slotProps.data).severity" />
             </template>
           </Column>
-          <Column header="Hành động">
+          <Column header="Thao Tác">
             <template #body="slotProps">
               <div class="flex">
                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"

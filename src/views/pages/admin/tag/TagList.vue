@@ -230,15 +230,15 @@ const confirmDeleteTag = (selectedTag) => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" header="" style="min-width: 8rem" />
+                    <Column selectionMode="multiple" header="" style="min-width: 3rem" />
                     <Column field="id" header="ID" sortable style="min-width: 5rem"></Column>
                     <Column field="name" header="Tên Tag" sortable style="min-width: 12rem"></Column>
                     <Column field="description" header="Mô tả" sortable style="min-width: 20rem"></Column>
 
-                    <Column :exportable="false" style="min-width: 8rem">
+                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editTag(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteTag(slotProps.data)" />
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="confirmDeleteTag(slotProps.data)" />
                         </template>
                     </Column>
 

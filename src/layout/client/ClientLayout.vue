@@ -46,5 +46,7 @@ onMounted(async () => {
 
 .footer {
   background-color: #f4f4f4; /* Cho dễ nhìn, bạn có thể bỏ */
+  /* border: 1px solid red;
+  margin-top: 300px; */
 }
 </style>

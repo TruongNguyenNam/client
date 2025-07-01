@@ -293,15 +293,15 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" header="" style="min-width: 8rem" />
+                    <Column selectionMode="multiple" header="" style="min-width: 3rem" />
                     <Column field="id" header="ID" sortable style="min-width: 5rem"></Column>
                     <Column field="name" header="Tên danh mục" sortable style="min-width: 12rem"></Column>
                     <Column field="description" header="Mô tả" sortable style="min-width: 16rem"></Column>
 
-                    <Column :exportable="false" style="min-width: 8rem">
+                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editCategory(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteCategory(slotProps.data)" />
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="confirmDeleteCategory(slotProps.data)" />
                         </template>
                     </Column>
 

@@ -16,9 +16,9 @@ const router = createRouter({
         { path: '/', name: 'dashboard', component: () => import('@/views/Dashboard.vue') },
         { path: '/documentation', name: 'documentation', component: () => import('@/views/pages/admin/product/ProductList.vue') },
         { path: '/productadd', name: 'productadd', component: () => import('@/views/pages/admin/product/ProductForm.vue') },
-        { path: '/product-parent/:id/update', name: 'ProductUpdateParent', component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue') },
-        { path: '/product/delete/:id', name: 'productupdatetrue', component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue') },
-        { path: '/product-child/:id/update', name: 'ProductUpdateChild', component: () => import('@/views/pages/admin/product/ProductUpdateChild.vue') },
+        { path: '/productupdateparent/:id', name: 'ProductUpdateParent', component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue') },
+        { path: '/productdelete/:id', name: 'productupdatetrue', component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue') },
+        { path: '/productupdatechild/:id', name: 'ProductUpdateChild', component: () => import('@/views/pages/admin/product/ProductUpdateChild.vue') },
         { path: '/addvariantsdetails/:id', name: 'addvariantsdetails', component: () => import('@/views/pages/admin/product/AddVariantsDetails.vue') },
         { path: '/category', name: 'category', component: () => import('@/views/pages/admin/category/CategoryList.vue') },
         { path: '/categoryadd', name: 'categoryadd', component: () => import('@/views/pages/admin/category/CategoryForm.vue') },
@@ -53,9 +53,9 @@ const router = createRouter({
         { path: 'wishlist/:userId', name: 'client-wishlist-details', component: () => import('@/views/pages/client/wishlist/FavoriteProductlist.vue') },
         { path: 'cart/:userId', name: 'cart-view', component: () => import('@/views/pages/client/cart/CartView.vue'),
         meta: { requiresAuth: true, role: 'CUSTOMER' }, },
+        { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue')}
       ],
     },
-    
     {
       path: '/auth',
       component: ClientLayout,

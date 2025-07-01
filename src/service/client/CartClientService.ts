@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ShoppingCartRequest,ShoppingCartResponse } from '../../model/client/cart';
+import type { ShoppingCartRequest,ShoppingCartResponse,OrderRequestClient,OrderResponseClient } from '../../model/client/cart';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/client/cart";
@@ -28,6 +28,7 @@ export const CartClientService = {
         return response.data;
     },
 
+
     viewCart: async (userId: number): Promise<ApiResponse<ShoppingCartResponse[]>> => {
         const response = await axiosInstance.get<ApiResponse<ShoppingCartResponse[]>>(`${API_URL}/view`, {
             params: { userId }
@@ -55,6 +56,11 @@ export const CartClientService = {
         });
         return response.data;
     }
+    ,
+    checkout: async (request: OrderRequestClient): Promise<ApiResponse<OrderResponseClient>> => {
+        const response = await axiosInstance.post<ApiResponse<OrderResponseClient>>(`${API_URL}/checkout`, request);
+        return response.data;
+    },
 
 
 
