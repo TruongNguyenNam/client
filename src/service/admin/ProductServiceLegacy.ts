@@ -5,12 +5,13 @@ const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
 
 const getAuthToken = (): string | null => {
-  return localStorage.getItem('accessToken');
+  return sessionStorage.getItem('accessToken');
 };
 
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getAuthToken();
+    console.log(token)
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -33,6 +34,66 @@ export const ProductService = {
       throw new Error("Không thể lấy danh sách sản phẩm. Vui lòng thử lại sau.");
     }
   },
+
+  // addVariantsToProduct: async (
+  //   parentProductId: number,
+  //   request: AddProductChild,
+  //   variantImages: File[]
+  // ): Promise<ApiResponse<void>> => {
+  //   try {
+  //     // Kiểm tra parentProductId
+  //     if (!parentProductId || isNaN(parentProductId)) {
+  //       console.error("Invalid parentProductId:", parentProductId);
+  //       throw new Error("ID sản phẩm cha không hợp lệ");
+  //     }
+
+  //     // Tạo bản sao của request và loại bỏ images
+  //     const sanitizedRequest: AddProductChild = {
+  //       ...request,
+  //       variants: request.variants.map(variant => ({
+  //         price: variant.price,
+  //         stockQuantity: variant.stockQuantity,
+  //       })),
+  //     };
+
+  //     const formData = new FormData();
+  //     formData.append('request', JSON.stringify(sanitizedRequest));
+
+  //     if (variantImages && variantImages.length > 0) {
+  //       variantImages.forEach((file) => {
+  //         formData.append('variantImages', file);
+  //       });
+  //     }
+
+  //     // Log kiểm tra dữ liệu
+  //     console.log("Sending FormData for addVariantsToProduct:");
+  //     for (const [key, value] of formData.entries()) {
+  //       console.log(`${key}: ${value instanceof File ? value.name : value}`);
+  //     }
+
+  //     const response = await fetch(`${API_URL}/${parentProductId}/variants`, {
+  //       method: 'POST',
+  //       body: formData,
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Backend Error Response:", data);
+  //       throw new Error(data.message || `Request failed with status code ${response.status}`);
+  //     }
+
+  //     console.log("Backend Success Response:", data);
+  //     return {
+  //       status: response.status,
+  //       message: data.message || 'Thêm biến thể sản phẩm thành công',
+  //       data: undefined,
+  //     };
+  //   } catch (error: any) {
+  //     console.error("Add Variants Error:", error);
+  //     throw error; // Ném lỗi gốc để giữ thông điệp từ backend
+  //   }
+  // },
 
   addVariantsToProduct: async (
     parentProductId: number,
@@ -70,49 +131,45 @@ export const ProductService = {
         console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
 
-      const response = await fetch(`${API_URL}/${parentProductId}/variants`, {
-        method: 'POST',
-        body: formData,
+      const response = await axiosInstance.post<ApiResponse<void>>(`${API_URL}/${parentProductId}/variants`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("Backend Error Response:", data);
-        throw new Error(data.message || `Request failed with status code ${response.status}`);
-      }
-
-      console.log("Backend Success Response:", data);
+      console.log("Backend Success Response:", response.data);
       return {
         status: response.status,
-        message: data.message || 'Thêm biến thể sản phẩm thành công',
+        message: response.data.message || 'Thêm biến thể sản phẩm thành công',
         data: undefined,
       };
     } catch (error: any) {
       console.error("Add Variants Error:", error);
-      throw error; // Ném lỗi gốc để giữ thông điệp từ backend
+      // Kiểm tra nếu lỗi từ response của backend
+      if (error.response?.data) {
+        console.error("Backend Error Response:", error.response.data);
+        throw new Error(error.response.data.message || `Request failed with status code ${error.response.status}`);
+      }
+      // Lỗi khác (mạng, timeout, v.v.)
+      throw new Error(error.message || "Không thể thêm biến thể sản phẩm. Vui lòng thử lại sau.");
     }
   },
 
 
   addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
-    try {
+   try {
       console.log("Create Product Request:", productRequest);
-  
+
       const formData = new FormData();
       const requests = [productRequest];
-  
-      // Gửi products dưới dạng chuỗi JSON (không chứa parentImages và images)
       formData.append("products", JSON.stringify(requests));
-  
-      // Thêm parentImages
+
       if (parentUploadedFiles && parentUploadedFiles.length > 0) {
         parentUploadedFiles.forEach((file) => {
           formData.append("parentImages", file, file.name);
         });
       }
-  
-      // Thêm images (ảnh của các biến thể)
+
       if (variantUploadedFiles && variantUploadedFiles.length > 0) {
         variantUploadedFiles.forEach((files) => {
           files.forEach((file) => {
@@ -120,42 +177,28 @@ export const ProductService = {
           });
         });
       }
-  
-      // Log kiểm tra dữ liệu gửi đi
+
       console.log("FormData entries:");
       for (const [key, value] of formData.entries()) {
         console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
-  
-      // Gửi API với fetch
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: formData
+
+      const response = await axiosInstance.post<ApiResponse<string>>(API_URL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-  
-      if (!response.ok) {
-        // Kiểm tra Content-Type của phản hồi
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Unknown error';
-  
-        if (contentType && contentType.includes('application/json')) {
-          // Nếu phản hồi là JSON
-          const errorResponse = await response.json();
-          errorMessage = errorResponse.message || 'Unknown error';
-        } else {
-          // Nếu phản hồi là text (như trường hợp ErrorException)
-          errorMessage = await response.text();
-        }
-  
-        throw new Error(errorMessage);
-      }
-  
-      const data = await response.json();
-      console.log("Create Product Response:", data);
-      return data.message;
-    } catch (error) {
+
+      console.log("Create Product Response:", response.data);
+      return response.data.message || "Thêm sản phẩm thành công";
+    } catch (error: any) {
       console.error("Unexpected Error:", error);
-      throw error; // Ném lại lỗi để submitProduct xử lý
+      if (error.response) {
+        const errorMessage = error.response.data.message || 'Lỗi không xác định';
+        throw new Error(errorMessage);
+      } else {
+        throw new Error(error.message || 'Thêm sản phẩm thất bại');
+      }
     }
   },
 
@@ -170,68 +213,100 @@ export const ProductService = {
     }
   },
 
+  //   try {
+  //     const response = await fetch(`${API_URL}/parent/${id}`, {
+  //       method: 'PUT',
+  //       body: formData
+  //       // Note: Don't set Content-Type header, let browser set it automatically
+  //     });
+  
+  //     const data = await response.json();
+      
+  //     if (!response.ok) {
+  //       throw new Error(data.message || 'Cập nhật sản phẩm cha thất bại');
+  //     }
+  
+  //     return data.message;
+  //   } catch (error) {
+  //     console.error("Update Parent Product Error:", error);
+  //     throw error; // Re-throw to handle in component
+  //   }
+  // },
 
   updateParentProduct: async (id: number, formData: FormData): Promise<string> => {
     try {
-      const response = await fetch(`${API_URL}/parent/${id}`, {
-        method: 'PUT',
-        body: formData
-        // Note: Don't set Content-Type header, let browser set it automatically
-      });
-  
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Cập nhật sản phẩm cha thất bại');
+      console.log("FormData entries for updateParentProduct:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
-  
-      return data.message;
-    } catch (error) {
+
+      const response = await axiosInstance.put<ApiResponse<string>>(
+        `${API_URL}/parent/${id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      console.log("Update Parent Product Response:", response.data);
+      return response.data.message || "Cập nhật sản phẩm cha thành công";
+    } catch (error: any) {
       console.error("Update Parent Product Error:", error);
-      throw error; // Re-throw to handle in component
+      throw new Error(error.response?.data?.message || 'Cập nhật sản phẩm cha thất bại');
     }
   },
 
   updateChildProduct: async (
-  childId: number,
-  childProduct: ProductUpdateChild,
-  images: File[]
-): Promise<ProductResponse> => {
-  const formData = new FormData();
-
-  const payload = {
-    description: childProduct.description,
-    price: childProduct.price,
-    stockQuantity: childProduct.stockQuantity,
-    productAttributeValues: childProduct.productAttributeValues,
-  };
-
-  formData.append('product', JSON.stringify(payload));
-  images.forEach((image) => {
-    formData.append('images', image);
-  });
-
-  const response = await fetch(`${API_URL}/child/${childId}`, {
-    method: 'PUT',
-    body: formData,
-  });
-
-  const responseData = await response.json(); // 👈 luôn parse JSON dù response.ok hay không
-
-  if (!response.ok) {
-    // Ném lỗi chi tiết để frontend xử lý được
-    const error = new Error(responseData.message || 'Lỗi hệ thống') as Error & {
-      status?: number;
-      data?: any;
-    };
-    error.status = response.status;
-    error.data = responseData.data;
-    throw error;
-  }
-
-  return responseData.data || {};
+    childId: number,
+    childProduct: ProductUpdateChild,
+    images: File[]
+  ): Promise<string> => {
+    try {
+      const formData = new FormData();
+      const payload = {
+        description: childProduct.description,
+        price: childProduct.price,
+        stockQuantity: childProduct.stockQuantity,
+        productAttributeValues: childProduct.productAttributeValues,
+      };
+  
+      formData.append('product', JSON.stringify(payload));
+      if (images.length > 0 && !images.every((image) => image instanceof File)) {
+        throw new Error('Một hoặc nhiều hình ảnh không hợp lệ');
+      }
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+  
+      console.log("FormData entries for updateChildProduct:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+      }
+  
+      const response = await axiosInstance.put<ApiResponse<string>>(
+        `${API_URL}/child/${childId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+  
+      console.log("Update Child Product Response:", JSON.stringify(response.data, null, 2));
+  
+      if (response.status !== 200) {
+        throw new Error(response.data.message || 'Cập nhật sản phẩm con thất bại');
+      }
+  
+      return response.data.message || 'Cập nhật sản phẩm con thành công';
+    } catch (error: any) {
+      console.error("Update Child Product Error:", error);
+      throw new Error(error.response?.data?.message || 'Lỗi khi cập nhật sản phẩm con');
+    }
   },
-
 
   searchProducts: async (
     name?: string,
@@ -304,11 +379,24 @@ export const ProductService = {
       console.error("Delete Product Error:", error);
       throw new Error("Không thể xóa sản phẩm. Vui lòng thử lại sau.");
     }
-  }
+  },
   
 
-
-
+getChildProductsByCategoryId: async (categoryId: number): Promise<ProductResponse[]> => {
+  const res = await axiosInstance.get<ProductResponse[]>(
+    `${API_URL}/findChildProductsByCate/${categoryId}`
+  );
+  return res.data; // ✅ không có .data
+},
+ findChildProductsByName: async (keyword: string): Promise<ProductResponse[]> => {
+    const encodedKeyword = encodeURIComponent(keyword);
+    const res = await axiosInstance.get<ProductResponse[]>(
+      `${API_URL}/finByNameProductChild/${encodedKeyword}`
+    );
+    return res.data; // ✅ nếu API trả về mảng trực tiếp
+  }
 };
+
+
 
 

@@ -131,7 +131,9 @@ const handleCancel = () => {
 </script>
 
 <template>
-    <div class="customer-add-page">
+        <div class="grid" >
+         <div class="col-12">
+        <div class="customer-add-page" style="max-width: 1300px;">
         <div class="form-title">Thêm Khách Hàng</div>
         <form class="customer-form" @submit.prevent="handleSubmit">
             <div class="form-row">
@@ -211,6 +213,15 @@ const handleCancel = () => {
             </div>
         </form>
     </div>
+                   
+             </div>
+        </div>
+
+
+   
+   
+
+
 </template>
 <style scoped>
 .customer-add-page {

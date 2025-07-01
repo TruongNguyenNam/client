@@ -378,7 +378,9 @@ const submitChildProduct = async () => {
   const isDescriptionValid = !!product.description;
   const isPriceValid = product.price != null && product.price >= 20000;
   const isStockValid = product.stockQuantity != null && product.stockQuantity > 0;
-  const isAttributeValid = product.productAttributeValues.every(attr => attr.attributeId && attr.value);
+  const isAttributeValid = product.productAttributeValues.every(
+    (attr) => attr.attributeId && attr.value
+  );
   const hasImages = existingImages.value.length > 0 || newImages.value.length > 0;
 
   if (!isDescriptionValid || !isPriceValid || !isStockValid || !isAttributeValid || !hasImages) {
@@ -412,7 +414,7 @@ const submitChildProduct = async () => {
       images: newImages.value
     });
 
-    await ProductService.updateChildProduct(productId, product, newImages.value);
+    const response = await ProductService.updateChildProduct(productId, product, newImages.value);
 
     toast.add({ 
       severity: 'success', 
@@ -423,10 +425,11 @@ const submitChildProduct = async () => {
 
     router.push('/documentation');
   } catch (error: any) {
+    console.error("Submit Child Product Error:", error);
     toast.add({ 
       severity: 'error', 
       summary: 'Lỗi', 
-      detail: error.message || 'Lỗi cập nhật sản phẩm con.', 
+      detail: error.message || 'Đã có lỗi xảy ra khi cập nhật sản phẩm con.', 
       life: 3000 
     });
   } finally {

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
-import type { CustomerResponse } from "../../../../model/admin/customer";
+import type { CustomerResponse,CustomerRequest } from "../../../../model/admin/customer";
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
 
 const route = useRoute();

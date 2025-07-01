@@ -23,7 +23,7 @@ export interface CustomerRequest {
   username: string;
   phoneNumber: string;
   role: string;
-  active: boolean;
+  active?: boolean;
   gender: string;
   address: AddressRequest;
 }
