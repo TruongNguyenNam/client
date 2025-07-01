@@ -271,7 +271,7 @@ const debouncedSearch = (event) => {
                     <!-- <Column field="id" header="ID" sortable /> -->
                     <Column field="name" header="Tên nhà cung cấp" sortable class="nhaCungCap" />
                     <Column field="description" header="Mô tả" sortable />
-                    <Column header="Hành động">
+                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
                             <div class="flex">
                                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"

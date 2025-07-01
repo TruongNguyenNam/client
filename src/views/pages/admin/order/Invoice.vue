@@ -101,6 +101,7 @@ const loadInvoicesFromStorage = () => {
     });
   }
 };
+// test 1 phút 60000ms 
 
 // Bắt đầu đếm ngược 5 phút để xóa hóa đơn
 const startAutoRemoveTimer = (invoice: any, duration: number = 300000) => {
@@ -402,14 +403,23 @@ const addProductToActiveInvoice = (product: any) => {
     toast.add({ severity: 'error', summary: 'Hết hàng', detail: `${product.name} hiện đã hết hàng`, life: 3000 });
     return;
   }
+  if (stockQuantity < 0) {
+    toast.add({ severity: 'error', summary: 'Hết hàng', detail: `${product.name} hiện đã hết hàng`, life: 3000 });
+    return;
+  }
   const activeInvoice = invoiceTabs.value[activeTabIndex.value];
   const existingItem = activeInvoice.items.find((item: any) => item.id === product.id);
+
+  if (existingItem && existingItem.quantity >= stockQuantity) {
+    toast.add({ severity: 'warn', summary: 'Quá số lượng', detail: `${product.name} đã vượt quá số lượng tồn kho`, life: 3000 });
+    return;
+  }
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
     activeInvoice.items.push({ 
       ...product, 
-      quantity: 1, 
+      quantity: 0, 
       price: product.price || 0 
     });
   }
@@ -468,6 +478,7 @@ const closePaymentToolbar = () => {
     resetTimerOnInteraction(selectedInvoice.value); // Reset timer khi đóng thanh toán
   }
   selectedInvoice.value = null;
+  couponUsage.value = []; 
 };
 
 const calculateFinalTotal = () => {
@@ -481,7 +492,7 @@ const updateTotal = () => {
     selectedInvoice.value.discount = 0;
   }
   updateChange();
-  saveInvoicesToStorage(); // Lưu thay đổi vào localStorage
+  saveInvoicesToStorage(); 
   resetTimerOnInteraction(selectedInvoice.value); // Reset timer khi cập nhật tổng
 };
 
