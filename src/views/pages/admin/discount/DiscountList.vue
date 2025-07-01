@@ -63,7 +63,7 @@ const searchDiscountByName = async (name: string) => {
 const filterByStatus = async (status: string) => {
   loading.value = true;
   try {
-    const response = await axios.get(`http://localhost:8080/api/v1/admin/discount/filterStatus/${status}`);
+    const response = await DiscountService.filterDiscountByStatus(status)
     ListDiscount.value = response.data ?? [];
   } catch (error) {
     toast.add({
@@ -213,6 +213,7 @@ onMounted(fetchProducts);
 </template>
 
 <style scoped>
+
 .menuat {
   background-color: rgb(234, 232, 232);
   border-radius: 5px;
@@ -242,6 +243,7 @@ onMounted(fetchProducts);
   padding: 0.5rem;
   box-sizing: border-box;
 }
+
 .p-dropdown {
   height: 2.5rem; /* chỉnh lại chiều cao */
   display: flex;

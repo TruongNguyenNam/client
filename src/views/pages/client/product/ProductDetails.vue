@@ -124,7 +124,6 @@
   const fetchProductDetails = async () => {
   const id = Number(route.params.id);
 
-  // Kiểm tra id trước khi gọi API
   if (isNaN(id)) {
     errorMessage.value = "ID sản phẩm không hợp lệ.";
     return;

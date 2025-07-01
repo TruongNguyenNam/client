@@ -5,7 +5,7 @@ const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
 
 const getAuthToken = (): string | null => {
-  return localStorage.getItem('accessToken');
+  return sessionStorage.getItem('accessToken');
 };
 
 axiosInstance.interceptors.request.use(
@@ -155,12 +155,9 @@ export const ProductService = {
     }
   },
 
-  addProduct: async (
-    productRequest: ProductRequest,
-    parentUploadedFiles: File[],
-    variantUploadedFiles: File[][]
-  ): Promise<string> => {
-    try {
+
+  addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
+   try {
       console.log("Create Product Request:", productRequest);
 
       const formData = new FormData();
@@ -382,11 +379,24 @@ export const ProductService = {
       console.error("Delete Product Error:", error);
       throw new Error("Không thể xóa sản phẩm. Vui lòng thử lại sau.");
     }
-  }
+  },
   
 
-
-
+getChildProductsByCategoryId: async (categoryId: number): Promise<ProductResponse[]> => {
+  const res = await axiosInstance.get<ProductResponse[]>(
+    `${API_URL}/findChildProductsByCate/${categoryId}`
+  );
+  return res.data; // ✅ không có .data
+},
+ findChildProductsByName: async (keyword: string): Promise<ProductResponse[]> => {
+    const encodedKeyword = encodeURIComponent(keyword);
+    const res = await axiosInstance.get<ProductResponse[]>(
+      `${API_URL}/finByNameProductChild/${encodedKeyword}`
+    );
+    return res.data; // ✅ nếu API trả về mảng trực tiếp
+  }
 };
+
+
 
 

@@ -1,12 +1,13 @@
 import axios from 'axios';
 import type { ProductResponseClient } from '../../model/client/product';
 import type { ApiResponse } from "../../utils/ApiResponse";
+import type { min } from 'date-fns';
 
 const API_URL = "http://localhost:8080/api/v1/client/product";
 const axiosInstance = axios.create();
 
 const getAuthToken = (): string | null => {
-    return localStorage.getItem('accessToken');
+    return sessionStorage.getItem('accessToken');
 };
 
 axiosInstance.interceptors.request.use(
@@ -33,34 +34,52 @@ export const ProductClientService = {
         }
       },
 
-
-    findByParentProductId: async (id: number): Promise<ApiResponse<ProductResponseClient[]>> => {
-        try {
-            const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error("Get Product By Id Error:", error);
-            throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
-        }
-    },
-
-    findByCategoryName: async (name: string): Promise<ApiResponse<ProductResponseClient[]>> => {
-        try {
-            const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/collection`, {
-                params: {
-                    category: name
+    productSearchByAttributeClient: async(sportType:string,supplierName:string, categoryName:string,
+        minPrice?:number,
+        maxPrice?:number): Promise<ApiResponse<ProductResponseClient[]>> => {
+                try{
+                    const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/collection`, {
+                        params: {
+                            sportType,
+                            supplierName,
+                            categoryName,
+                            minPrice,
+                            maxPrice
+                        }
+                    });
+                        return response.data;
+                }catch(error){
+                    console.error("Get Product By Category Error:", error);
+                    throw new Error("Không thể lấy danh sách sản phẩm theo danh mục. Vui lòng thử lại sau.");
                 }
-            });
-            return response.data;
-        } catch (error) {
-            console.error("Get Product By Category Error:", error);
-            throw new Error("Không thể lấy danh sách sản phẩm theo danh mục. Vui lòng thử lại sau.");
-        }
-    }
+
+        },
     
+        findByParentProductId: async (id: number): Promise<ApiResponse<ProductResponseClient[]>> => {
+            try {
+                const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Get Product By Id Error:", error);
+                throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
+            }
+        },
+       
 
     
-
+ // findByCategoryName: async (name: string): Promise<ApiResponse<ProductResponseClient[]>> => {
+    //     try {
+    //         const response = await axiosInstance.get<ApiResponse<ProductResponseClient[]>>(`${API_URL}/collection`, {
+    //             params: {
+    //                 category: name
+    //             }
+    //         });
+    //         return response.data;
+    //     } catch (error) {
+    //         console.error("Get Product By Category Error:", error);
+    //         throw new Error("Không thể lấy danh sách sản phẩm theo danh mục. Vui lòng thử lại sau.");
+    //     }
+    // },
 
     
 

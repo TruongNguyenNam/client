@@ -22,3 +22,13 @@ export interface ProductResponseClient {
     productId: number;
     value: string;
   }
+
+  export interface ProductSearchClientRequest{
+    sportType:string;
+    supplierName:string;
+    categoryName:string;
+    minPrice:number;
+    maxPrice:number;
+  }
+
+

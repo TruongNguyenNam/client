@@ -1,7 +1,4 @@
-<script setup lang="ts">
-import {DiscountService} from "../../../../service/DiscountService"
-import { ProductService } from '../../../../service/ProductServiceLegacy';
-</script>
+
 
 <template>
   <div class="p-4 max-w-4xl mx-auto bg-white rounded shadow">
@@ -29,8 +26,7 @@ import { ProductService } from '../../../../service/ProductServiceLegacy';
               type="number"
               :class="{'border-red-500': errors.percentValue}"
               class="w-full border px-2 py-1 rounded"
-              min="1"
-              max="100"
+            
             />
             <small v-if="errors.percentValue" class="text-red-600 mt-1 block text-sm">{{ errors.percentValue }}</small>
           </div>
@@ -128,6 +124,9 @@ import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
+import { CategoryService } from '../../../../service/admin/CategoryService'
+import { ProductService } from '../../../../service/admin/ProductServiceLegacy'
+import { DiscountService } from '../../../../service/admin/DiscountService'
 
 interface Category {
   id: number
@@ -135,9 +134,9 @@ interface Category {
 }
 
 interface Product {
-  id: number
+ id: number
   name: string
-  price: number
+  price: number | null
 }
 
 interface DiscountRequest {
@@ -171,8 +170,8 @@ const toast = useToast()
 // Load danh mục khi component mounted
 onMounted(async () => {
   try {
-    const res = await axios.get('http://localhost:8080/api/v1/admin/category')
-    categories.value = res.data.data || []
+    const res = await CategoryService.getAllCategories()
+    categories.value = res.data || []
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Lỗi tải danh mục', detail: 'Không thể tải danh mục.', life: 4000 })
   }
@@ -184,12 +183,24 @@ onMounted(async () => {
 // Hàm load tất cả sản phẩm con từ API gốc
 const loadAllChildProducts = async () => {
   try {
-    const prodRes = await axios.get('http://localhost:8080/api/v1/admin/product/child')
-    products.value = prodRes.data.data || []
+    const prodRes = await ProductService.getAllChildProducts()
+    const rawData = prodRes.data || []
+
+    products.value = rawData.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price ?? null // để đảm bảo đúng với kiểu Product
+    }))
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Lỗi tải sản phẩm', detail: 'Không thể tải danh sách sản phẩm.', life: 4000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi tải sản phẩm',
+      detail: 'Không thể tải danh sách sản phẩm.',
+      life: 4000
+    })
   }
 }
+
 
 // Hàm load sản phẩm theo danh mục khi chọn dropdown
 const fetchProductsByCategory = async () => {
@@ -201,9 +212,9 @@ const fetchProductsByCategory = async () => {
    
   } else {
     try {
-      const res = await axios.get(`http://localhost:8080/api/v1/admin/product/findChildProductsByCate/${selectedCategoryId.value}`)
-      console.log('API response products:', res.data.data) // Log data trả về
-     products.value = res.data.data || res.data || []
+      const res = await ProductService.getChildProductsByCategoryId(selectedCategoryId.value)
+      console.log('API response products:', res) // Log data trả về
+     products.value = res
 
 
      
@@ -220,11 +231,13 @@ watch(selectedProducts, (val) => {
 })
 
 const formatPrice = (product: Product) => {
+  if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
   return product.price.toLocaleString('vi-VN', {
     style: 'currency',
     currency: 'VND'
-  })
+  });
 }
+
 
 const validate = () => {
   errors.value = {}
@@ -256,7 +269,7 @@ const handleSubmit = async () => {
 
     console.log('Payload:', payload)
 
-    await axios.post('http://localhost:8080/api/v1/admin/discount/create', payload)
+    await DiscountService.saveDiscount(payload)
 
     toast.add({ severity: 'success', summary: 'Thành công', detail: 'Lưu khuyến mãi thành công!', life: 3000 })
 
@@ -287,11 +300,9 @@ const doSearch = async (keyword: string) => {
   }
 
   try {
-    const res = await axios.get(
-      `http://localhost:8080/api/v1/admin/product/finByNameProductChild/${encodeURIComponent(keyword)}`
-    )
-    const data = Array.isArray(res.data) ? res.data : res.data.data || []
-    products.value = data
+    const res = await ProductService.findChildProductsByName(keyword)
+    const data = Array.isArray(res) 
+    products.value = res
     // Giữ nguyên selectedProducts, KHÔNG đổi gì cả
   } catch {
     toast.add({ severity: 'error', summary: 'Lỗi tìm kiếm', detail: 'Không thể tìm sản phẩm.', life: 3000 })

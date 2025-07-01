@@ -285,6 +285,7 @@ const props = defineProps<{
     paymentMethodId: number | null;
     paymentMethod: string;
     notes: string;
+    items: { name: string; price: number; quantity: number }[];
   };
   customers: CustomerResponse[];
   paymentMethods: PaymentMethodResponse[];
