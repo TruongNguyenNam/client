@@ -41,7 +41,44 @@ const fullAddress = computed(() =>
     ].filter(Boolean).join(', ')
 );
 
+
+// Biến lưu lỗi 
+const errors = ref<{ [key: string]: string }>({});
+// Regex kiểm tra email, phone
+function validateEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function validatePhone(phone: string) {
+    return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+}
+
+
 const handleSubmit = async () => {
+    errors.value = {};
+    if (!customer.value.username.trim()) {
+        errors.value.username = "Tên khách hàng không được để trống";
+    }
+    if (!validateEmail(customer.value.email)) {
+        errors.value.email = "Email không hợp lệ";
+    }
+    if (!validatePhone(customer.value.phoneNumber)) {
+        errors.value.phoneNumber = "Số điện thoại không hợp lệ";
+    }
+    if (!customer.value.gender) {
+        errors.value.gender = "Vui lòng chọn giới tính";
+    }
+    if (!customer.value.province) {
+        errors.value.province = "Vui lòng chọn tỉnh/thành";
+    }
+    if (!customer.value.district) {
+        errors.value.district = "Vui lòng chọn quận/huyện";
+    }
+    if (!customer.value.ward) {
+        errors.value.ward = "Vui lòng chọn phường/xã";
+    }
+    // Nếu lỗi, không submit
+    if (Object.keys(errors.value).length > 0) return;
+
     const address = {
         street: customer.value.street,
         ward: wardOptions.value.find(w => w.level3_id === customer.value.ward)?.name || "",
@@ -63,10 +100,29 @@ const handleSubmit = async () => {
             address
         });
         router.push("/customers");
-    } catch (err) {
-        const error = err as any;
-        console.log(error.response?.data || error);
+    } catch (err: any) {
+        const resp = err?.response?.data;
+        if (resp && typeof resp.data === "object" && resp.data !== null) {
+            Object.keys(resp.data).forEach((field) => {
+                if (field === "name") {
+                    const msg = resp.data[field];
+                    if (msg.toLowerCase().includes("email")) errors.value.email = msg;
+                    else if (
+                        msg.toLowerCase().includes("điện thoại") ||
+                        msg.toLowerCase().includes("phone")
+                    ) errors.value.phoneNumber = msg;
+                    else errors.value.global = msg;
+                } else {
+                    errors.value[field] = resp.data[field];
+                }
+            });
+        } else if (resp && resp.message) {
+            errors.value.global = resp.message;
+        } else {
+            errors.value.global = "Đã có lỗi xảy ra";
+        }
     }
+    console.log('errors.value:', errors.value);
 };
 
 const handleCancel = () => {
@@ -81,12 +137,13 @@ const handleCancel = () => {
             <div class="form-row">
                 <div class="form-group">
                     <label for="username">Tên Khách Hàng</label>
-                    <input id="username" v-model="customer.username" type="text" placeholder="Nhập tên khách hàng"
-                        required />
+                    <input id="username" v-model="customer.username" type="text" placeholder="Nhập tên khách hàng" />
+                    <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input id="email" v-model="customer.email" type="email" placeholder="Nhập địa chỉ email" required />
+                    <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
                 </div>
             </div>
             <div class="form-row">
@@ -94,6 +151,7 @@ const handleCancel = () => {
                     <label for="phoneNumber">Số Điện Thoại</label>
                     <input id="phoneNumber" v-model="customer.phoneNumber" type="text" placeholder="Nhập số điện thoại"
                         required />
+                    <div v-if="errors.phoneNumber" class="error-message">{{ errors.phoneNumber }}</div>
                 </div>
                 <div class="form-group">
                     <label for="gender">Giới Tính</label>
@@ -101,9 +159,9 @@ const handleCancel = () => {
                         <option value="" disabled>Chọn giới tính</option>
                         <option v-for="g in genderOptions" :value="g.value" :key="g.value">{{ g.label }}</option>
                     </select>
+                    <div v-if="errors.gender" class="error-message">{{ errors.gender }}</div>
                 </div>
             </div>
-            <!-- Địa chỉ dạng cấp -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="province">Tỉnh/Thành phố</label>
@@ -112,6 +170,7 @@ const handleCancel = () => {
                         <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}
                         </option>
                     </select>
+                    <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
                 </div>
                 <div class="form-group">
                     <label for="district">Quận/Huyện</label>
@@ -120,6 +179,7 @@ const handleCancel = () => {
                         <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}
                         </option>
                     </select>
+                    <div v-if="errors.district" class="error-message">{{ errors.district }}</div>
                 </div>
                 <div class="form-group">
                     <label for="ward">Phường/Xã</label>
@@ -127,6 +187,7 @@ const handleCancel = () => {
                         <option value="">Chọn phường/xã</option>
                         <option v-for="w in wardOptions" :key="w.level3_id" :value="w.level3_id">{{ w.name }}</option>
                     </select>
+                    <div v-if="errors.ward" class="error-message">{{ errors.ward }}</div>
                 </div>
             </div>
             <div class="form-group full-width">
@@ -137,6 +198,7 @@ const handleCancel = () => {
                 <label>Địa chỉ đầy đủ</label>
                 <input :value="fullAddress" type="text" readonly placeholder="" />
             </div>
+            <div v-if="errors.global" class="error-message">{{ errors.global }}</div>
             <div class="form-actions">
                 <button class="btn btn-cancel" type="button" @click="handleCancel">
                     <span class="icon">✖</span>
@@ -259,6 +321,13 @@ textarea:focus {
 
 .btn-submit:hover {
     background: #4f46e5;
+}
+
+.error-message {
+    color: #e11d48;
+    font-size: 0.96rem;
+    margin-top: 5px;
+    margin-bottom: 2px;
 }
 
 @media (max-width: 800px) {

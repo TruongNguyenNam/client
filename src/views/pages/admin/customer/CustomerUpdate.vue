@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
 import type { CustomerResponse } from "../../../../model/admin/customer";
@@ -40,7 +40,17 @@ onMounted(async () => {
     }
 });
 
-// Sửa để truyền vào value thay vì event, tránh lỗi TS
+// Biến lưu lỗi 
+const errors = ref<{ [key: string]: string }>({});
+// Regex kiểm tra email, phone
+function validateEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function validatePhone(phone: string) {
+    return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+}
+
+//  truyền vào value
 function onProvinceChange(value: string) {
     const province = provinceOptions.find((p: any) => p.name === value);
     districtOptions.value = province ? province.level2s : [];
@@ -61,14 +71,14 @@ function onDistrictChange(value: string) {
 
 const handleSubmit = async () => {
     if (!customer.value) return;
-    // Gộp lại object address đúng yêu cầu backend
+    // address đúng yêu cầu backend
     const requestBody = {
         id: customer.value.id,
         email: customer.value.email,
         username: customer.value.username,
         phoneNumber: customer.value.phoneNumber,
         role: customer.value.role,
-        isActive: customer.value.isActive,
+        active: customer.value.active,
         gender: customer.value.gender,
         address: {
             street: customer.value.addressStreet,
@@ -88,6 +98,22 @@ const handleSubmit = async () => {
 const handleCancel = () => {
     router.back();
 };
+
+// computed: Địa chỉ đầy đủ
+const fullAddress = computed(() => {
+    if (!customer.value) return "";
+    const arr = [
+        customer.value.addressStreet,
+        customer.value.addressWard,
+        customer.value.addressDistrict,
+        customer.value.addressProvince,
+        customer.value.addressCity,
+        customer.value.addressState,
+        customer.value.addressCountry,
+        customer.value.addressZipcode
+    ].filter(Boolean);
+    return arr.join(", ");
+});
 </script>
 
 <template>
@@ -120,37 +146,23 @@ const handleCancel = () => {
             <div class="form-row">
                 <div class="form-group">
                     <label for="province">Tỉnh/Thành phố</label>
-                    <select
-                        id="province"
-                        v-model="customer.addressProvince"
-                        required
-                        @change="onProvinceChange(($event.target as HTMLSelectElement).value)"
-                    >
+                    <select id="province" v-model="customer.addressProvince" required
+                        @change="onProvinceChange(($event.target as HTMLSelectElement).value)">
                         <option value="">Chọn tỉnh/thành</option>
                         <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.name">{{ p.name }}</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="district">Quận/Huyện</label>
-                    <select
-                        id="district"
-                        v-model="customer.addressDistrict"
-                        :disabled="!customer.addressProvince"
-                        required
-                        @change="onDistrictChange(($event.target as HTMLSelectElement).value)"
-                    >
+                    <select id="district" v-model="customer.addressDistrict" :disabled="!customer.addressProvince"
+                        required @change="onDistrictChange(($event.target as HTMLSelectElement).value)">
                         <option value="">Chọn quận/huyện</option>
                         <option v-for="d in districtOptions" :key="d.level2_id" :value="d.name">{{ d.name }}</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="ward">Phường/Xã</label>
-                    <select
-                        id="ward"
-                        v-model="customer.addressWard"
-                        :disabled="!customer.addressDistrict"
-                        required
-                    >
+                    <select id="ward" v-model="customer.addressWard" :disabled="!customer.addressDistrict" required>
                         <option value="">Chọn phường/xã</option>
                         <option v-for="w in wardOptions" :key="w.level3_id" :value="w.name">{{ w.name }}</option>
                     </select>
@@ -159,6 +171,11 @@ const handleCancel = () => {
             <div class="form-group full-width">
                 <label for="street">Địa chỉ chi tiết</label>
                 <input id="street" v-model="customer.addressStreet" type="text" />
+            </div>
+            <div class="form-group full-width">
+                <label for="fullAddress">Địa chỉ đầy đủ</label>
+                <input id="fullAddress" :value="fullAddress" type="text" readonly
+                    placeholder="Địa chỉ đầy đủ" />
             </div>
             <div class="form-actions">
                 <button class="btn btn-cancel" type="button" @click="handleCancel">
@@ -173,7 +190,8 @@ const handleCancel = () => {
         </form>
     </div>
 </template>
-<style scoped>
+
+<style scoped lang="scss">
 /* Giữ nguyên style như form thêm */
 .customer-add-page {
     background: #fff;

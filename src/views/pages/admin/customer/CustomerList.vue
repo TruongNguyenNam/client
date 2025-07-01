@@ -53,43 +53,32 @@ const clearSearch = (): void => {
 };
 
 //tìm kiếm theo tên hoặc số điện thoại
-// const searchCustomers = async (): Promise<void> => {
-//   if (!searchTerm.value.trim()) {
-//     await loadCustomers();
-//     lazyParams.value.page = 0;
-//     return;
-//   }
-//   loading.value = true;
-//   try {
-//     const response = await CustomerService.getCustomersByNameOrPhone(searchTerm.value);
-//     customers.value = Array.isArray(response.data) ? response.data : [];
-//     totalRecords.value = customers.value.length;
-//     lazyParams.value.page = 0;
-//   } catch (error) {
-//     customers.value = [];
-//     totalRecords.value = 0;
-//   } finally {
-//     loading.value = false;
-//   }
-// };
-
-// let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-// const debouncedSearch = () => {
-//   if (searchTimeout) clearTimeout(searchTimeout);
-//   searchTimeout = setTimeout(() => { searchCustomers(); }, 500);
-// };
-
-const formatDate = (date: Date | string | null): string => {
-  if (!date) return '';
-  return new Date(date).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+const searchCustomers = async (): Promise<void> => {
+  if (!searchTerm.value.trim()) {
+    await loadCustomers();
+    lazyParams.value.page = 0;
+    return;
+  }
+  loading.value = true;
+  try {
+    const response = await CustomerService.searchCustomers(searchTerm.value);
+    customers.value = Array.isArray(response.data) ? response.data : [];
+    totalRecords.value = customers.value.length;
+    lazyParams.value.page = 0;
+  } catch (error) {
+    customers.value = [];
+    totalRecords.value = 0;
+  } finally {
+    loading.value = false;
+  }
 };
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+const debouncedSearch = () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => { searchCustomers(); }, 500);
+};
+
 
 const getCustomerStatus = (customer: CustomerResponse) => {
   return { text: customer.active === true ? 'Hoạt động' : 'Không hoạt động', severity: customer.active === false ? 'warning' : 'success' };
@@ -121,8 +110,11 @@ const formatGender = (gender: string | null | undefined) => {
         <div class="flex align-items-center justify-content-between mb-4">
           <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />
           <div class="search-bar-vertical">
-            <InputText v-model="searchTerm" placeholder="Tìm theo tên hoặc SĐT..." class="search-input-box"
-              @keyup="" />
+            <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <InputText v-model="searchTerm" placeholder="Tìm theo Tên, Email hoặc SĐT" class="search-input-box"
+              @keyup="debouncedSearch" />
+              </span>
           </div>
         </div>
         <DataTable v-model:selection="selectedCustomers" :value="customers" :paginator="true"
@@ -238,7 +230,7 @@ const formatGender = (gender: string | null | undefined) => {
 }
 
 .search-input-box {
-  width: 230px;
+  width: 250px;
   min-width: 120px;
 }
 

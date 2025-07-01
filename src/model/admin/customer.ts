@@ -1,7 +1,7 @@
 import type { AddressRequest } from "./address";
 
 export interface CustomerResponse {
-  id?: number;
+  id: number;
   email: string;
   username: string;
   phoneNumber: string;

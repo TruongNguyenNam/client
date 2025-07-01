@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { CarrierRequest,CarrierResponse } from '../../model/admin/carrier';
+import type { CarrierRequest, CarrierResponse } from '../../model/admin/carrier';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
 const API_URL = "http://localhost:8080/api/v1/admin/carrier";
@@ -32,5 +32,14 @@ export const CarrierService = {
             throw new Error('Failed to fetch carriers. Please try again later.');
         }
     },
-
+    // Thêm mới dich vụ vận chuyển
+    saveCarrier: async (carrierRequest: CarrierRequest): Promise<ApiResponse<CarrierResponse>> => {
+        try {
+            const response = await axiosInstance.post<ApiResponse<CarrierResponse>>(`${API_URL}/add`, carrierRequest);
+            return response.data;
+        } catch (error) {
+            console.error('Error saving carrier:', error);
+            throw new Error('Failed to save carrier. Please try again later.');
+        }
+    },
 }

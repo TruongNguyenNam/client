@@ -309,8 +309,11 @@ const goToGiftCoupon = (coupon: Coupon) => {
                             <span class="filter-separator">-</span>
                             <InputNumber v-model="maxDiscount" :min="0" placeholder="Đến" class="filter-input" />
                         </div>
-                        <InputText v-model="searchTerm" placeholder="Tìm theo mã phiếu..." class="search-input-box"
-                            @keyup="debouncedSearch" />
+                        <span class="p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <InputText v-model="searchTerm" placeholder="Tìm theo mã phiếu..." class="search-input-box"
+                                @keyup="debouncedSearch" />
+                        </span>
                     </div>
                 </div>
 
