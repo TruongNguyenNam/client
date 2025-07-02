@@ -193,9 +193,9 @@
       <!-- Nút điều khiển -->
       <div class="flex justify-end gap-2">
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
-        <!-- <Button label="Hoàn tất" icon="pi pi-check" @click="$emit('complete-payment')" /> -->
+        <Button label="Hoàn tất" icon="pi pi-check" @click="$emit('complete-payment')" />
         <!-- <Button label="In hóa đơn" icon="pi pi-print" severity="info" @click="handlePrint" /> -->
-        <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" />
+        <!-- <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" /> -->
 
       </div>
     </div>

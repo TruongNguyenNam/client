@@ -44,7 +44,7 @@ const router = createRouter({
         },
 
         {
-            path: '/client',
+            path: '/client',    
             component: ClientLayout,
             children: [
                 { path: '', name: 'client-home', component: () => import('@/views/pages/client/Home.vue') },
