@@ -221,7 +221,7 @@ import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
 import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
 import CustomerDialog from './CustomerDialog.vue';
-import InvoicePrint from './InvoicePrint.vue'
+import InvoicePrint from './InvoicePrint.vue';
 
 const showPrintPreview = ref(false)
 const handlePrint = () => {
