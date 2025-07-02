@@ -81,6 +81,8 @@ import type { UserResponse } from '../../service/auth/AuthService';
 import { useAuthStore } from '../../stores/auth';
 import { RouterLink } from 'vue-router';
 
+
+
 const router = useRouter();
 const userMenuRef = ref();
 const authStore = useAuthStore();

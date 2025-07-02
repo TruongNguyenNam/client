@@ -32,7 +32,7 @@ export const CustomerService = {
             throw new Error('Failed to fetch Customer. Please try again later.');
         }
     },
-    
+
     getCustomersNotReceivedCoupon: async (couponId: number): Promise<ApiResponse<CustomerResponse[]>> => {
         try {
             const response = await axiosInstance.get<ApiResponse<CustomerResponse[]>>(
@@ -54,10 +54,10 @@ export const CustomerService = {
 
         } catch (error) {
 
-            throw new Error('Failed to create customer.');
+            throw error;
         }
     },
-    
+
     // Sửa thông tin khách hàng
     updateCustomer: async (id: number, data: CustomerRequest): Promise<ApiResponse<CustomerResponse>> => {
         try {
@@ -67,7 +67,24 @@ export const CustomerService = {
             );
             return response.data;
         } catch (error) {
-            throw new Error('Failed to update customer.');
+            throw error;
+        }
+    },
+
+    // Tìm kiếm khách hàng theo keyword (email, phone, username)
+    searchCustomers: async (keyword: string): Promise<ApiResponse<CustomerResponse[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<CustomerResponse[]>>(
+                `${API_URL}/search`,
+                {
+                    params: {
+                        keyword: keyword
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw new Error('Failed to search customers.');
         }
     },
 

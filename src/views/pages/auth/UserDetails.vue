@@ -1,230 +1,143 @@
 <template>
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="w-full max-w-4xl space-y-8">
-      <!-- Thông tin người dùng -->
-      <div class="bg-white rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Thông tin cá nhân</h1>
-
-        <div v-if="error" class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded mb-6">
-          {{ error }}
+  <br> <br> <br> <br>
+  <div class="profile-layout">
+    <!-- Sidebar -->
+    <aside class="profile-sidebar">
+      <div class="profile-username">{{ user?.username || 'Tên người dùng' }}</div>
+      <button class="sidebar-edit-btn">Sửa Hồ Sơ</button>
+      <nav class="profile-menu">
+        <div class="profile-menu-section">Tài Khoản Của Tôi</div>
+        <a class="profile-menu-item active" href="#">Hồ Sơ</a>
+        <a class="profile-menu-item" href="#">Ngân Hàng</a>
+        <a class="profile-menu-item" href="#">Địa Chỉ</a>
+        <a class="profile-menu-item" href="#">Đổi Mật Khẩu</a>
+        <a class="profile-menu-item" href="#">Cài Đặt Thông Báo</a>
+        <a class="profile-menu-item" href="#">Những Thiết Lập Riêng Tư</a>
+        <div class="profile-menu-section mt-3"></div>
+        <a class="profile-menu-item" href="#">Đơn Mua</a>
+        <a class="profile-menu-item" href="#">Kho Voucher</a>
+        <div class="profile-menu-sale">
+          <span class="sale-badge">7.7</span>
+          <span>Sale Hè Freeship</span>
+          <span class="sale-new">New</span>
         </div>
-        <div v-if="successMessage" class="bg-green-50 border-l-4 border-green-400 text-green-700 p-4 rounded mb-6">
-          {{ successMessage }}
-        </div>
+      </nav>
+    </aside>
 
-        <div v-if="user" class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-600">
-          <div class="space-y-3">
-            <p><strong class="font-medium">Tên:</strong> {{ user.username }}</p>
-            <p><strong class="font-medium">Email:</strong> {{ user.email }}</p>
-            <p><strong class="font-medium">Vai trò:</strong> {{ user.role }}</p>
-          </div>
-          <div class="space-y-3">
-            <p><strong class="font-medium">Số điện thoại:</strong> {{ user.phoneNumber || 'Chưa cập nhật' }}</p>
-            <p><strong class="font-medium">Giới tính:</strong> {{ user.gender || 'Chưa cập nhật' }}</p>
-            <p>
-              <strong class="font-medium">Địa chỉ:</strong>
-              <span v-if="user.address">
-                {{ user.address.addressStreet || '' }}, {{ user.address.addressWard || '' }},
-                {{ user.address.addressDistrict || '' }}, {{ user.address.addressProvince || '' }},
-                {{ user.address.addressCity || '' }}, {{ user.address.addressCountry || '' }}
-                {{ user.address.addressZipcode || '' }}
-              </span>
-              <span v-else>Chưa cập nhật</span>
-            </p>
-            <p><strong class="font-medium">Trạng thái:</strong> {{ user.isActive ? 'Kích hoạt' : 'Chưa kích hoạt' }}</p>
+    <!-- Main Profile Content -->
+    <main class="profile-main">
+      <form @submit.prevent="updateUser" class="profile-form">
+        <h1 class="profile-form-title">Hồ Sơ Của Tôi</h1>
+        <p class="profile-form-desc">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+        <div class="profile-form-row">
+          <label class="profile-label">Tên đăng nhập</label>
+          <div class="profile-value">{{ user?.username }}</div>
+        </div>
+        <div class="profile-form-row">
+          <label class="profile-label">Tên</label>
+          <input v-model="updateForm.name" class="profile-input" placeholder="Nhập tên" />
+        </div>
+        <div class="profile-form-row">
+          <label class="profile-label">Email</label>
+          <div class="profile-value">
+            {{ maskedEmail }}
+            <button type="button" class="profile-link">Thay Đổi</button>
           </div>
         </div>
-        <div v-else class="text-center text-gray-500 py-6">Đang tải thông tin...</div>
-      </div>
-
-      <!-- Form cập nhật -->
-      <div class="bg-white rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6 text-center">Cập nhật thông tin</h2>
-
-        <form @submit.prevent="updateUser" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="form-label">Email</label>
-              <InputText v-model="updateForm.email" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label">Số điện thoại</label>
-              <InputText v-model="updateForm.phoneNumber" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label">Giới tính</label>
-              <Dropdown
-                v-model="updateForm.gender"
-                :options="genderOptions"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Chọn giới tính"
-                class="form-input"
-              />
-            </div>
+        <div class="profile-form-row">
+          <label class="profile-label">Số điện thoại</label>
+          <div class="profile-value">
+            {{ maskedPhone }}
+            <button type="button" class="profile-link">Thay Đổi</button>
           </div>
-
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Địa chỉ</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <InputText v-model="updateForm.address.addressStreet" placeholder="Địa chỉ chi tiết" class="form-input" />
-              <Dropdown
-                v-model="updateForm.address.addressProvince"
-                :options="provinceOptions"
-                optionLabel="name"
-                optionValue="name"
-                placeholder="Tỉnh/Thành phố"
-                class="form-input"
-                @change="onProvinceChange"
-              />
-              <Dropdown
-                v-model="updateForm.address.addressDistrict"
-                :options="districtOptions"
-                optionLabel="name"
-                optionValue="name"
-                placeholder="Quận/Huyện"
-                class="form-input"
-                :disabled="!updateForm.address.addressProvince"
-                @change="onDistrictChange"
-              />
-              <Dropdown
-                v-model="updateForm.address.addressWard"
-                :options="wardOptions"
-                optionLabel="name"
-                optionValue="name"
-                placeholder="Phường/Xã"
-                class="form-input"
-                :disabled="!updateForm.address.addressDistrict"
-              />
-              <InputText v-model="updateForm.address.addressCity" placeholder="Thành phố" class="form-input" />
-              <InputText v-model="updateForm.address.addressCountry" placeholder="Quốc gia" class="form-input" />
-              <InputText v-model="updateForm.address.addressZipcode" placeholder="Mã bưu điện" class="form-input" />
-            </div>
+        </div>
+        <div class="profile-form-row">
+          <label class="profile-label">Giới tính</label>
+          <div class="profile-radio-group">
+            <label v-for="opt in genderOptions" :key="opt.value" class="profile-radio-label">
+              <input type="radio" :value="opt.value" v-model="updateForm.gender" class="profile-radio" />
+              <span>{{ opt.label }}</span>
+            </label>
           </div>
-
-          <div class="text-center pt-4">
-            <Button
-              type="submit"
-              label="Cập nhật"
-              icon="pi pi-check"
-              :loading="loading"
-              class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-            />
+        </div>
+        <div class="profile-form-row">
+          <label class="profile-label">Ngày sinh</label>
+          <div class="profile-value">
+            <input v-model="updateForm.birthday" type="date" class="profile-input" style="max-width: 180px" />
+            <button type="button" class="profile-link">Thay Đổi</button>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <div class="profile-form-row">
+          <button type="submit" class="profile-save-btn" :disabled="loading">
+            {{ loading ? 'Đang lưu...' : 'Lưu' }}
+          </button>
+          <span v-if="successMessage" class="profile-success">{{ successMessage }}</span>
+          <span v-if="error" class="profile-error">{{ error }}</span>
+        </div>
+      </form>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
-import Button from 'primevue/button';
-import provincesData from '../../../assets/data/vietnam_provinces.json';
+import { ref, computed, onMounted } from 'vue';
+// Dummy service imports. Replace with your actual service.
 import { AuthService } from '../../../service/auth/AuthService';
-import type { UserResponse, UpdateUserForm } from '../../../service/auth/AuthService';
-import { useRouter } from 'vue-router';
-
-const router = useRouter();
+import type { UserResponse } from '../../../service/auth/AuthService';
 
 const user = ref<UserResponse | null>(null);
-const updateForm = ref<UpdateUserForm>({
+const updateForm = ref({
+  name: '',
   email: '',
   phoneNumber: '',
   gender: '',
-  address: {
-    id: 0,
-    addressStreet: '',
-    addressWard: '',
-    addressCity: '',
-    addressState: '',
-    addressCountry: '',
-    addressZipcode: '',
-    addressDistrict: '',
-    addressProvince: '',
-  },
+  birthday: ''
 });
+const loading = ref(false);
 const error = ref('');
 const successMessage = ref('');
-const loading = ref(false);
-
-const genderOptions = ref([
+const genderOptions = [
   { label: 'Nam', value: 'MALE' },
   { label: 'Nữ', value: 'FEMALE' },
-]);
+  { label: 'Khác', value: 'OTHER' }
+];
 
-const provinceOptions = ref(provincesData.data);
-const districtOptions = ref<any[]>([]);
-const wardOptions = ref<any[]>([]);
-
-const userId = ref<number>(parseInt(sessionStorage.getItem('userId') || '0'));
-
-const onProvinceChange = () => {
-  const province = provinceOptions.value.find(p => p.name === updateForm.value.address.addressProvince);
-  districtOptions.value = province?.level2s || [];
-  updateForm.value.address.addressDistrict = '';
-  updateForm.value.address.addressWard = '';
-  wardOptions.value = [];
-};
-
-const onDistrictChange = () => {
-  const district = districtOptions.value.find(d => d.name === updateForm.value.address.addressDistrict);
-  wardOptions.value = district?.level3s || [];
-  updateForm.value.address.addressWard = '';
-};
+const maskedEmail = computed(() => {
+  if (!user.value?.email) return '';
+  const parts = user.value.email.split('@');
+  return parts[0].slice(0, 2) + '*****@' + parts[1];
+});
+const maskedPhone = computed(() => {
+  if (!user.value?.phoneNumber) return '';
+  return '*******' + user.value.phoneNumber.slice(-2);
+});
 
 const fetchUserInfo = async () => {
-  if (!userId.value || isNaN(userId.value)) {
-    error.value = 'Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.';
-    router.push('/auth/login');
-    return;
-  }
   try {
-    const response = await AuthService.findByUserId(userId.value);
-    if (response.data) {
-      user.value = response.data;
-      const u = user.value;
-      updateForm.value.email = u.email || '';
-      updateForm.value.phoneNumber = u.phoneNumber || '';
-      updateForm.value.gender = u.gender || '';
-      updateForm.value.address = u.address || updateForm.value.address;
-
-      if (u.address?.addressProvince) {
-        districtOptions.value = provinceOptions.value.find(p => p.name === u.address?.addressProvince)?.level2s || [];
-      }
-      if (u.address?.addressDistrict) {
-        wardOptions.value = districtOptions.value.find(d => d.name === u.address?.addressDistrict)?.level3s || [];
-      }
-    } else {
-      error.value = 'Không tìm thấy thông tin người dùng.';
-    }
+    const userId = parseInt(sessionStorage.getItem('userId') || '0');
+    const response = await AuthService.findByUserId(userId);
+    user.value = response.data ?? null;
+    updateForm.value.name = user.value?.username ?? '';
+    updateForm.value.email = user.value?.email ?? '';
+    updateForm.value.phoneNumber = user.value?.phoneNumber ?? '';
+    updateForm.value.gender = user.value?.gender ?? '';
+    updateForm.value.birthday = user.value?.birthday ?? '';
   } catch (err: any) {
-    error.value = 'Lỗi khi lấy thông tin người dùng: ' + (err.message || 'Không xác định');
-    router.push('/auth/login');
+    error.value = 'Không thể lấy thông tin người dùng.';
   }
 };
 
 const updateUser = async () => {
-  if (!userId.value || isNaN(userId.value)) {
-    error.value = 'Không tìm thấy ID người dùng.';
-    return;
-  }
   loading.value = true;
+  error.value = '';
+  successMessage.value = '';
   try {
-    const response = await AuthService.updateUserAddress(userId.value, updateForm.value);
-    if (response.data) {
-      user.value = response.data;
-      successMessage.value = response.data.message || 'Cập nhật thành công!';
-      error.value = '';
-      sessionStorage.setItem('userInfo', JSON.stringify(response.data));
-    } else {
-      error.value = 'Cập nhật thất bại: Không nhận được dữ liệu.';
-    }
+    const userId = parseInt(sessionStorage.getItem('userId') || '0');
+    await AuthService.updateUserProfile(userId, updateForm.value);
+    successMessage.value = 'Cập nhật thành công!';
+    await fetchUserInfo();
   } catch (err: any) {
-    error.value = 'Lỗi khi cập nhật thông tin: ' + (err.message || 'Không xác định');
-    successMessage.value = '';
+    error.value = 'Lỗi khi cập nhật: ' + (err.message || 'Không xác định');
   } finally {
     loading.value = false;
   }
@@ -236,10 +149,207 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.form-label {
-  @apply block text-sm font-medium text-gray-700 mb-1.5;
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+.profile-layout {
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
 }
-.form-input {
-  @apply w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200;
+.profile-sidebar {
+  width: 280px;
+  min-width: 210px;
+  background: #fff;
+  border-right: 1px solid #ececec;
+  padding: 40px 24px 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.profile-username {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 6px;
+}
+.sidebar-edit-btn {
+  color: #1793e6;
+  font-size: 12px;
+  background: none;
+  border: none;
+  margin-bottom: 28px;
+  cursor: pointer;
+  padding: 0;
+}
+.profile-menu {
+  width: 100%;
+}
+.profile-menu-section {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+.profile-menu-item {
+  display: block;
+  color: #222;
+  font-size: 16px;
+  padding: 5px 0 5px 0;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background 0.1s;
+  margin-bottom: 2px;
+}
+.profile-menu-item.active,
+.profile-menu-item:hover {
+  color: #ee4d2d;
+  background: #fef6f5;
+  font-weight: 600;
+}
+.profile-menu-sale {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  font-size: 14px;
+  gap: 4px;
+}
+.sale-badge {
+  background: #ee4d2d;
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+.sale-new {
+  color: #ee4d2d;
+  font-weight: 600;
+  font-size: 13px;
+  margin-left: 5px;
+}
+
+/* Main content */
+.profile-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 0;
+}
+.profile-form {
+  background: #fff;
+  width: 100%;
+  max-width: 680px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,.04);
+  padding: 36px 48px 32px 48px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.profile-form-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 2px;
+}
+.profile-form-desc {
+  color: #888;
+  font-size: 15px;
+  margin-bottom: 30px;
+}
+.profile-form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 21px;
+}
+.profile-label {
+  width: 150px;
+  color: #555;
+  font-size: 15px;
+  font-weight: 500;
+  margin-right: 18px;
+}
+.profile-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  color: #222;
+  gap: 6px;
+}
+.profile-input {
+  flex: 1;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  padding: 9px 12px;
+  font-size: 15px;
+  outline: none;
+  transition: border 0.2s;
+}
+.profile-input:focus {
+  border-color: #ee4d2d;
+}
+.profile-link {
+  background: none;
+  border: none;
+  color: #1793e6;
+  font-size: 14px;
+  margin-left: 10px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.profile-link:hover {
+  color: #ee4d2d;
+}
+.profile-radio-group {
+  display: flex;
+  gap: 24px;
+}
+.profile-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  margin-right: 13px;
+  color: #444;
+  font-weight: 400;
+}
+.profile-radio {
+  accent-color: #ee4d2d;
+  margin-right: 6px;
+}
+.profile-save-btn {
+  min-width: 120px;
+  background: #ee4d2d;
+  color: #fff;
+  font-size: 15px;
+  padding: 11px 0;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-right: 18px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.profile-save-btn:disabled {
+  background: #ffb199;
+  cursor: not-allowed;
+}
+.profile-success {
+  color: #13c97a;
+  font-size: 15px;
+  margin-left: 12px;
+}
+.profile-error {
+  color: #ee4d2d;
+  font-size: 15px;
+  margin-left: 12px;
+}
+@media (max-width: 900px) {
+  .profile-form { padding: 20px 10px; }
+  .profile-main { padding: 30px 0; }
+  .profile-sidebar { padding: 30px 10px 0 10px; }
 }
 </style>

@@ -261,7 +261,10 @@ const debouncedSearch = (event) => {
                 <DataTable v-model:selection="selectedSuppliers" :value="suppliers" :paginator="true"
                     :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
                     emptyMessage="Không tìm thấy nhà cung cấp nào." :loading="loading" @page="onPage"
-                    :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['name', 'description']">
+                    :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['name', 'description']"
+                     class="p-datatable-gridlines"
+                    :rowHover="true"
+                    >
                     <template #header>
                         <div class="flex justify-content-between align-items-center">
                             <span class="text-xl font-semibold">Danh sách nhà cung cấp</span>
@@ -271,13 +274,11 @@ const debouncedSearch = (event) => {
                     <!-- <Column field="id" header="ID" sortable /> -->
                     <Column field="name" header="Tên nhà cung cấp" sortable class="nhaCungCap" />
                     <Column field="description" header="Mô tả" sortable />
-                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
+                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem" >
                         <template #body="slotProps">
                             <div class="flex">
                                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
                                     @click="editSupplier(slotProps.data)" />
-                                <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
-                                    @click="confirmDeleteSupplier(slotProps.data)" />
                             </div>
                         </template>
                     </Column>
