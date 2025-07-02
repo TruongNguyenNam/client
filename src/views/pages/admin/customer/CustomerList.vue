@@ -111,26 +111,34 @@ const formatGender = (gender: string | null | undefined) => {
           <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />
           <div class="search-bar-vertical">
             <span class="p-input-icon-left">
-            <i class="pi pi-search"></i>
-            <InputText v-model="searchTerm" placeholder="Tìm theo Tên, Email hoặc SĐT" class="search-input-box"
-              @keyup="debouncedSearch" />
-              </span>
+              <i class="pi pi-search"></i>
+              <InputText v-model="searchTerm" placeholder="Tìm theo Tên, Email hoặc SĐT" class="search-input-box"
+                @keyup="debouncedSearch" />
+            </span>
           </div>
         </div>
-        <DataTable v-model:selection="selectedCustomers" :value="customers" :paginator="true"
-          :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
-          emptyMessage="Không tìm thấy khách hàng nào." :loading="loading" @page="onPage"
-          :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['username', 'email', 'phoneNumber']">
+        <DataTable v-model:selection="selectedCustomers" 
+          :value="customers" 
+          :paginator="true"
+          :first="lazyParams.page * lazyParams.size" 
+          :rows="lazyParams.size" 
+          :totalRecords="totalRecords"
+          emptyMessage="Không tìm thấy khách hàng nào." 
+          :loading="loading" @page="onPage"
+          :rowsPerPageOptions="[5, 10, 20, 50]" 
+          class="p-datatable-gridlines"
+          :rowHover="true"
+          :globalFilterFields="['username', 'email', 'phoneNumber']">
           <template #header>
             <div class="flex justify-content-between align-items-center">
               <span class="text-xl font-semibold">Danh sách khách hàng</span>
             </div>
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
-          <Column field="username" header="Tên khách hàng" />
-          <Column field="email" header="Email" />
-          <Column field="phoneNumber" header="Số điện thoại" />
-          <Column header="Địa chỉ">
+          <Column field="username" header="Tên khách hàng" sortable/>
+          <Column field="email" header="Email" sortable/>
+          <Column field="phoneNumber" header="Số điện thoại" sortable />
+          <Column header="Địa chỉ" sortable>
             <template #body="slotProps">
               {{
                 [
@@ -143,12 +151,12 @@ const formatGender = (gender: string | null | undefined) => {
               }}
             </template>
           </Column>
-          <Column field="gender" header="Giới tính">
+          <Column field="gender" header="Giới tính" sortable>
             <template #body="slotProps">
               {{ formatGender(slotProps.data.gender) }}
             </template>
           </Column>
-          <Column field="status" header="Trạng thái" sortable>
+          <Column field="status" header="Trạng thái" >
             <template #body="slotProps">
               <Tag :value="getCustomerStatus(slotProps.data).text"
                 :severity="getCustomerStatus(slotProps.data).severity" />
