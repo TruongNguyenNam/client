@@ -113,17 +113,7 @@ export interface LoginInfoDto {
   address: UserAddress | null;
 }
 
-export interface UserAddress {
-  id: number;
-  addressStreet: string;
-  addressWard: string;
-  addressCity: string;
-  addressState: string;
-  addressCountry: string;
-  addressZipcode: string;
-  addressDistrict: string;
-  addressProvince: string;
-}
+
 
 export interface TokenDTO {
   token: string;
@@ -139,7 +129,18 @@ export interface UserResponse {
   phoneNumber: string | null;
   gender: string | null;
   isActive: boolean;
-  address: UserAddress | null;
+  address: UserAddress;
+}
+export interface UserAddress {
+  id: number;
+  addressStreet: string;
+  addressWard: string;
+  addressCity: string;
+  addressState: string;
+  addressCountry: string;
+  addressZipcode: string;
+  addressDistrict: string;
+  addressProvince: string;
 }
 
 export interface UpdateUserForm {

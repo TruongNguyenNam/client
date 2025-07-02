@@ -1,4 +1,5 @@
 // src/stores/auth.ts
+// test lại file chỉnh sửa bage trong giao diện
 import { defineStore } from 'pinia';
 import type { WishlistResponse, WishlistRequest } from '../model/client/wishlist';
 import type { ShoppingCartResponse, ShoppingCartRequest } from '../model/client/cart';
@@ -6,7 +7,6 @@ import type { UserResponse } from '../service/auth/AuthService';
 import { WishlistClientService } from '../service/client/WishlistClientService';
 import { CartClientService } from '../service/client/CartClientService';
 import { AuthService } from '../service/auth/AuthService';
-
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     userId: null as number | null,
@@ -48,9 +48,6 @@ export const useAuthStore = defineStore('auth', {
         if (response.status === 200 && response.data) {
           this.wishlist = response.data;
           this.wishlistCount = response.data.reduce((count, item) => count + (item.product?.length || 0), 0);
-        } else {
-          this.wishlist = [];
-          this.wishlistCount = 0;
         }
       } catch (error) {
         console.error('Lỗi khi tải danh sách yêu thích:', error);
@@ -89,15 +86,9 @@ export const useAuthStore = defineStore('auth', {
       if (!this.userId) return;
       try {
         const response = await CartClientService.viewCart(this.userId);
-        console.log('API response for cart:', response.data); // Log dữ liệu từ API
         if (response.status === 200 && response.data) {
           this.cart = response.data;
-          this.cartCount = response.data.length; // Cập nhật cartCount
-          console.log('Cart updated, cartCount:', this.cartCount); // Log để debug
-        } else {
-          this.cart = [];
-          this.cartCount = 0;
-          console.log('Cart reset, cartCount:', this.cartCount); // Log khi reset
+          this.cartCount = response.data.length; 
         }
       } catch (error) {
         console.error('Lỗi khi tải giỏ hàng:', error);
@@ -124,7 +115,6 @@ export const useAuthStore = defineStore('auth', {
     async removeFromCart(cartItemId: number) {
       try {
         const response = await CartClientService.removeProductFromCart(cartItemId);
-        console.log('Remove response:', response); 
         if (response.status === 200) {
           await this.fetchCart();
         }
