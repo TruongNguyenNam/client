@@ -6,22 +6,26 @@ import AppMenuItem from './AppMenuItem.vue';
 const model = ref([
     {
         label: 'Home',
-        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
+        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/home' }]
+    },
+    {
+        label: 'Pos Store',
+        items: [{ label: 'Bán Hàng', icon: 'pi pi-fw pi-shopping-bag', to: '/order',class:'rotated-icon' },]
     },
     {
         label: 'Admin Store',
         items: [
             // { label: 'productForm', icon: 'pi pi-fw pi-id-card', to: '/prodductadd' },
-            { label: 'Statistical', icon: 'pi pi-fw pi-table', to: '/home',class:'rotated-icon' },
-            { label: 'Product', icon: 'pi pi-fw pi-box', to: '/documentation' },
-            { label: 'Category', icon: 'pi pi-fw pi-check-square', to: '/category' },
-            { label: 'Customer', icon: 'pi pi-fw pi-users', to: '/customers' },
-            { label: 'Supplier', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },
-            { label: 'Attribute', icon: 'pi pi-fw pi-exclamation-circle', to: '/attribute' },
-            { label: 'Discount', icon: 'pi pi-fw pi-exclamation-circle', to: '/discount' },
-            { label: 'Coupon', icon: 'pi pi-fw pi-ticket', to: '/coupon' }, 
-            { label: 'Tag', icon: 'pi pi-fw pi-tags', to: '/tag', class: 'rotated-icon' },
-            { label: 'Order', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
+            { label: 'Doanh Thu', icon: 'pi pi-fw pi-home', to: '/home',class:'rotated-icon' },
+            { label: 'Sản Phẩm', icon: 'pi pi-fw pi-box', to: '/documentation' },
+            { label: 'Danh mục', icon: 'pi pi-fw pi-check-square', to: '/category' },
+            { label: 'Khách Hàng', icon: 'pi pi-fw pi-users', to: '/customers' },
+            { label: 'Nhà Sản Xuất', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },
+            { label: 'Thuộc Tính', icon: 'pi pi-fw pi-exclamation-circle', to: '/attribute' },
+            { label: 'Đợt Giảm Giá', icon: 'pi pi-fw pi-ticket', to: '/discount' },
+            { label: 'Phiếu Giảm Giá', icon: 'pi pi-fw pi-ticket', to: '/coupon' }, 
+            { label: 'Nhãn', icon: 'pi pi-fw pi-tags', to: '/tag', class: 'rotated-icon' },
+            // { label: 'Bán Hàng', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
           
             {
                 label: 'User',
