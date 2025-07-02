@@ -25,6 +25,8 @@ const model = ref([
             { label: 'Đợt Giảm Giá', icon: 'pi pi-fw pi-ticket', to: '/discount' },
             { label: 'Phiếu Giảm Giá', icon: 'pi pi-fw pi-ticket', to: '/coupon' }, 
             { label: 'Nhãn', icon: 'pi pi-fw pi-tags', to: '/tag', class: 'rotated-icon' },
+            { label: 'Đơn hàng', icon: 'pi pi-fw pi-tags', to: '/management', class: 'rotated-icon' },
+
             // { label: 'Bán Hàng', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
           
             {
