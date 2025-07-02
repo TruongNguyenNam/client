@@ -196,7 +196,7 @@ const formatCurrency = (value) => {
           <i class="pi pi-calendar text-white text-xl"></i>
         </div>
         <div class="mt-3 text-sm">
-          {{ todayProductCount }} Sản Phẩm, {{ todaySuccessOrders }} Thành Công, {{ todayCancelledOrders }} Hoàn, {{ todayReturnedOrders }} Trả
+          {{ todayProductCount }} Sản Phẩm, {{ todaySuccessOrders }} Thành Công, {{ todayCancelledOrders }} Huỷ, {{ todayReturnedOrders }} Trả
         </div>
       </div>
     </div>
@@ -212,7 +212,7 @@ const formatCurrency = (value) => {
           <i class="pi pi-calendar text-white text-xl"></i>
         </div>
         <div class="mt-3 text-sm">
-          {{ monthlyProductCount }} Sản Phẩm, {{ monthlySuccessOrders }} Thành Công, {{ monthlyCancelledOrders }} Hoàn, {{ monthlyReturnedOrders }} Trả
+          {{ monthlyProductCount }} Sản Phẩm, {{ monthlySuccessOrders }} Thành Công, {{ monthlyCancelledOrders }} Huỷ, {{ monthlyReturnedOrders }} Trả
         </div>
       </div>
     </div>
@@ -228,7 +228,7 @@ const formatCurrency = (value) => {
           <i class="pi pi-calendar text-white text-xl"></i>
         </div>
         <div class="mt-3 text-sm">
-          {{ yearlyProductCount }} Sản Phẩm, {{ yearlySuccessOrders }} Thành Công, {{ yearlyCancelledOrders }} Hoàn, {{ yearlyReturnedOrders }} Trả
+          {{ yearlyProductCount }} Sản Phẩm, {{ yearlySuccessOrders }} Thành Công, {{ yearlyCancelledOrders }} Huỷ, {{ yearlyReturnedOrders }} Trả
         </div>
       </div>
     </div>
@@ -247,7 +247,7 @@ const formatCurrency = (value) => {
         <Button label="Lọc" icon="pi pi-search" class="w-full" @click="fetchCustomStats" />
         <div v-if="customRevenue !== null" class="mt-3 text-2xl font-bold">{{ formatCurrency(customRevenue) }}</div>
         <div v-if="customRevenue !== null" class="mt-2 text-sm">
-          {{ customProductCount }} Sản Phẩm, {{ customSuccessOrders }} Thành công, {{ customCancelledOrders }} Hoàn, {{ customReturnedOrders }} Trả
+          {{ customProductCount }} Sản Phẩm, {{ customSuccessOrders }} Thành công, {{ customCancelledOrders }} Huỷ, {{ customReturnedOrders }} Trả
         </div>
       </div>
     </div>

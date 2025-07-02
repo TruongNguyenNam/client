@@ -193,15 +193,16 @@
       <!-- Nút điều khiển -->
       <div class="flex justify-end gap-2">
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
-        <Button label="Hoàn tất" icon="pi pi-check" @click="$emit('complete-payment')" />
-        <Button label="In hóa đơn" icon="pi pi-print" severity="info" @click="handlePrint" />
+        <!-- <Button label="Hoàn tất" icon="pi pi-check" @click="$emit('complete-payment')" /> -->
+        <!-- <Button label="In hóa đơn" icon="pi pi-print" severity="info" @click="handlePrint" /> -->
+        <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" />
+
       </div>
     </div>
-    <!-- Chèn ở cuối Sidebar -->
-     <!--  -->
     <InvoicePrint v-if="showPrintPreview" :invoice="invoice" :changeAmount="changeAmount" />
 
   </Sidebar>
+  <ConfirmDialog />
 </template>
 
 <script setup lang="ts">
@@ -222,6 +223,72 @@ import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
 import CustomerDialog from './CustomerDialog.vue';
 import InvoicePrint from './InvoicePrint.vue';
+import { useConfirm } from 'primevue/useconfirm';
+
+
+const confirm = useConfirm();
+
+const validateBeforeComplete = () => {
+  const required = calculateFinalTotal();
+  const paid = props.invoice.paidAmount || 0;
+  if (!props.invoice.isPos && !selectedCustomer.value) {
+    toast.add({
+      severity: 'error',
+      summary: 'Thiếu khách hàng',
+      detail: 'Đơn hàng giao hàng cần chọn khách hàng',
+      life: 3000
+    });
+    return false;
+  }
+  if (!props.invoice.paymentMethodId) {
+    toast.add({
+      severity: 'error',
+      summary: 'Thiếu phương thức thanh toán',
+      detail: 'Vui lòng chọn phương thức thanh toán',
+      life: 3000
+    });
+    return false;
+  }
+  if (paid < required) {
+    toast.add({
+      severity: 'error',
+      summary: 'Chưa thanh toán đủ',
+      detail: 'Số tiền khách thanh toán phải lớn hơn hoặc bằng số tiền cần trả',
+      life: 3000
+    });
+    return false;
+  }
+  return true;
+};
+const completeAndPrint = () => {
+  if (!validateBeforeComplete()) return;
+  confirm.require({
+    message: 'Bạn có muốn in hóa đơn không?',
+    header: 'Xác nhận in hóa đơn',
+    icon: 'pi pi-print',
+    acceptLabel: 'Có',
+    rejectLabel: 'Không',
+    accept: () => {
+      emit('complete-payment');
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đơn hàng đã hoàn tất',
+        life: 3000
+      });
+      handlePrint();
+    },
+    reject: () => {
+      emit('complete-payment');
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đơn hàng đã hoàn tất',
+        life: 3000
+      });
+    }
+  });
+};
 
 const showPrintPreview = ref(false)
 const handlePrint = () => {
