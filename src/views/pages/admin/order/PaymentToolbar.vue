@@ -1,3 +1,4 @@
+```vue
 <template>
   <Sidebar v-model:visible="isVisible" position="right" class="payment-toolbar"
     :style="{ width: '550px', maxWidth: '100%' }" :dismissable="false" @hide="$emit('close')">
@@ -16,13 +17,9 @@
 
       <CustomerDialog v-model="showDialog" @selected="handleCustomerSelect" />
 
-
-
-      <!-- Thông tin khách hàng -->
       <!-- Thông tin khách hàng -->
       <div v-if="selectedCustomer" class="mb-4 bg-gray-50 rounded-lg p-5 shadow-sm">
         <div class="space-y-4">
-          <!-- Họ tên & SĐT -->
           <label class="block text-sm text-gray-600 mb-2">Thông Tin Khách Hàng</label>
           <div class="flex gap-4">
             <div class="flex-1">
@@ -36,66 +33,13 @@
                 placeholder="Số điện thoại" />
             </div>
           </div>
-
-          <!-- Email -->
-          <!-- <div>
-          <label class="block text-sm text-gray-600 mb-1">Email</label>
-          <InputText
-            v-model="selectedCustomer.email"
-            class="w-full bg-gray-100"
-            :disabled="true"
-            placeholder="Email"
-          />
-        </div> -->
-
-          <!-- Địa chỉ giao hàng -->
           <div>
             <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
-
-            <!-- Đường -->
             <div class="mb-3">
-              <label class="block text-sm text-gray-600 mb-2">số nhà </label>
+              <label class="block text-sm text-gray-600 mb-2">Số nhà</label>
               <InputText v-model="selectedCustomer.addressStreet" class="w-full bg-gray-100" :disabled="true"
                 placeholder="Số nhà, tên đường" />
             </div>
-
-            <!-- <div class="mb-3">
-            <InputText
-                v-model="selectedCustomer.addressWard"
-                class="w-full bg-gray-100"
-                :disabled="true"
-                placeholder="Phường/Xã"
-              />
-          </div>
-
-          <div class="mb-3">
-            <InputText
-                v-model="selectedCustomer.addressDistrict"
-                class="w-full bg-gray-100"
-                :disabled="true"
-                placeholder="Quận/Huyện"
-              />
-          </div>
-
-          <div class="mb-3">
-            <InputText
-              v-model="selectedCustomer.addressProvince"
-              class="w-full bg-gray-100"
-              :disabled="true"
-              placeholder="Tỉnh/Thành phố"
-            />
-          </div>
-
-          <div class="mb-3">
-              <InputText
-              v-model="selectedCustomer.addressZipcode"
-              class="w-full bg-gray-100"
-              :disabled="true"
-              placeholder="Mã bưu chính"
-            />
-          </div> -->
-
-            <!-- Phường / Quận -->
             <div class="flex gap-4 mb-3">
               <div class="flex-1">
                 <label class="block text-sm text-gray-600 mb-2">Phường / Quận</label>
@@ -108,8 +52,6 @@
                   placeholder="Quận/Huyện" />
               </div>
             </div>
-
-            <!-- Tỉnh / Mã bưu chính -->
             <div class="flex gap-4">
               <div class="flex-1">
                 <label class="block text-sm text-gray-600 mb-2">Tỉnh/Thành phố</label>
@@ -126,12 +68,16 @@
         </div>
       </div>
 
-
       <!-- Thông tin vận chuyển (nếu không phải POS) -->
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Nhà vận chuyển</label>
         <Dropdown v-model="invoice.carrierId" :options="carriers" optionLabel="name" optionValue="id"
           placeholder="Chọn nhà vận chuyển" class="w-full" />
+      </div>
+      <div v-if="!invoice.isPos" class="mb-4">
+        <label class="block mb-1 font-medium">Phí vận chuyển</label>
+        <InputNumber v-model="invoice.shippingCost" @input="handleShippingCostChange" class="w-full"
+          :min="0" :useGrouping="true" placeholder="Nhập phí vận chuyển" />
       </div>
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Ngày giao dự kiến</label>
@@ -143,6 +89,10 @@
         <div class="flex justify-between mb-2 items-center">
           <span class="label">Tổng tiền hàng:</span>
           <span class="value font-medium">{{ formatCurrency(invoice.orderTotal).replace('₫', 'đ') }}</span>
+        </div>
+        <div v-if="!invoice.isPos" class="flex justify-between mb-2 items-center">
+          <span class="label">Phí vận chuyển:</span>
+          <span class="value font-medium">{{ formatCurrency(invoice.shippingCost || 0).replace('₫', 'đ') }}</span>
         </div>
         <div class="flex justify-between mb-2 items-center">
           <span class="label">Mã giảm giá:</span>
@@ -193,14 +143,10 @@
       <!-- Nút điều khiển -->
       <div class="flex justify-end gap-2">
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
-        <!-- <Button label="Hoàn tất" icon="pi pi-check" @click="$emit('complete-payment')" /> -->
-        <!-- <Button label="In hóa đơn" icon="pi pi-print" severity="info" @click="handlePrint" /> -->
         <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" />
-
       </div>
     </div>
     <InvoicePrint v-if="showPrintPreview" :invoice="invoice" :changeAmount="changeAmount" />
-
   </Sidebar>
   <ConfirmDialog />
 </template>
@@ -216,6 +162,7 @@ import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
 import InputText from 'primevue/inputtext';
+import ConfirmDialog from 'primevue/confirmdialog';
 import type { CustomerResponse } from '../../../../model/admin/customer';
 import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
 import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
@@ -225,8 +172,64 @@ import CustomerDialog from './CustomerDialog.vue';
 import InvoicePrint from './InvoicePrint.vue';
 import { useConfirm } from 'primevue/useconfirm';
 
-
 const confirm = useConfirm();
+const toast = useToast();
+const isVisible = ref(true);
+const showDialog = ref(false);
+const showPrintPreview = ref(false);
+const localCouponUsage = ref<CouponUsageResponse[]>([]);
+
+
+const props = defineProps<{
+  invoice: {
+    orderCode: string;
+    userId: number | null;
+    customerName: string;
+    phoneNumber: string;
+    email: string;
+    addressStreet: string;
+    addressWard: string;
+    addressDistrict: string;
+    addressProvince: string;
+    addressCity: string;
+    addressZipcode: string;
+    isPos: boolean;
+    carrierId: number | null;
+    shippingCost: number | null;
+    estimatedDeliveryDate: Date | null;
+    orderTotal: number;
+    discount: number;
+    couponUsageIds: number[];
+    paidAmount: number | null;
+    paymentMethodId: number | null;
+    paymentMethod: string;
+    notes: string;
+    items: { name: string; price: number; quantity: number }[];
+  };
+  customers: CustomerResponse[];
+  paymentMethods: PaymentMethodResponse[];
+  couponUsage: CouponUsageResponse[];
+  carriers: CarrierResponse[];
+  changeAmount: number | null;
+}>();
+
+const selectedCustomerId = ref<number | null>(props.invoice.userId);
+const selectedCustomerName = ref<string>(props.invoice.customerName || '');
+
+const emit = defineEmits<{
+  (e: 'update-total'): void;
+  (e: 'update-change'): void;
+  (e: 'close'): void;
+  (e: 'complete-payment'): void;
+}>();
+
+const selectedCustomer = computed(() => {
+  return props.customers.find(c => c.id === selectedCustomerId.value) || null;
+});
+
+const getCouponById = (id: number) => {
+  return props.couponUsage.find(c => c.id === id) || null;
+};
 
 const validateBeforeComplete = () => {
   const required = calculateFinalTotal();
@@ -236,6 +239,24 @@ const validateBeforeComplete = () => {
       severity: 'error',
       summary: 'Thiếu khách hàng',
       detail: 'Đơn hàng giao hàng cần chọn khách hàng',
+      life: 3000
+    });
+    return false;
+  }
+  if (!props.invoice.isPos && !props.invoice.carrierId) {
+    toast.add({
+      severity: 'error',
+      summary: 'Thiếu nhà vận chuyển',
+      detail: 'Vui lòng chọn nhà vận chuyển',
+      life: 3000
+    });
+    return false;
+  }
+  if (!props.invoice.isPos && (props.invoice.shippingCost === null || props.invoice.shippingCost < 0)) {
+    toast.add({
+      severity: 'error',
+      summary: 'Phí vận chuyển không hợp lệ',
+      detail: 'Vui lòng nhập phí vận chuyển hợp lệ',
       life: 3000
     });
     return false;
@@ -260,6 +281,7 @@ const validateBeforeComplete = () => {
   }
   return true;
 };
+
 const completeAndPrint = () => {
   if (!validateBeforeComplete()) return;
   confirm.require({
@@ -290,18 +312,13 @@ const completeAndPrint = () => {
   });
 };
 
-const showPrintPreview = ref(false)
 const handlePrint = () => {
   showPrintPreview.value = true;
-
-  // Đợi DOM render xong trước khi in
   setTimeout(() => {
     const content = document.getElementById('print-invoice')?.innerHTML;
     if (!content) return;
-
     const win = window.open('', '', 'width=900,height=1000');
     if (!win) return;
-
     win.document.write(`
       <html>
         <head>
@@ -328,61 +345,6 @@ const handlePrint = () => {
   }, 100);
 };
 
-
-const props = defineProps<{
-  invoice: {
-    orderCode: string;
-    userId: number | null;
-    customerName: string;
-    phoneNumber: string;
-    email: string;
-    addressStreet: string;
-    addressWard: string;
-    addressDistrict: string;
-    addressProvince: string;
-    addressCity: string;
-    addressZipcode: string;
-    isPos: boolean;
-    carrierId: number | null;
-    estimatedDeliveryDate: Date | null;
-    orderTotal: number;
-    discount: number;
-    couponUsageIds: number[];
-    paidAmount: number | null;
-    paymentMethodId: number | null;
-    paymentMethod: string;
-    notes: string;
-    items: { name: string; price: number; quantity: number }[];
-  };
-  customers: CustomerResponse[];
-  paymentMethods: PaymentMethodResponse[];
-  couponUsage: CouponUsageResponse[];
-  carriers: CarrierResponse[];
-  changeAmount: number | null;
-}>();
-
-const showDialog = ref(false);
-const emit = defineEmits<{
-  (e: 'update-total'): void;
-  (e: 'update-change'): void;
-  (e: 'close'): void;
-  (e: 'complete-payment'): void;
-}>();
-
-const selectedCustomerId = ref<number | null>(props.invoice.userId);
-const selectedCustomerName = ref<string>(props.invoice.customerName || '');
-const toast = useToast();
-const isVisible = ref(true);
-const localCouponUsage = ref<CouponUsageResponse[]>([]);
-
-const selectedCustomer = computed(() => {
-  return props.customers.find(c => c.id === selectedCustomerId.value) || null;
-});
-
-const getCouponById = (id: number) => {
-  return props.couponUsage.find(c => c.id === id) || null;
-};
-
 const fetchCouponUsage = async () => {
   if (selectedCustomerId.value) {
     try {
@@ -405,12 +367,10 @@ const fetchCouponUsage = async () => {
   }
 };
 
-// Xử lý khi khách hàng được chọn từ CustomerDialog
 const handleCustomerSelect = (customer: CustomerResponse) => {
   selectedCustomerId.value = customer.id;
-  selectedCustomerName.value = customer.username; // Cập nhật tên hiển thị trong InputText
-  showDialog.value = false; // Đóng dialog sau khi chọn
-  // Cập nhật thông tin hóa đơn
+  selectedCustomerName.value = customer.username;
+  showDialog.value = false;
   if (!customer) {
     props.invoice.userId = null;
     props.invoice.customerName = '';
@@ -438,7 +398,6 @@ const handleCustomerSelect = (customer: CustomerResponse) => {
       props.invoice.addressZipcode = customer.addressZipcode;
     }
   }
-  // Gọi fetchCouponUsage sau khi chọn khách hàng
   fetchCouponUsage();
 };
 
@@ -449,7 +408,8 @@ const updatePaymentMethod = () => {
 };
 
 const calculateFinalTotal = () => {
-  return props.invoice.orderTotal - (props.invoice.discount || 0);
+  const shippingCost = props.invoice.isPos ? 0 : (props.invoice.shippingCost || 0);
+  return props.invoice.orderTotal + shippingCost - (props.invoice.discount || 0);
 };
 
 const formatCurrency = (value: number) => {
@@ -457,6 +417,11 @@ const formatCurrency = (value: number) => {
 };
 
 const handlePaidAmountChange = () => {
+  emit('update-change');
+};
+
+const handleShippingCostChange = () => {
+  emit('update-total');
   emit('update-change');
 };
 
@@ -474,7 +439,8 @@ watch(() => props.invoice.couponUsageIds, (newCouponIds) => {
   const coupons = props.couponUsage.filter(c => newCouponIds?.includes(c.id));
   if (coupons.length > 0) {
     props.invoice.discount = coupons.reduce((sum, coupon) => sum + (coupon.couponDiscountAmount || 0), 0);
-    if (props.invoice.orderTotal < props.invoice.discount) {
+    const finalTotal = calculateFinalTotal();
+    if (finalTotal < 0) {
       props.invoice.discount = 0;
       props.invoice.couponUsageIds = [];
       toast.add({
@@ -492,6 +458,10 @@ watch(() => props.invoice.couponUsageIds, (newCouponIds) => {
 
 watch(() => props.invoice.paidAmount, () => {
   handlePaidAmountChange();
+}, { immediate: true });
+
+watch(() => props.invoice.shippingCost, () => {
+  handleShippingCostChange();
 }, { immediate: true });
 </script>
 
@@ -518,10 +488,8 @@ watch(() => props.invoice.paidAmount, () => {
 
 .kct {
   color: #1e90ff;
-  /* Màu xanh cho "Khách cần trả" để nổi bật */
 }
 
-/* Tùy chỉnh InputText để trông đẹp hơn */
 :deep(.p-inputtext) {
   cursor: pointer;
   background-color: #f8f9fa;
