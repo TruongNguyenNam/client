@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
-import type { ProductResponse } from '../../../../model/admin/product';
+import type { ProductResponse, VariantCountDTO } from '../../../../model/admin/product';
 import { RouterLink } from 'vue-router';
 
 const listProduct = ref<ProductResponse[]>([]);
@@ -14,13 +14,24 @@ const first = ref(0);
 const rows = ref(10);
 const totalRecords = ref(0);
 
-// Lấy danh sách sản phẩm cha
+// Lấy danh sách sản phẩm cha và số lượng biến thể
 const getAllParentProduct = async () => {
   loading.value = true;
   try {
-    const products = await ProductService.getAllParentProducts();
-    listProduct.value = products;
-    totalRecords.value = products.length;
+    const [products, variantCounts] = await Promise.all([
+      ProductService.getAllParentProducts(),
+      ProductService.getVariantCounts(),
+    ]);
+
+    // Gán variantCount cho từng sản phẩm cha
+    listProduct.value = products.map((product: ProductResponse) => {
+      const variant = variantCounts.find((v: VariantCountDTO) => v.parentProductId === product.id);
+      return {
+        ...product,
+        variantCount: variant ? variant.variantCount : 0,
+      };
+    });
+    totalRecords.value = listProduct.value.length;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách sản phẩm:", error);
     listProduct.value = [];
@@ -47,10 +58,17 @@ const searchProducts = async () => {
   
   loading.value = true;
   try {
-    // Giả sử ProductService có phương thức tìm kiếm nâng cao
-    const products = await ProductService.searchProducts(searchTerm.value); // Thay bằng API phù hợp
-    listProduct.value = products;
-    totalRecords.value = products.length;
+    const products = await ProductService.searchProducts(searchTerm.value);
+    const variantCounts = await ProductService.getVariantCounts();
+
+    listProduct.value = products.map((product: ProductResponse) => {
+      const variant = variantCounts.find((v: VariantCountDTO) => v.parentProductId === product.id);
+      return {
+        ...product,
+        variantCount: variant ? variant.variantCount : 0,
+      };
+    });
+    totalRecords.value = listProduct.value.length;
   } catch (error) {
     console.error("Lỗi khi tìm kiếm sản phẩm nâng cao:", error);
     listProduct.value = [];
@@ -147,9 +165,11 @@ const onPageChange = (event: any) => {
           </Column>
 
           <Column field="name" header="Tên sản phẩm" sortable style="min-width: 200px"></Column>
+          <Column field="variantCount" header="Số lượng" sortable style="min-width: 150px"></Column>
           <Column field="categoryName" header="Danh mục" sortable style="min-width: 150px"></Column>
           <Column field="supplierName" header="Nhà cung cấp" sortable style="min-width: 150px"></Column>
           <Column field="sportType" header="Loại thể thao" sortable style="min-width: 150px"></Column>
+        
 
           <Column header="Thao tác" style="min-width: 120px">
             <template #body="{ data }">

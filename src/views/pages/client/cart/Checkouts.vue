@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="checkout-page">
     <div class="checkout-container">
@@ -613,6 +612,7 @@ const submitOrder = async () => {
     console.log('Payload gửi đến backend:', orderRequest);
 
     const response = await CartClientService.checkout(orderRequest);
+    console.log('Response from checkout API:', response);
     if (response.status === 200 && response.data) {
       const orderResponse = response.data;
       toast.add({
@@ -624,7 +624,7 @@ const submitOrder = async () => {
       authStore.cart = [];
       localStorage.removeItem('cartNote');
       authStore.cartCount = 0;
-      router.push(`/order-confirmation/${orderResponse.orderCode}`);
+      // router.push(`/order-confirmation/${orderResponse.orderCode}`);
     }
   } catch (error: any) {
     console.error('Lỗi khi tạo đơn hàng:', error);

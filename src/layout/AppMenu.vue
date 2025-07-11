@@ -29,27 +29,27 @@ const model = ref([
 
             // { label: 'Bán Hàng', icon: 'pi pi-fw pi-table', to: '/order',class:'rotated-icon' },
           
-            {
-                label: 'User',
-                icon: 'pi pi-fw pi-user',
-                items: [
-                    {
-                        label: 'Login',
-                        icon: 'pi pi-fw pi-sign-in',
-                        to: '/auth/login'
-                    },
-                    {
-                        label: 'Error',
-                        icon: 'pi pi-fw pi-times-circle',
-                        to: '/auth/error'
-                    },
-                    {
-                        label: 'Access Denied',
-                        icon: 'pi pi-fw pi-lock',
-                        to: '/auth/access'
-                    }
-                ]
-            },
+            // {
+            //     label: 'User',
+            //     icon: 'pi pi-fw pi-user',
+            //     items: [
+            //         {
+            //             label: 'Login',
+            //             icon: 'pi pi-fw pi-sign-in',
+            //             to: '/auth/login'
+            //         },
+            //         {
+            //             label: 'Error',
+            //             icon: 'pi pi-fw pi-times-circle',
+            //             to: '/auth/error'
+            //         },
+            //         {
+            //             label: 'Access Denied',
+            //             icon: 'pi pi-fw pi-lock',
+            //             to: '/auth/access'
+            //         }
+            //     ]
+            // },
             // { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
             // { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
             // { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },
@@ -60,6 +60,11 @@ const model = ref([
             // { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/uikit/charts' },
             // { label: 'Misc', icon: 'pi pi-fw pi-circle', to: '/uikit/misc' }
         ]
+    },
+    {
+        label: 'Đơn Hàng',
+        items:  [{ label: 'Đơn Hàng', icon: 'pi pi-fw pi-tags', to: '/findByShip', class: 'rotated-icon' },]
+    
     },
     {
         label: 'Prime Blocks',

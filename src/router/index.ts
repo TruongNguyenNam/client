@@ -39,7 +39,10 @@ const router = createRouter({
                 { path: '/order', name: 'order', component: () => import('@/views/pages/admin/order/Invoice.vue') },
                 { path: '/home', name: 'home', component: () => import('@/views/pages/admin/statistical/Statistical.vue') },
                 {path: '/management',name: 'management',component: () => import('@/views/pages/admin/management/ManagementList.vue')},
-                {path: '/management/order/:id',name: 'order-detail',component: () => import('@/views/pages/admin/management/Management.vue')}
+                {path: '/management/order/:id',name: 'order-detail',component: () => import('@/views/pages/admin/management/Management.vue')},
+                // {path: '/findByShip',name: 'order-ship',component: () => import('@/views/pages/admin/management/ManagementShip.vue')},
+                {path: '/findByShip',name: 'certificationorder',component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue')},
+                {path: '/certificationorder/:id',name: 'certificationorder-detail',component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue')}
             ],
         },
 
@@ -57,6 +60,7 @@ const router = createRouter({
                     path: 'cart/:userId', name: 'cart-view', component: () => import('@/views/pages/client/cart/CartView.vue'),
                     meta: { requiresAuth: true, role: 'CUSTOMER' },
                 },
+                { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue')}
             ],
         },
 
