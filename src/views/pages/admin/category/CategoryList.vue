@@ -5,6 +5,75 @@ import { ref, onBeforeMount, watch, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import * as XLSX from 'xlsx'; // Thêm dòng này
+
+// Hàm xuất danh mục ra Excel
+const exportCategories = () => {
+    if (!categories.value.length) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có danh mục để xuất', life: 3000 });
+        return;
+    }
+
+    const exportData = categories.value.map((cat) => ({
+        'ID': cat.id,
+        'Tên danh mục': cat.name,
+        'Mô tả': cat.description,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'DanhMuc');
+
+    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+    XLSX.writeFile(workbook, `Danh_muc_${today}.xlsx`);
+};
+const handleExcelUpload = (event) => {
+    const file = event.files[0];
+
+    if (!file) {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không có file được chọn', life: 3000 });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        // ✅ Kiểm tra cấu trúc dữ liệu
+        const imported = jsonData.map(item => ({
+            name: item['Tên danh mục'] || '',
+            description: item['Mô tả'] || '',
+        })).filter(item => item.name && item.description);
+
+        // ✅ Gọi API addCategory() cho từng dòng
+        for (const item of imported) {
+            try {
+                await CategoryService.addCategory(item);
+            } catch (err) {
+                console.error('Lỗi khi thêm:', item, err);
+            }
+        }
+
+        toast.add({ severity: 'success', summary: 'Thành công', detail: `Đã nhập ${imported.length} danh mục`, life: 3000 });
+        loadCategories();
+    };
+    reader.readAsArrayBuffer(file);
+};
+const downloadTemplate = () => {
+    const templateData = [
+        { 'Tên danh mục': 'Ví dụ 1', 'Mô tả': 'Mô tả ví dụ 1' },
+        { 'Tên danh mục': 'Ví dụ 2', 'Mô tả': 'Mô tả ví dụ 2' }
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
+    XLSX.writeFile(workbook, 'Mau_danh_muc.xlsx');
+};
 
 const toast = useToast();
 
@@ -219,8 +288,8 @@ const editCategory = (categoryData) => {
 
 //check trùng
 const isDuplicateCategoryName = (name, excludeId = null) => {
-    return categories.value.some((cat) => 
-        cat.name.trim().toLowerCase() === name.trim().toLowerCase() && 
+    return categories.value.some((cat) =>
+        cat.name.trim().toLowerCase() === name.trim().toLowerCase() &&
         cat.id !== excludeId
     );
 };
@@ -237,17 +306,25 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                     <template v-slot:start>
                         <div class="my-2">
                             <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="deleteSelectedCategories" :disabled="!selectedCategories.length" />
+                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
+                                @click="deleteSelectedCategories" :disabled="!selectedCategories.length" />
                         </div>
                     </template>
 
                     <template v-slot:end>
-                        <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" />
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" />
+                        <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
+                            @click="downloadTemplate" /> 
+                        <!-- Nhập Excel -->
+                        <FileUpload mode="basic" accept=".xlsx, .xls" :auto="true" chooseLabel="Nhập Excel"
+                            @select="handleExcelUpload" class="mr-2 inline-block" />
+
+                        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportCategories" />
+
                     </template>
                 </Toolbar>
 
-                <Dialog v-model:visible="categoryDialog" :style="{width: '450px'}" header="Chi tiết danh mục" :modal="true" class="p-fluid">
+                <Dialog v-model:visible="categoryDialog" :style="{ width: '450px' }" header="Chi tiết danh mục"
+                    :modal="true" class="p-fluid">
                     <div class="field">
                         <label for="name">Tên danh mục</label>
                         <InputText id="name" v-model="category.name" required="true" autofocus />
@@ -262,33 +339,22 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                     </template>
                 </Dialog>
 
-                <DataTable
-                    :value="categories"
-                    v-model:selection="selectedCategories"
-                    :paginator="true"
-                    :first="lazyParams.page * lazyParams.size"
-                    :rows="lazyParams.size"
-                    :totalRecords="totalRecords"
-                    :rowHover="true"
-                    class="p-datatable-gridlines"
-                    filterDisplay="menu"
-                    v-model:filters="filters"
-                    :loading="loading"
-                    :lazy="false"
-                    @page="onPage"
-                    responsiveLayout="scroll"
-                    :globalFilterFields="['name', 'description']"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
+                <DataTable :value="categories" v-model:selection="selectedCategories" :paginator="true"
+                    :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
+                    :rowHover="true" class="p-datatable-gridlines" filterDisplay="menu" v-model:filters="filters"
+                    :loading="loading" :lazy="false" @page="onPage" responsiveLayout="scroll"
+                    :globalFilterFields="['name', 'description']" :rowsPerPageOptions="[5, 10, 20, 50]"
                     currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} danh mục"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                    :pageLinkSize="3"
-                >
+                    :pageLinkSize="3">
                     <template #header>
                         <div class="flex justify-content-between flex-column sm:flex-row">
-                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2" @click="clearFilter()" />
+                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2"
+                                @click="clearFilter()" />
                             <span class="p-input-icon-left mb-2">
                                 <i class="pi pi-search" />
-                                <InputText v-model="filters.global.value" placeholder="Tìm kiếm..." style="width: 100%" />
+                                <InputText v-model="filters.global.value" placeholder="Tìm kiếm..."
+                                    style="width: 100%" />
                             </span>
                         </div>
                     </template>
@@ -300,8 +366,10 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
 
                     <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
-                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editCategory(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="confirmDeleteCategory(slotProps.data)" />
+                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
+                                @click="editCategory(slotProps.data)" />
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                                @click="confirmDeleteCategory(slotProps.data)" />
                         </template>
                     </Column>
 
@@ -309,24 +377,28 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                     <template #loading> Đang tải dữ liệu... </template>
                 </DataTable>
 
-                <Dialog v-model:visible="deleteProductDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
+                <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Xác nhận"
+                    :modal="true">
                     <div class="confirmation-content">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span v-if="category">Bạn có chắc chắn muốn xóa <b>{{category.name}}</b>?</span>
+                        <span v-if="category">Bạn có chắc chắn muốn xóa <b>{{ category.name }}</b>?</span>
                     </div>
                     <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteProductDialog = false"/>
+                        <Button label="Không" icon="pi pi-times" class="p-button-text"
+                            @click="deleteProductDialog = false" />
                         <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteCategory" />
                     </template>
                 </Dialog>
 
-                <Dialog v-model:visible="deleteProductsDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
+                <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Xác nhận"
+                    :modal="true">
                     <div class="confirmation-content">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
                         <span v-if="category">Bạn có chắc chắn muốn xóa các danh mục đã chọn?</span>
                     </div>
                     <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteProductsDialog = false"/>
+                        <Button label="Không" icon="pi pi-times" class="p-button-text"
+                            @click="deleteProductsDialog = false" />
                         <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteSelectedCategories" />
                     </template>
                 </Dialog>
