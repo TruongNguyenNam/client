@@ -1,3 +1,5 @@
+<!-- chưa có VNPay -->
+
 <template>
   <div class="layout-container">
     <InvoiceHeader 
@@ -36,15 +38,12 @@
       @close="closePaymentToolbar"
       @complete-payment="completePayment"
     />
-
-    <RouterView @vnpay-callback="handleVNPayCallback" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useRoute } from 'vue-router';
 import type { ProductResponse } from '../../../../model/admin/product';
 import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/admin/order';
 import type { CustomerResponse } from '../../../../model/admin/customer';
@@ -59,13 +58,11 @@ import { PaymentMethodService } from '../../../../service/admin/PaymentMethodSer
 import { ShipmentService } from '../../../../service/admin/ShipmentService';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
 import { CarrierService } from '../../../../service/admin/CarrierService';
-import { VnPayService } from '../../../../service/admin/VnPayService';
 import InvoiceHeader from './InvoiceHeader.vue';
 import ProductList from './ProductList.vue';
 import CartSection from './CartSection.vue';
 import PaymentToolbar from './PaymentToolbar.vue';
 
-const route = useRoute();
 const listProduct = ref<ProductResponse[]>([]);
 const totalRecords = ref(0);
 const loading = ref(false);
@@ -373,7 +370,7 @@ const addProductToActiveInvoice = (product: any) => {
   } else {
     activeInvoice.items.push({ 
       ...product, 
-      quantity: 1, 
+      quantity: 0, 
       price: product.price || 0 
     });
   }
@@ -464,63 +461,22 @@ const updateChange = () => {
   changeAmount.value = paid > finalTotal ? paid - finalTotal : 0;
 };
 
-const handleVNPayCallback = async (queryParams: any) => {
-try {
-  const response = await VnPayService.verifyVnpayCallback(queryParams);
-  if (response.status && response.data.success) {
-    const orderCode = response.data.orderCode;
-    if (!orderCode) {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không tìm thấy mã đơn hàng trong phản hồi VNPay',
-        life: 3000,
-      });
-      return;
-    }
-
-    const invoice = invoiceTabs.value.find(tab => tab.orderCode === orderCode);
-    if (invoice) {
-      invoice.orderStatus = 'COMPLETED';
-      invoice.items.forEach((item: any) => {
-        const product = listProduct.value.find((p: any) => p.id === item.id);
-        if (product) {
-          product.stockQuantity = (product.stockQuantity ?? 0) - item.quantity;
-        }
-      });
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: `Thanh toán VNPay thành công cho đơn hàng ${orderCode}`,
-        life: 5000,
-      });
-      removeTabByOrderCode(orderCode); // Now safe to call with string
-    } else {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: `Không tìm thấy đơn hàng ${orderCode}`,
-        life: 3000,
-      });
-    }
-  } else {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: response.data.message || 'Thanh toán VNPay thất bại',
-      life: 3000,
-    });
+watch(() => selectedInvoice.value?.paymentMethod, (newValue) => {
+  if (selectedInvoice.value) {
+    const method = paymentMethods.value.find(m => m.name === newValue);
+    selectedInvoice.value.paymentMethodId = method?.id || 1;
+    saveInvoicesToStorage();
+    resetTimerOnInteraction(selectedInvoice.value);
   }
-} catch (error) {
-  console.error('Lỗi khi xử lý callback VNPay:', error);
-  toast.add({
-    severity: 'error',
-    summary: 'Lỗi',
-    detail: 'Lỗi hệ thống khi xử lý thanh toán VNPay',
-    life: 3000,
-  });
-}
-};
+});
+
+watch(() => selectedInvoice.value?.shippingCost, () => {
+  if (selectedInvoice.value) {
+    updateTotal();
+    saveInvoicesToStorage();
+    resetTimerOnInteraction(selectedInvoice.value);
+  }
+});
 
 const completePayment = async () => {
   if (!selectedInvoice.value) return;
@@ -541,12 +497,8 @@ const completePayment = async () => {
     return;
   }
   const finalTotal = calculateFinalTotal();
-  if (selectedInvoice.value.paymentMethodId === 1 && (!selectedInvoice.value.paidAmount || selectedInvoice.value.paidAmount < finalTotal)) {
+  if (!selectedInvoice.value.paidAmount || selectedInvoice.value.paidAmount < finalTotal) {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Số tiền khách thanh toán phải lớn hơn hoặc bằng số tiền cần trả', life: 3000 });
-    return;
-  }
-  if (selectedInvoice.value.paymentMethodId === 2) {
-    // VNPay: Thanh toán được xử lý trong initiateVNPayPayment
     return;
   }
   const customer = selectedInvoice.value.userId ? 
@@ -554,17 +506,16 @@ const completePayment = async () => {
   const payload: OrderRequest = {
     orderCode: selectedInvoice.value.orderCode,
     userId: selectedInvoice.value.userId || undefined,
-    notes: selectedInvoice.value.notes || undefined,
+    notes: selectedInvoice.value.notes,
     items: selectedInvoice.value.items.map((item: any) => ({
       productId: item.id,
       quantity: item.quantity
     })),
     payment: {
       paymentMethodId: selectedInvoice.value.paymentMethodId || 1,
-      amount: finalTotal,
-      returnUrl: selectedInvoice.value.paymentMethodId === 2 ? 'http://localhost:5173/#/callback' : undefined
+      amount: selectedInvoice.value.paidAmount || 0
     },
-    couponUsageIds: selectedInvoice.value.couponUsageIds?.length ? selectedInvoice.value.couponUsageIds : undefined
+    couponUsageIds: selectedInvoice.value.couponUsageIds || undefined
   };
   if (!selectedInvoice.value.isPos && customer) {
     const orderItemIds = selectedInvoice.value.items.map((item: any) => item.id);
@@ -601,13 +552,24 @@ const completePayment = async () => {
       setTimeout(() => {
         closePaymentToolbar();
       }, 300);
-      removeTabByOrderCode(orderCode);
+      const index = invoiceTabs.value.findIndex(tab => tab.orderCode === orderCode);
+      if (index !== -1) {
+        invoiceTabs.value.splice(index, 1);
+        saveInvoicesToStorage();
+        if (activeTabIndex.value >= invoiceTabs.value.length) {
+          activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
+        }
+        clearTimeout(invoiceTimeouts.value[orderCode]);
+        delete invoiceTimeouts.value[orderCode];
+      }
+      return;
     }
   } catch (error) {
     console.error("Lỗi khi thanh toán đơn hàng:", error);
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Thanh toán thất bại', life: 3000 });
   }
 };
+
 
 const formatCurrency = (value: number) => {
   return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });

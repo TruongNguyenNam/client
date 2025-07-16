@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="checkout-page">
     <div class="checkout-container">
@@ -41,7 +40,7 @@
             <div v-if="!form.addressWard" class="shipping-note">Vui lòng chọn phường/xã để có danh sách phương thức vận chuyển.</div>
             <div v-else v-for="carrier in carriers" :key="carrier.id" class="shipping-option">
               <input type="radio" :id="carrier.name" v-model="form.shippingMethod" :value="carrier" />
-              <label :for="carrier.name">{{ carrier.name }}</label>
+              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn phí' }})</label>
             </div>
           </div>
         </div>
@@ -92,7 +91,7 @@
             <div class="total-section">
               <div class="total-item">Tạm tính <span class="total-amount">{{ formatPrice(subtotal) }}</span></div>
               <div class="total-item">Giảm giá <span class="total-amount">{{ couponDiscount > 0 ? '-' + formatPrice(couponDiscount) : '—' }}</span></div>
-              <div class="total-item">Phí vận chuyển <span class="total-amount">Miễn phí</span></div>
+              <div class="total-item">Phí vận chuyển <span class="total-amount">{{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn phí' }}</span></div>
               <div class="total-item total-final">Tổng cộng <span class="total-amount">{{ formatPrice(total) }}</span></div>
             </div>
 
@@ -118,8 +117,7 @@ import type { ComputedRef } from 'vue';
 import type { CouponUsageClientResponse } from '../../../../model/client/couponUsage';
 import type { CarrierClientResponse } from '../../../../model/client/carrier';
 import type { PaymentMethodClientResponse } from '../../../../model/client/paymentMethod';
-import type { OrderRequestClient } from '../../../../model/client/cart';
-// import type { UpdateUserForm } from '../../../../service/auth/AuthService';
+import type { OrderRequestClient, OrderResponseClient } from '../../../../model/client/cart';
 import { CouponUsageClientService } from '../../../../service/client/CouponUsageClientService';
 import { CarrierClientService } from '../../../../service/client/CarrierClientService';
 import { PaymentMethodClientService } from '../../../../service/client/PaymentMethodClient';
@@ -241,7 +239,13 @@ const subtotal: ComputedRef<number> = computed(() =>
   }, 0)
 );
 
-const total: ComputedRef<number> = computed(() => Math.max(0, subtotal.value - couponDiscount.value));
+const shippingCost: ComputedRef<number> = computed(() => {
+  return subtotal.value > 500000 ? 0 : 30000; // Miễn phí nếu đơn hàng > 500k, ngược lại 30k
+});
+
+const total: ComputedRef<number> = computed(() => {
+  return Math.max(0, subtotal.value - couponDiscount.value + shippingCost.value);
+});
 
 const isFormValid: ComputedRef<boolean> = computed(() =>
   !!form.value.fullName &&
@@ -270,12 +274,14 @@ const onProvinceChange = () => {
   form.value.addressDistrict = '';
   form.value.addressWard = '';
   wards.value = [];
+  form.value.shippingMethod = null; // Reset shipping method
 };
 
 const onDistrictChange = () => {
   const district = districts.value.find(d => d.name === form.value.addressDistrict);
   wards.value = district?.level3s || [];
   form.value.addressWard = '';
+  form.value.shippingMethod = null; // Reset shipping method
 };
 
 const applyCoupons = async () => {
@@ -395,6 +401,16 @@ onMounted(async () => {
       }
     }
     note.value = route.query.note?.toString() || localStorage.getItem('cartNote') || '';
+
+    // Thông báo miễn phí vận chuyển nếu subtotal > 500k
+    if (subtotal.value > 500000) {
+      toast.add({
+        severity: 'info',
+        summary: 'Thông báo',
+        detail: 'Đơn hàng của bạn được miễn phí vận chuyển!',
+        life: 3000,
+      });
+    }
   } catch (error) {
     console.error('Lỗi khi tải dữ liệu:', error);
     toast.add({
@@ -576,7 +592,7 @@ const submitOrder = async () => {
       gender: authStore.userInfo?.gender || '',
       address: {
         id: authStore.userInfo?.address?.id || 0,
-        addressStreet: '', // Không sử dụng addressStreet
+        addressStreet: '',
         addressWard: form.value.addressWard,
         addressDistrict: form.value.addressDistrict,
         addressProvince: form.value.addressProvince,
@@ -599,11 +615,13 @@ const submitOrder = async () => {
       payment: {
         paymentMethodId: form.value.paymentMethod?.id || 1,
         amount: total.value,
+        returnUrl: window.location.origin + '/payment-return',
       },
       couponUsageIds: selectedCoupons.value.map(coupon => coupon.id) || [],
       shipments: [
         {
           carrierId: form.value.shippingMethod?.id || 1,
+          shippingCost: shippingCost.value,
           estimatedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
           orderItemIds: authStore.cart.map(item => item.id),
         },
@@ -613,24 +631,33 @@ const submitOrder = async () => {
     console.log('Payload gửi đến backend:', orderRequest);
 
     const response = await CartClientService.checkout(orderRequest);
+    console.log('Response from checkout API:', response);
+
     if (response.status === 200 && response.data) {
-      const orderResponse = response.data;
+      const orderResponse: OrderResponseClient = response.data;
       toast.add({
         severity: 'success',
         summary: 'Thành công',
         detail: `Đơn hàng ${orderResponse.orderCode} đã được tạo.`,
         life: 5000,
       });
-      authStore.cart = [];
-      localStorage.removeItem('cartNote');
-      authStore.cartCount = 0;
-      router.push(`/order-confirmation/${orderResponse.orderCode}`);
+
+      // Xử lý thanh toán VNPay
+      if (orderResponse.paymentUrl) {
+        window.location.href = orderResponse.paymentUrl; // Chuyển hướng đến VNPay
+      } else {
+        authStore.cart = [];
+        localStorage.removeItem('cartNote');
+        authStore.cartCount = 0;
+        router.push(`/client/cart/${authStore.userId}`);
+        // router.push('/cart/${}')
+      }
     }
   } catch (error: any) {
     console.error('Lỗi khi tạo đơn hàng:', error);
-    let errorMessage = error.response?.data?.error || 'Không thể tạo đơn hàng.';
+    let errorMessage = error.response?.data?.message || 'Không thể tạo đơn hàng.';
     if (error.response?.status === 400) {
-      errorMessage = error.response.data.error || 'Dữ liệu không hợp lệ.';
+      errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ.';
     } else if (error.response?.status === 401) {
       errorMessage = 'Vui lòng đăng nhập lại.';
       router.push('/login');

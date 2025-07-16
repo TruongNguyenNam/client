@@ -12,8 +12,10 @@
         <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-6" style="border: 1px solid red;">
           <h1 class="text-xl font-semibold text-gray-800 mb-2">{{ getBrandName(products[0].name) }}</h1>
           <p class="text-gray-600 text-sm mb-2">Thương hiệu: {{ getBrandName(products[0].name) }} New Arrival | Mã sản phẩm: {{ products[0].sku }}</p>
+          <span class="text-red-600 font-bold">Số Lượng: {{ selectedProduct.stockQuantity ?? 0}}</span>
           <div class="text-gray-600 mb-4">
             <p class="text-xl">
+           
               <span class="text-red-600 font-bold">{{ formatCurrency(selectedProduct.price ?? 0) }}</span>
               <span class="text-gray-500 line-through ml-2">{{ formatCurrency(selectedProduct.originalPrice) }}</span>
               <span v-if="selectedProduct.originalPrice && selectedProduct.price !== null && selectedProduct.price < selectedProduct.originalPrice" class="text-red-500 text-base ml-2">

@@ -17,10 +17,12 @@ export interface OrderRequest {
   export interface PaymentRequest {
     paymentMethodId: number;
     amount: number;
+    returnUrl?: string; 
   }
   
   export interface ShipmentRequest {
     carrierId?: number;
+    shippingCost: number;
     estimatedDeliveryDate: string;
     orderItemIds: number[];
   }
@@ -30,7 +32,7 @@ export interface OrderRequest {
   export interface OrderResponse {
     id: number;
     orderCode: string;
-    notes?:string;
+    notes?: string;
     address?: AddressResponse; 
     orderStatus: string;
     orderTotal: number;
@@ -40,11 +42,12 @@ export interface OrderRequest {
     items: OrderItemResponse[];
     payment: PaymentResponse;
     couponUsages: CouponResponse[];
-    shipment?: ShipmentResponse;
+    shipments: ShipmentResponse[];
     createdBy: number;
     createdDate: string; 
     lastModifiedBy: number;
     lastModifiedDate: string; 
+    paymentUrl?: string;
   }
   
   export interface OrderItemResponse {
@@ -58,6 +61,7 @@ export interface OrderRequest {
   export interface PaymentResponse {
     id: number;
     paymentMethodName: string;
+    paymentMethodId:number;
     amount: number;
     status: string;
     paidDate?: string; 
@@ -66,6 +70,7 @@ export interface OrderRequest {
   export interface AddressResponse {
     id: number;
     email: string;
+    userId:number;
     username: string;
     phoneNumber: string;
     role: string;
@@ -83,9 +88,11 @@ export interface OrderRequest {
   export interface ShipmentResponse {
     id: number;
     shipmentDate: string; 
+    shippingCost: number;
     shipmentStatus: string;
     trackingNumber: string;
     carrierName: string;
+    carrierId: number;
     estimatedDeliveryDate: string; 
   }
   
@@ -104,6 +111,22 @@ export interface OrderRequest {
   export interface CreateInvoiceRequest {
     isPos: boolean;
   }
+
+
+
+
+  // export interface UpdateOrderStatusRequest {
+  //   newStatus: OrderStatus;
+  //   nodes: string;
+  // }
+  
+  // export enum OrderStatus {
+  //   PENDING = 'PENDING',
+  //   COMPLETED = 'COMPLETED',
+  //   CANCELLED = 'CANCELLED',
+  //   SHIPPED = 'SHIPPED',
+  //   RETURNED = 'RETURNED'
+  // }
   
 
 
