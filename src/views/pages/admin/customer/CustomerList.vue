@@ -117,17 +117,10 @@ const formatGender = (gender: string | null | undefined) => {
             </span>
           </div>
         </div>
-        <DataTable v-model:selection="selectedCustomers" 
-          :value="customers" 
-          :paginator="true"
-          :first="lazyParams.page * lazyParams.size" 
-          :rows="lazyParams.size" 
-          :totalRecords="totalRecords"
-          emptyMessage="Không tìm thấy khách hàng nào." 
-          :loading="loading" @page="onPage"
-          :rowsPerPageOptions="[5, 10, 20, 50]" 
-          class="p-datatable-gridlines"
-          :rowHover="true"
+        <DataTable v-model:selection="selectedCustomers" :value="customers" :paginator="true"
+          :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
+          emptyMessage="Không tìm thấy khách hàng nào." :loading="loading" @page="onPage"
+          :rowsPerPageOptions="[5, 10, 20, 50]" class="p-datatable-gridlines" :rowHover="true"
           :globalFilterFields="['username', 'email', 'phoneNumber']">
           <template #header>
             <div class="flex justify-content-between align-items-center">
@@ -135,28 +128,33 @@ const formatGender = (gender: string | null | undefined) => {
             </div>
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
-          <Column field="username" header="Tên khách hàng" sortable/>
-          <Column field="email" header="Email" sortable/>
+          <Column field="username" header="Tên khách hàng" sortable />
+          <Column field="email" header="Email" sortable />
           <Column field="phoneNumber" header="Số điện thoại" sortable />
-          <Column header="Địa chỉ" sortable>
+          <Column header="Địa chỉ mặc định" sortable>
             <template #body="slotProps">
               {{
-                [
-                  slotProps.data.addressStreet,
-                  slotProps.data.addressWard,
-                  slotProps.data.addressDistrict,
-                  slotProps.data.addressProvince,
-                  slotProps.data.addressCity
-                ].filter(Boolean).join(', ')
+                (() => {
+                  const defaultAddress = slotProps.data.addresses?.find((addr: any) => addr.isDefault);
+                  if (!defaultAddress) return '—';
+                  return [
+                    defaultAddress.street,
+                    defaultAddress.ward,
+                    defaultAddress.district,
+                    defaultAddress.province,
+                    defaultAddress.city
+              ].filter(Boolean).join(', ');
+              })()
               }}
             </template>
+
           </Column>
           <Column field="gender" header="Giới tính" sortable>
             <template #body="slotProps">
               {{ formatGender(slotProps.data.gender) }}
             </template>
           </Column>
-          <Column field="status" header="Trạng thái" >
+          <Column field="status" header="Trạng thái">
             <template #body="slotProps">
               <Tag :value="getCustomerStatus(slotProps.data).text"
                 :severity="getCustomerStatus(slotProps.data).severity" />

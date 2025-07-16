@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { ApiResponse } from '../../utils/ApiResponse';
 import type { CustomerRequest } from '../../model/admin/customer';
 import type { CustomerResponse } from '../../model/admin/customer';
-
+import type { AddressRequest } from '../../model/admin/address';
 const API_URL = "http://localhost:8080/api/v1/admin/customers";
 const axiosInstance = axios.create();
 
@@ -98,4 +98,18 @@ export const CustomerService = {
             throw new Error('Failed to fetch customer by id.');
         }
     },
+// thêm dia chi
+    addAddressForCustomer: async (customerId: number, addressData: AddressRequest): Promise<ApiResponse<any>> => {
+        try {
+            const response = await axiosInstance.post<ApiResponse<any>>(
+                `${API_URL}/${customerId}/addresses`,
+                addressData
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi khi thêm địa chỉ:", error);
+            throw error;
+        }
+    }
+
 };

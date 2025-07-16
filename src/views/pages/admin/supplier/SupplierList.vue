@@ -74,6 +74,7 @@ const addSupplier = async () => {
 const editSupplier = (supplier) => {
     openEdit(supplier.id); // Mở dialog chỉnh sửa
 };
+
 // Mở dialog chỉnh sửa nhà cung cấp
 const openEdit = async (supplierId) => {
     try {

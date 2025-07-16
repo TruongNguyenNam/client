@@ -1,4 +1,4 @@
-import type { AddressRequest } from "./address";
+import type { AddressRequest,AddressResponse } from "./address";
 
 export interface CustomerResponse {
   id: number;
@@ -6,14 +6,7 @@ export interface CustomerResponse {
   username: string;
   phoneNumber: string;
   role: string;
-  addressStreet: string;
-  addressWard: string;        // Phường (Phường Phúc Đồng)
-  addressCity: string;        // Thành phố (Hà Nội)
-  addressState: string;       // Bang/Tỉnh (nếu dùng cho nước ngoài)
-  addressCountry: string;     // Quốc gia (Việt Nam)
-  addressZipcode: string;     // Mã bưu điện
-  addressDistrict: string;    // Quận/Huyện (Huyện Vĩnh Tuy)
-  addressProvince: string;    // Tỉnh/Thành phố (Quận Long Biên)
+  addresses: AddressResponse[];
   active: boolean;          // Trạng thái hoạt động
   gender: string;             // Giới tính (MALE/FEMALE/OTHER)
 }
@@ -25,6 +18,7 @@ export interface CustomerRequest {
   role: string;
   active?: boolean;
   gender: string;
-  address: AddressRequest;
+  address?: AddressRequest;
 }
+
 export type Gender = "MALE" | "FEMALE";
