@@ -6,7 +6,7 @@
     </div>
 
     <div class="list">
-        <h1 style="text-align: center;">chào mừng đến với Shop</h1>
+        <h1 style="text-align: center;">chào mừng đến với ShoeStore</h1>
     </div>
 
  <!-- Product List Section -->
@@ -86,7 +86,7 @@
             :rows="rowsPerPage" 
             :first="currentPage * rowsPerPage"
             :totalRecords="groupedProducts.length"
-            :rowsPerPageOptions="[8, 16, 24]"
+            :rowsPerPageOptions="[10, 20, 30]"
             @page="onPageChange"
           />
         </div>
@@ -123,7 +123,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const currentPage = ref(0);
-const rowsPerPage = ref(8);
+const rowsPerPage = ref(10);
 
 const onPageChange = (event: any) => {
   currentPage.value = event.page;
@@ -317,15 +317,6 @@ const toggleCart = async (parentProductId: number | null) => {
 </script>
 
 <style scoped>
-.container {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 100px;
-}
-
-/* .list{
-   color: red; 
-} */
 
 .banner{
   width: 100%;
@@ -335,6 +326,8 @@ const toggleCart = async (parentProductId: number | null) => {
 .banner-v2{
   width: 100%;
   border: 1px solid red;
+  margin-top: 10px;
+  height: auto;
 }
 
 
@@ -358,23 +351,27 @@ const toggleCart = async (parentProductId: number | null) => {
 }
 
 .header {
-  width:100%;
-  margin-top: 0;
-  border:  1px solid red;
+    width: 1450px;
+    margin: 0 auto;
+    border:  1px solid red;
+    height: 900px;
 }
+
+
 
 .product-card {
   width: 100%;
   max-width: 250px;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid #eee;
+  border: 1px solid red;
   background: #fff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.2s;
   height: 400px;
   display: flex;
   flex-direction: column;
+  
 }
 
 .product-card:hover {
