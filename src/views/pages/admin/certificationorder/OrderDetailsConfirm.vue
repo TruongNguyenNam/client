@@ -279,6 +279,7 @@ interface PaymentRequest {
 
 interface ShipmentRequest {
   carrierId?: number;
+  shippingCost: number;
   estimatedDeliveryDate: string;
 }
 
@@ -460,6 +461,7 @@ const updateOrderItems = async () => {
     shipments: order.value?.shipments && !order.value.isPos
       ? order.value.shipments.map(s => ({
           carrierId: s.carrierId,
+          shippingCost: s.shippingCost,
           estimatedDeliveryDate: s.estimatedDeliveryDate
         }))
       : []
