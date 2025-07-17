@@ -1,3 +1,38 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import InputText from 'primevue/inputtext';
+import ProductCard from './ProductCard.vue';
+import type { ProductResponse } from '../../../../model/admin/product';
+
+const props = defineProps({
+  products: {
+    type: Array as () => ProductResponse[],
+    required: true
+  },
+  selectedInvoice: {
+    type: Object,
+    default: null
+  }
+});
+
+const emit = defineEmits(['add-product']);
+
+const searchQuery = ref('');
+
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) return props.products;
+  const query = searchQuery.value.toLowerCase();
+  return props.products.filter(product => 
+    product.name.toLowerCase().includes(query)
+  );
+});
+
+const handleAddProduct = (product: ProductResponse) => {
+  console.log('Emitting add-product for:', product.id, 'at', new Date().toISOString());
+  emit('add-product', product);
+};
+</script>
+
 <template>
   <div class="product-section">
     <!-- Thanh tìm kiếm -->
@@ -11,45 +46,13 @@
         v-for="product in filteredProducts"
         :key="product.id"
         :product="product"
-        @click="$emit('add-product', product)"
+        @click="handleAddProduct(product)"
       />
     </div>
 
     <slot></slot>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import InputText from 'primevue/inputtext';
-import ProductCard from './ProductCard.vue';
-import type { ProductResponse } from '../../../../model/admin/product';
-
-
-const props = defineProps({
-  products: {
-    type: Array as () => ProductResponse[],
-    required: true
-  },
-  selectedInvoice: {
-    type: Object,
-    default: null
-  }
-});
-
-defineEmits(['add-product']);
-
-const searchQuery = ref('');
-
-const filteredProducts = computed(() => {
-  if (!searchQuery.value) return props.products;
-  
-  const query = searchQuery.value.toLowerCase();
-  return props.products.filter(product => 
-    product.name.toLowerCase().includes(query)
-  );
-});
-</script>
 
 <style scoped>
 .product-section {

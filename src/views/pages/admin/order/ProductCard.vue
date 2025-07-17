@@ -1,5 +1,34 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true
+  }
+});
+
+const emit = defineEmits(['click']);
+
+const stockQuantity = computed(() => props.product.stockQuantity ?? 0);
+
+const formatCurrency = (value: number | null) => {
+  return (value || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+};
+
+const discountPercentage = computed(() => {
+  if (!props.product.originalPrice || props.product.price >= props.product.originalPrice) return 0;
+  return Math.round((1 - props.product.price / props.product.originalPrice) * 100);
+});
+
+const handleClick = () => {
+  console.log('Click on ProductCard:', props.product.id, 'at', new Date().toISOString());
+  emit('click');
+};
+</script>
+
 <template>
-  <div class="product-card" @click="$emit('click')">
+  <div class="product-card" @click="handleClick">
     <img 
       :src="product.imageUrl && product.imageUrl.length > 0 ? product.imageUrl[0] : '/no-image.png'" 
       alt="Product Image" 
@@ -20,28 +49,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-
-const props = defineProps({
-  product: {
-    type: Object,
-    required: true
-  }
-});
-
-const stockQuantity = computed(() => props.product.stockQuantity ?? 0);
-
-const formatCurrency = (value: number | null) => {
-  return (value || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-};
-
-const discountPercentage = computed(() => {
-  if (!props.product.originalPrice || props.product.price >= props.product.originalPrice) return 0;
-  return Math.round((1 - props.product.price / props.product.originalPrice) * 100);
-});
-</script>
 
 <style scoped>
 .product-card {

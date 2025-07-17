@@ -1,3 +1,4 @@
+<!-- PaymentToolber CŨ -->
 <template>
   <Sidebar v-model:visible="isVisible" position="right" class="payment-toolbar"
     :style="{ width: '550px', maxWidth: '100%' }" :dismissable="false" @hide="$emit('close')">
@@ -114,19 +115,15 @@
           <span class="label">Khách cần trả:</span>
           <span class="value kct">{{ formatCurrency(calculateFinalTotal()).replace('₫', 'đ') }}</span>
         </div>
-        <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
+        <div class="flex justify-between mb-2 items-center">
           <span class="label">Khách thanh toán:</span>
           <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
             :min="0" :useGrouping="true" placeholder="Nhập số tiền" />
         </div>
-        <div v-if="invoice.paymentMethodId === 1 && changeAmount !== null && changeAmount >= 0"
+        <div v-if="changeAmount !== null && changeAmount >= 0"
           class="flex justify-between mb-2 items-center text-green-600">
           <span class="label">Tiền thừa:</span>
           <span class="value">{{ formatCurrency(changeAmount).replace('₫', 'đ') }}</span>
-        </div>
-        <div v-if="invoice.paymentMethodId === 2" class="mb-4">
-          <Button label="Thanh toán qua VNPay" icon="pi pi-credit-card" severity="info" :loading="isPaymentProcessing"
-            @click="initiateVNPayPayment" :disabled="isPaymentProcessing" />
         </div>
       </div>
 
@@ -144,7 +141,7 @@
       </div>
 
       <!-- Nút điều khiển -->
-      <div v-if="invoice.paymentMethodId === 1" class="flex justify-end gap-2">
+      <div class="flex justify-end gap-2">
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
         <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" />
       </div>
@@ -171,7 +168,6 @@ import type { PaymentMethodResponse } from '../../../../model/admin/paymentMetho
 import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
 import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
-import { OrderService } from '../../../../service/admin/OrderService';
 import CustomerDialog from './CustomerDialog.vue';
 import InvoicePrint from './InvoicePrint.vue';
 import { useConfirm } from 'primevue/useconfirm';
@@ -181,8 +177,8 @@ const toast = useToast();
 const isVisible = ref(true);
 const showDialog = ref(false);
 const showPrintPreview = ref(false);
-const isPaymentProcessing = ref(false);
 const localCouponUsage = ref<CouponUsageResponse[]>([]);
+
 
 const props = defineProps<{
   invoice: {
@@ -208,7 +204,7 @@ const props = defineProps<{
     paymentMethodId: number | null;
     paymentMethod: string;
     notes: string;
-    items: { id: number; name: string; price: number; quantity: number }[];
+    items: { name: string; price: number; quantity: number }[];
   };
   customers: CustomerResponse[];
   paymentMethods: PaymentMethodResponse[];
@@ -274,7 +270,7 @@ const validateBeforeComplete = () => {
     });
     return false;
   }
-  if (props.invoice.paymentMethodId === 1 && paid < required) {
+  if (paid < required) {
     toast.add({
       severity: 'error',
       summary: 'Chưa thanh toán đủ',
@@ -284,54 +280,6 @@ const validateBeforeComplete = () => {
     return false;
   }
   return true;
-};
-
-const initiateVNPayPayment = async () => {
-  if (!validateBeforeComplete()) return;
-  isPaymentProcessing.value = true;
-  try {
-    const finalTotal = calculateFinalTotal();
-    const payload = {
-      orderCode: props.invoice.orderCode,
-      userId: selectedCustomerId.value || undefined,
-      items: props.invoice.items.map(item => ({
-        productId: item.id,
-        quantity: item.quantity,
-      })),
-      shipments: props.invoice.isPos
-        ? undefined
-        : [
-            {
-              carrierId: props.invoice.carrierId!,
-              shippingCost: props.invoice.shippingCost ?? 0,
-              estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
-              orderItemIds: props.invoice.items.map(item => item.id),
-            },
-          ],
-      couponUsageIds: props.invoice.couponUsageIds?.length ? props.invoice.couponUsageIds : undefined,
-      payment: {
-        paymentMethodId: props.invoice.paymentMethodId!,
-        amount: finalTotal,
-        returnUrl: 'http://localhost:5173/#/callback',
-      },
-      notes: props.invoice.notes || undefined,
-    };
-    const response = await OrderService.addProductToOrder(props.invoice.orderCode, payload);
-    if (response && response.data && response.data.paymentUrl) {
-      window.location.href = response.data.paymentUrl; // Chuyển hướng đến VNPay
-    } else {
-      throw new Error('Không nhận được URL thanh toán từ server');
-    }
-  } catch (error: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.message || 'Không thể khởi tạo thanh toán VNPay',
-      life: 3000
-    });
-  } finally {
-    isPaymentProcessing.value = false;
-  }
 };
 
 const completeAndPrint = () => {
@@ -560,4 +508,3 @@ watch(() => props.invoice.shippingCost, () => {
   box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
 }
 </style>
-```

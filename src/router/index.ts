@@ -37,6 +37,7 @@ const router = createRouter({
                 { path: '/attribute/edit', name: 'attributeadd', component: () => import('@/views/pages/admin/attribute/AttributeForm.vue') },
                 { path: '/tag', name: 'tag', component: () => import('@/views/pages/admin/tag/TagList.vue') },
                 { path: '/order', name: 'order', component: () => import('@/views/pages/admin/order/Invoice.vue') },
+                { path: '/callback', name: 'vnpay-callback', component: () => import('@/views/pages/admin/order/VNPayCallback.vue') },
                 { path: '/home', name: 'home', component: () => import('@/views/pages/admin/statistical/Statistical.vue') },
                 {path: '/management',name: 'management',component: () => import('@/views/pages/admin/management/ManagementList.vue')},
                 {path: '/management/order/:id',name: 'order-detail',component: () => import('@/views/pages/admin/management/Management.vue')},

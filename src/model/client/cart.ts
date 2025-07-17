@@ -60,13 +60,16 @@ export interface OrderItemRequest {
 export interface PaymentRequest {
   paymentMethodId: number;
   amount: number;
+  returnUrl?: string;
 }
-
+ 
 export interface ShipmentRequest {
   carrierId: number;
-  estimatedDeliveryDate: string; 
+  estimatedDeliveryDate: string; // ISO 8601 format
   orderItemIds?: number[];
+  shippingCost?: number;
 }
+
 
 
 
@@ -83,16 +86,18 @@ export interface OrderResponseClient {
   items: OrderItemResponse[];
   payment: PaymentResponse;
   couponUsages?: CouponResponse[];
-  shipment?: ShipmentResponse;
+  shipments?: ShipmentResponse[];
   createdBy: number;
   createdDate: string;
   lastModifiedBy: number;
   lastModifiedDate: string;
+  paymentUrl?: string;
 }
 
 export interface AddressResponse {
   id: number;
   email: string;
+  userId: number;
   username: string;
   phoneNumber: string;
   role: string;
@@ -113,7 +118,9 @@ export interface ShipmentResponse {
   shipmentStatus: string;
   trackingNumber: string;
   carrierName: string;
+  carrierId: number;
   estimatedDeliveryDate: string;
+  shippingCost: number;
 }
 
 export interface CouponResponse {
@@ -141,8 +148,12 @@ export interface PaymentResponse {
   paymentStatus: string;
   paymentDate: string;
   changeAmount: number;
+  paymentMethodId: number;
   paymentMethodName: string;
+  returnUrl?: string;
+  transactionId?: string;
 }
+
 
 
 

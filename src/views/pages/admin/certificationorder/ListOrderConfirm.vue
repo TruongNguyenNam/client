@@ -7,25 +7,26 @@
   
           <!-- TabView cho các trạng thái đơn hàng -->
           <TabView v-model:activeIndex="activeTab" @update:activeIndex="onTabChange">
-            <TabPanel header="Tất cả">
-              <span>Tất cả đơn hàng</span>
-            </TabPanel>
-            <TabPanel header="Đang chờ">
-              <span>Đơn hàng đang chờ</span>
-            </TabPanel>
-            <TabPanel header="Hoàn thành">
-              <span>Đơn hàng hoàn thành</span>
-            </TabPanel>
-            <TabPanel header="Huỷ bỏ">
-              <span>Đơn hàng huỷ bỏ</span>
-            </TabPanel>
-            <TabPanel header="Đang giao">
-              <span>Đơn hàng đang giao</span>
-            </TabPanel>
-            <TabPanel header="Trả hàng">
-              <span>Đơn hàng trả hàng</span>
-            </TabPanel>
+  <TabPanel :header="`Tất cả (${totalRecords})`">
+    <span>Tất cả đơn hàng</span>
+  </TabPanel>
+  <TabPanel :header="`Đang chờ (${statusCounts.PENDING || 0})`">
+    <span>Đơn hàng đang chờ</span>
+  </TabPanel>
+  <TabPanel :header="`Hoàn thành (${statusCounts.COMPLETED || 0})`">
+    <span>Đơn hàng hoàn thành</span>
+  </TabPanel>
+  <TabPanel :header="`Huỷ bỏ (${statusCounts.CANCELLED || 0})`">
+    <span>Đơn hàng huỷ bỏ</span>
+  </TabPanel>
+  <TabPanel :header="`Đang giao (${statusCounts.SHIPPED || 0})`">
+    <span>Đơn hàng đang giao</span>
+  </TabPanel>
+  <TabPanel :header="`Trả hàng (${statusCounts.RETURNED || 0})`">
+    <span>Đơn hàng trả hàng</span>
+  </TabPanel>
           </TabView>
+
   
           <DataTable
             :value="orderList"
@@ -167,7 +168,9 @@
   const orderList = ref<OrderResponse[]>([]);
   const totalRecords = ref(0);
   const activeTab = ref(0); // Tab đang được chọn (0 = Tất cả, 1 = PENDING, 2 = COMPLETED, ...)
-  
+  const statusCounts = ref<Record<string, number>>({});
+
+
   // Define filters with proper typing for PrimeVue DataTable
   const filters = ref({
     global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
@@ -196,6 +199,26 @@
         return status;
     }
   };
+  
+  const fetchOrderStatusCounts = async () => {
+  try {
+    const response = await OrderService.getOrderStatusCounts();
+    const data = response.data;
+
+    const map: Record<string, number> = {};
+    data?.forEach((item) => {
+      map[item.orderStatus] = item.count;
+    });
+
+    statusCounts.value = map;
+  } catch (error) {
+    console.error('Lỗi lấy thống kê trạng thái:', error);
+  }
+};
+
+
+
+
   
 const getOrderList = async () => {
     loading.value = true;
@@ -258,6 +281,7 @@ const getOrderList = async () => {
     lazyParams.value.page = event.first / event.rows;
     lazyParams.value.size = event.rows;
     getOrderList();
+    fetchOrderStatusCounts();
   };
   
   const initFilters = () => {
@@ -274,6 +298,7 @@ const getOrderList = async () => {
   
   onMounted(() => {
     getOrderList();
+    fetchOrderStatusCounts();
   });
 </script>
   

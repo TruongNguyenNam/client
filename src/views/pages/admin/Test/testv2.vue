@@ -1,3 +1,5 @@
+<!-- cái này của VNPAY -->
+
 <template>
   <div class="layout-container">
     <InvoiceHeader 
@@ -36,36 +38,29 @@
       @close="closePaymentToolbar"
       @complete-payment="completePayment"
     />
-
-    <RouterView @vnpay-callback="handleVNPayCallback" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useRoute } from 'vue-router';
 import type { ProductResponse } from '../../../../model/admin/product';
-import type { OrderResponse, CreateInvoiceRequest, OrderRequest } from '../../../../model/admin/order';
+import type { OrderResponse, CreateInvoiceRequest } from '../../../../model/admin/order';
 import type { CustomerResponse } from '../../../../model/admin/customer';
 import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
 import type { PaymentMethodResponse } from '../../../../model/admin/paymentMethod';
-import type { ShipmentResponse } from '../../../../model/admin/shipment';
 import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
-import { OrderService } from '../../../../service/admin/OrderService';
 import { PaymentMethodService } from '../../../../service/admin/PaymentMethodService';
-import { ShipmentService } from '../../../../service/admin/ShipmentService';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
 import { CarrierService } from '../../../../service/admin/CarrierService';
-import { VnPayService } from '../../../../service/admin/VnPayService';
+import { OrderService } from '../../../../service/admin/OrderService';
 import InvoiceHeader from './InvoiceHeader.vue';
 import ProductList from './ProductList.vue';
 import CartSection from './CartSection.vue';
 import PaymentToolbar from './PaymentToolbar.vue';
 
-const route = useRoute();
 const listProduct = ref<ProductResponse[]>([]);
 const totalRecords = ref(0);
 const loading = ref(false);
@@ -78,7 +73,6 @@ const searchQuery = ref('');
 const customers = ref<CustomerResponse[]>([]);
 const paymentMethods = ref<PaymentMethodResponse[]>([]);
 const couponUsage = ref<CouponUsageResponse[]>([]);
-const shipments = ref<ShipmentResponse[]>([]);
 const carriers = ref<CarrierResponse[]>([]);
 const changeAmount = ref(0);
 const invoiceTimeouts = ref<{ [key: string]: number }>({});
@@ -125,7 +119,7 @@ const removeTabByOrderCode = (orderCode: string) => {
       severity: 'info',
       summary: 'Hóa đơn tự động xóa',
       detail: `Hóa đơn ${orderCode} đã tự động bị xóa sau 5 phút`,
-      life: 3000
+      life: 3000,
     });
   }
 };
@@ -169,11 +163,11 @@ const getAllCustomers = async () => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách khách hàng:", error);
     customers.value = [];
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách khách hàng', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách khách hàng',
+      life: 3000,
     });
   } finally {
     loading.value = false;
@@ -189,11 +183,11 @@ const getAllPaymentMethods = async () => {
     }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách phương thức thanh toán:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách phương thức thanh toán', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách phương thức thanh toán',
+      life: 3000,
     });
   } finally {
     loading.value = false;
@@ -209,11 +203,11 @@ const getAllCouponUsage = async (customerId: number) => {
     }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách mã giảm giá:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách mã giảm giá', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách mã giảm giá',
+      life: 3000,
     });
   } finally {
     loading.value = false;
@@ -232,11 +226,11 @@ const getAllCarriers = async () => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách đơn vị vận chuyển:", error);
     carriers.value = [];
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách đơn vị vận chuyển', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách đơn vị vận chuyển',
+      life: 3000,
     });
   } finally {
     loading.value = false;
@@ -250,17 +244,16 @@ onMounted(async () => {
       getAllChildProduct(),
       getAllCustomers(),
       getAllPaymentMethods(),
-      getAllCouponUsage(1),
       getAllCarriers(),
     ]);
     loadInvoicesFromStorage();
   } catch (error) {
     console.error("Lỗi khi tải dữ liệu:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.',
+      life: 3000,
     });
   } finally {
     loading.value = false;
@@ -289,7 +282,7 @@ const addInvoiceTab = async () => {
   try {
     loading.value = true;
     const createInvoiceRequest: CreateInvoiceRequest = {
-      isPos: currentIsPos.value
+      isPos: currentIsPos.value,
     };
     const response = await OrderService.createOrder(createInvoiceRequest);
     if (response && response.data) {
@@ -307,33 +300,33 @@ const addInvoiceTab = async () => {
         items: [],
         customerName: '',
         discount: 0,
-        paidAmount: 0, 
+        paidAmount: 0,
         paymentMethod: paymentMethods.value[0]?.name || 'Tiền mặt',
         paymentMethodId: paymentMethods.value[0]?.id || 1,
         notes: '',
         carrierId: carriers.value[0]?.id || null,
         shippingCost: 0,
         estimatedDeliveryDate: null,
-        couponUsageIds: [] 
+        couponUsageIds: [],
       };
       invoiceTabs.value.push(newInvoice);
       activeTabIndex.value = invoiceTabs.value.length - 1;
       saveInvoicesToStorage();
       startAutoRemoveTimer(newInvoice);
-      toast.add({ 
-        severity: 'success', 
-        summary: 'Thành công', 
-        detail: `Đã tạo hóa đơn ${newInvoice.orderCode}`, 
-        life: 3000 
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: `Đã tạo hóa đơn ${newInvoice.orderCode}`,
+        life: 3000,
       });
     }
   } catch (error) {
     console.error('Lỗi khi tạo hóa đơn:', error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tạo hóa đơn. Vui lòng thử lại sau.', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tạo hóa đơn. Vui lòng thử lại sau.',
+      life: 3000,
     });
   } finally {
     loading.value = false;
@@ -353,28 +346,44 @@ const removeTab = (index: number) => {
 
 const addProductToActiveInvoice = (product: any) => {
   if (invoiceTabs.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Chưa có đơn hàng', detail: 'Vui lòng tạo đơn hàng trước', life: 3000 });
+    toast.add({
+      severity: 'warn',
+      summary: 'Chưa có đơn hàng',
+      detail: 'Vui lòng tạo đơn hàng trước',
+      life: 3000,
+    });
     return;
   }
   const stockQuantity = product?.stockQuantity ?? 0;
   if (stockQuantity <= 0) {
-    toast.add({ severity: 'error', summary: 'Hết hàng', detail: `${product.name} hiện đã hết hàng`, life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Hết hàng',
+      detail: `${product.name} hiện đã hết hàng`,
+      life: 3000,
+    });
     return;
   }
   const activeInvoice = invoiceTabs.value[activeTabIndex.value];
   const existingItem = activeInvoice.items.find((item: any) => item.id === product.id);
 
   if (existingItem && existingItem.quantity >= stockQuantity) {
-    toast.add({ severity: 'warn', summary: 'Quá số lượng', detail: `${product.name} đã vượt quá số lượng tồn kho`, life: 3000 });
+    toast.add({
+      severity: 'warn',
+      summary: 'Quá số lượng',
+      detail: `${product.name} đã vượt quá số lượng tồn kho`,
+      life: 3000,
+    });
     return;
   }
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
-    activeInvoice.items.push({ 
-      ...product, 
-      quantity: 1, 
-      price: product.price || 0 
+    activeInvoice.items.push({
+      id: product.id,
+      name: product.name,
+      price: product.price || 0,
+      quantity: 1,
     });
   }
   recalculateTotal(activeInvoice);
@@ -386,7 +395,12 @@ const incrementQuantity = (invoice: any, index: number) => {
   const product = listProduct.value.find((p: any) => p.id === invoice.items[index].id);
   const stockQuantity = product?.stockQuantity ?? 0;
   if (product && invoice.items[index].quantity >= stockQuantity) {
-    toast.add({ severity: 'warn', summary: 'Hết hàng', detail: 'Không thể thêm số lượng, đã đạt giới hạn tồn kho', life: 3000 });
+    toast.add({
+      severity: 'warn',
+      summary: 'Hết hàng',
+      detail: 'Không thể thêm số lượng, đã đạt giới hạn tồn kho',
+      life: 3000,
+    });
     return;
   }
   invoice.items[index].quantity += 1;
@@ -418,6 +432,10 @@ const recalculateTotal = (invoice: any) => {
     (sum: number, item: any) => sum + ((item.price || 0) * item.quantity),
     0
   );
+  invoice.orderTotal = invoice.orderTotal - (invoice.discount || 0);
+  if (invoice.orderTotal < 0) {
+    invoice.orderTotal = 0;
+  }
 };
 
 const openPaymentToolbar = (invoice: any) => {
@@ -438,13 +456,13 @@ const closePaymentToolbar = () => {
     resetTimerOnInteraction(selectedInvoice.value);
   }
   selectedInvoice.value = null;
-  couponUsage.value = []; 
+  couponUsage.value = [];
 };
 
 const calculateFinalTotal = () => {
   if (!selectedInvoice.value) return 0;
   const shippingCost = selectedInvoice.value.isPos ? 0 : (selectedInvoice.value.shippingCost || 0);
-  return selectedInvoice.value.orderTotal + shippingCost - (selectedInvoice.value.discount || 0);
+  return selectedInvoice.value.orderTotal + shippingCost;
 };
 
 const updateTotal = () => {
@@ -452,6 +470,7 @@ const updateTotal = () => {
   if (selectedInvoice.value.discount < 0) {
     selectedInvoice.value.discount = 0;
   }
+  recalculateTotal(selectedInvoice.value);
   updateChange();
   saveInvoicesToStorage();
   resetTimerOnInteraction(selectedInvoice.value);
@@ -464,150 +483,45 @@ const updateChange = () => {
   changeAmount.value = paid > finalTotal ? paid - finalTotal : 0;
 };
 
-const handleVNPayCallback = async (queryParams: any) => {
-try {
-  const response = await VnPayService.verifyVnpayCallback(queryParams);
-  if (response.status && response.data.success) {
-    const orderCode = response.data.orderCode;
-    if (!orderCode) {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không tìm thấy mã đơn hàng trong phản hồi VNPay',
-        life: 3000,
-      });
-      return;
-    }
-
-    const invoice = invoiceTabs.value.find(tab => tab.orderCode === orderCode);
-    if (invoice) {
-      invoice.orderStatus = 'COMPLETED';
-      invoice.items.forEach((item: any) => {
-        const product = listProduct.value.find((p: any) => p.id === item.id);
-        if (product) {
-          product.stockQuantity = (product.stockQuantity ?? 0) - item.quantity;
-        }
-      });
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: `Thanh toán VNPay thành công cho đơn hàng ${orderCode}`,
-        life: 5000,
-      });
-      removeTabByOrderCode(orderCode); // Now safe to call with string
-    } else {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: `Không tìm thấy đơn hàng ${orderCode}`,
-        life: 3000,
-      });
-    }
-  } else {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: response.data.message || 'Thanh toán VNPay thất bại',
-      life: 3000,
-    });
-  }
-} catch (error) {
-  console.error('Lỗi khi xử lý callback VNPay:', error);
-  toast.add({
-    severity: 'error',
-    summary: 'Lỗi',
-    detail: 'Lỗi hệ thống khi xử lý thanh toán VNPay',
-    life: 3000,
-  });
-}
-};
-
-const completePayment = async () => {
+const completePayment = () => {
   if (!selectedInvoice.value) return;
-  if (selectedInvoice.value.items.length === 0) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng thêm sản phẩm', life: 3000 });
-    return;
-  }
-  if (!selectedInvoice.value.isPos && !selectedInvoice.value.userId) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn khách hàng', life: 3000 });
-    return;
-  }
-  if (!selectedInvoice.value.isPos && !selectedInvoice.value.carrierId) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn nhà vận chuyển', life: 3000 });
-    return;
-  }
-  if (!selectedInvoice.value.isPos && (selectedInvoice.value.shippingCost === null || selectedInvoice.value.shippingCost < 0)) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng nhập phí vận chuyển hợp lệ', life: 3000 });
-    return;
-  }
-  const finalTotal = calculateFinalTotal();
-  if (selectedInvoice.value.paymentMethodId === 1 && (!selectedInvoice.value.paidAmount || selectedInvoice.value.paidAmount < finalTotal)) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Số tiền khách thanh toán phải lớn hơn hoặc bằng số tiền cần trả', life: 3000 });
-    return;
-  }
-  if (selectedInvoice.value.paymentMethodId === 2) {
-    // VNPay: Thanh toán được xử lý trong initiateVNPayPayment
-    return;
-  }
-  const customer = selectedInvoice.value.userId ? 
-    customers.value.find(c => c.id === selectedInvoice.value.userId) : null;
-  const payload: OrderRequest = {
-    orderCode: selectedInvoice.value.orderCode,
-    userId: selectedInvoice.value.userId || undefined,
-    notes: selectedInvoice.value.notes || undefined,
-    items: selectedInvoice.value.items.map((item: any) => ({
-      productId: item.id,
-      quantity: item.quantity
-    })),
-    payment: {
-      paymentMethodId: selectedInvoice.value.paymentMethodId || 1,
-      amount: finalTotal,
-      returnUrl: selectedInvoice.value.paymentMethodId === 2 ? 'http://localhost:5173/#/callback' : undefined
-    },
-    couponUsageIds: selectedInvoice.value.couponUsageIds?.length ? selectedInvoice.value.couponUsageIds : undefined
-  };
-  if (!selectedInvoice.value.isPos && customer) {
-    const orderItemIds = selectedInvoice.value.items.map((item: any) => item.id);
-    payload.shipments = [{
-      carrierId: selectedInvoice.value.carrierId || undefined,
-      shippingCost: selectedInvoice.value.shippingCost || 0,
-      estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate 
-        ? new Date(selectedInvoice.value.estimatedDeliveryDate).toISOString() 
-        : new Date().toISOString(),
-      orderItemIds: orderItemIds
-    }];
-  }
-  try {
-    console.log("Payload gửi đến backend:", payload);
-    const response = await OrderService.addProductToOrder(
-      selectedInvoice.value.orderCode, 
-      payload
-    );
-    if (response && response.data) {
-      selectedInvoice.value.items.forEach((item: any) => {
-        const product = listProduct.value.find((p: any) => p.id === item.id);
-        if (product) {
-          product.stockQuantity = (product.stockQuantity ?? 0) - item.quantity;
-        }
-      });
-      selectedInvoice.value.orderStatus = 'COMPLETED';
-      toast.add({ 
-        severity: 'success', 
-        summary: 'Thành công', 
-        detail: `Đã thanh toán ${formatCurrency(finalTotal).replace('₫', 'đ')}. Tiền thừa: ${formatCurrency(changeAmount.value).replace('₫', 'đ')}`,
-        life: 5000 
-      });
-      const orderCode = selectedInvoice.value.orderCode;
-      setTimeout(() => {
-        closePaymentToolbar();
-      }, 300);
-      removeTabByOrderCode(orderCode);
+  const orderCode = selectedInvoice.value.orderCode;
+  selectedInvoice.value.items.forEach((item: any) => {
+    const product = listProduct.value.find((p: any) => p.id === item.id);
+    if (product) {
+      product.stockQuantity = (product.stockQuantity ?? 0) - item.quantity;
     }
-  } catch (error) {
-    console.error("Lỗi khi thanh toán đơn hàng:", error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Thanh toán thất bại', life: 3000 });
+  });
+  selectedInvoice.value.orderStatus = 'PENDING';
+  const index = invoiceTabs.value.findIndex(tab => tab.orderCode === orderCode);
+  if (index !== -1) {
+    invoiceTabs.value.splice(index, 1);
+    saveInvoicesToStorage();
+    if (activeTabIndex.value >= invoiceTabs.value.length) {
+      activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
+    }
+    clearTimeout(invoiceTimeouts.value[orderCode]);
+    delete invoiceTimeouts.value[orderCode];
   }
+  closePaymentToolbar();
 };
+
+watch(() => selectedInvoice.value?.paymentMethod, (newValue) => {
+  if (selectedInvoice.value) {
+    const method = paymentMethods.value.find(m => m.name === newValue);
+    selectedInvoice.value.paymentMethodId = method?.id || 1;
+    saveInvoicesToStorage();
+    resetTimerOnInteraction(selectedInvoice.value);
+  }
+});
+
+watch(() => selectedInvoice.value?.shippingCost, () => {
+  if (selectedInvoice.value) {
+    updateChange();
+    saveInvoicesToStorage();
+    resetTimerOnInteraction(selectedInvoice.value);
+  }
+});
 
 const formatCurrency = (value: number) => {
   return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
