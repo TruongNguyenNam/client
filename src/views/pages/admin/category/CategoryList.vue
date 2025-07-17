@@ -5,9 +5,7 @@ import { ref, onBeforeMount, watch, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
-import * as XLSX from 'xlsx'; // Thêm dòng này
-
-// Hàm xuất danh mục ra Excel
+import { exportToExcel, importFromExcel } from '@/utils/excel';
 const exportCategories = () => {
     if (!categories.value.length) {
         toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có danh mục để xuất', life: 3000 });
@@ -20,38 +18,38 @@ const exportCategories = () => {
         'Mô tả': cat.description,
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'DanhMuc');
-
-    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
-    XLSX.writeFile(workbook, `Danh_muc_${today}.xlsx`);
+    const today = new Date().toISOString().split('T')[0];
+    exportToExcel(exportData, `Danh_muc_${today}`, 'DanhMuc');
 };
-const handleExcelUpload = (event) => {
-    const file = event.files[0];
-
+const handleExcelUpload = async (event) => {
+    const file = event.files?.[0];
     if (!file) {
         toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không có file được chọn', life: 3000 });
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+    try {
+        const jsonData = await importFromExcel(file);
 
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        const imported = jsonData
+            .map((item) => ({
+                name: item['Tên danh mục']?.trim() || '',
+                description: item['Mô tả']?.trim() || '',
+            }))
+            .filter(item => item.name && item.description);
 
-        // ✅ Kiểm tra cấu trúc dữ liệu
-        const imported = jsonData.map(item => ({
-            name: item['Tên danh mục'] || '',
-            description: item['Mô tả'] || '',
-        })).filter(item => item.name && item.description);
+        // Danh sách tên đã có (toLowerCase để so trùng không phân biệt hoa thường)
+        const existingNames = categories.value.map(cat => cat.name.trim().toLowerCase());
 
-        // ✅ Gọi API addCategory() cho từng dòng
-        for (const item of imported) {
+        // Lọc ra các mục KHÔNG bị trùng tên
+        const validItems = imported.filter(item => {
+            return !existingNames.includes(item.name.toLowerCase());
+        });
+
+        const duplicatedItems = imported.length - validItems.length;
+
+        // Thêm danh mục hợp lệ
+        for (const item of validItems) {
             try {
                 await CategoryService.addCategory(item);
             } catch (err) {
@@ -59,22 +57,37 @@ const handleExcelUpload = (event) => {
             }
         }
 
-        toast.add({ severity: 'success', summary: 'Thành công', detail: `Đã nhập ${imported.length} danh mục`, life: 3000 });
+        // Thông báo kết quả
+        if (validItems.length > 0) {
+            toast.add({
+                severity: 'success',
+                summary: 'Thành công',
+                detail: `Đã nhập ${validItems.length} danh mục${duplicatedItems > 0 ? ` (bỏ qua ${duplicatedItems} danh mục trùng tên)` : ''}`,
+                life: 3000
+            });
+        } else {
+            toast.add({
+                severity: 'warn',
+                summary: 'Thông báo',
+                detail: 'Tất cả các danh mục trong file đều đã tồn tại!',
+                life: 3000
+            });
+        }
+
         loadCategories();
-    };
-    reader.readAsArrayBuffer(file);
+    } catch (err) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi đọc file Excel', life: 3000 });
+        console.error(err);
+    }
 };
+
 const downloadTemplate = () => {
     const templateData = [
         { 'Tên danh mục': 'Ví dụ 1', 'Mô tả': 'Mô tả ví dụ 1' },
         { 'Tên danh mục': 'Ví dụ 2', 'Mô tả': 'Mô tả ví dụ 2' }
     ];
-    const worksheet = XLSX.utils.json_to_sheet(templateData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
-    XLSX.writeFile(workbook, 'Mau_danh_muc.xlsx');
+    exportToExcel(templateData, 'Mau_danh_muc', 'Template');
 };
-
 const toast = useToast();
 
 const categories = ref([]);

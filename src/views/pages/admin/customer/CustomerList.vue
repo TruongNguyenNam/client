@@ -3,6 +3,107 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
 import type { CustomerResponse } from "../../../../model/admin/customer";
+import { exportToExcel, importFromExcel, downloadExcelTemplate } from '../../../../utils/excel';
+import { useToast } from 'primevue/usetoast';
+const toast = useToast();
+// Tải file mẫu Excel
+const downloadCustomerTemplate = () => {
+  const exampleData = [
+  {
+    Name: 'Nguyễn Văn A',
+    Email: 'vana@example.com',
+    PhoneNumber: '0912345678',
+    Address: '123 Đường A, Phường B, Quận C, TP.HCM',
+    Gender: 'MALE',
+  },
+  {
+    Name: 'Trần Thị B',
+    Email: 'thib@example.com',
+    PhoneNumber: '0987654321',
+    Address: '456 Đường D, Phường E, Quận F, Hà Nội',
+    Gender: 'FEMALE',
+  },
+];
+  exportToExcel(exampleData, 'Template_KhachHang', 'KhachHangTemplate');
+  toast.add({
+    severity: 'info',
+    summary: 'Tải mẫu thành công',
+    detail: 'File mẫu đã được tải về cùng 3 dòng ví dụ',
+    life: 3000
+  });
+};
+
+
+// Xuất danh sách khách hàng ra Excel
+const exportCustomers = () => {
+  if (!customers.value.length) {
+    toast.add({ severity: 'warn', summary: 'Không có dữ liệu', detail: 'Danh sách khách hàng trống', life: 3000 });
+    return;
+  }
+
+  const data = customers.value.map(c => ({
+    Name: c.username,
+    Email: c.email,
+    PhoneNumber: c.phoneNumber,
+    Address: [
+      c.addressStreet, c.addressWard, c.addressDistrict,
+      c.addressProvince, c.addressCity
+    ].filter(Boolean).join(', '),
+    Gender: c.gender
+  }));
+
+  exportToExcel(data, 'DanhSachKhachHang');
+  toast.add({ severity: 'success', summary: 'Xuất thành công', detail: 'Đã xuất file Excel', life: 3000 });
+};
+
+// Import danh sách khách hàng từ Excel
+const importCustomers = async (event: any) => {
+  const file = event.files?.[0];
+  if (!file) return;
+
+  try {
+    const importedData = await importFromExcel(file);
+    console.log("File Excel import:", importedData); // Gợi ý thêm
+    let added = 0;
+
+    for (const item of importedData) {
+      if (item.Name && item.Email && item.PhoneNumber) {
+        const gender = item.Gender?.toUpperCase() || 'OTHER'; // ✅ Đã sửa chỗ này
+
+        const customerData = {
+          username: item.Name.trim(),
+          email: item.Email.trim(),
+          phoneNumber: item.PhoneNumber.trim(),
+          addressStreet: item.Address || '',
+          address: item.Address || '',
+          gender: ['MALE', 'FEMALE', 'OTHER'].includes(gender) ? gender : 'OTHER',
+          role: 'CUSTOMER',
+        };
+
+        await CustomerService.createCustomer(customerData);
+        added++;
+      }
+    }
+
+    toast.add({
+      severity: 'success',
+      summary: 'Import thành công',
+      detail: `Đã thêm ${added} khách hàng`,
+      life: 3000
+    });
+
+    await loadCustomers();
+  } catch (err) {
+    console.error("Lỗi khi import Excel:", err);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi import',
+      detail: 'Vui lòng kiểm tra lại file hoặc định dạng cột',
+      life: 4000
+    });
+  }
+};
+
 
 const customers = ref<CustomerResponse[]>([]);
 const loading = ref<boolean>(true);
@@ -103,9 +204,13 @@ const formatGender = (gender: string | null | undefined) => {
             <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2" @click="addCustomer" />
           </template>
           <template v-slot:end>
-            <Button label="Nhập" icon="pi pi-upload" class="p-button-help mr-2" />
-            <Button label="Xuất" icon="pi pi-download" class="p-button-info" />
+            <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
+              @click="downloadCustomerTemplate" />
+            <FileUpload mode="basic" accept=".xlsx" :auto="true" :maxFileSize="1000000" chooseLabel="Nhập Excel"
+              class="mr-2 inline-block" @select="importCustomers" />
+            <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportCustomers" />
           </template>
+
         </Toolbar>
         <div class="flex align-items-center justify-content-between mb-4">
           <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />
@@ -117,17 +222,10 @@ const formatGender = (gender: string | null | undefined) => {
             </span>
           </div>
         </div>
-        <DataTable v-model:selection="selectedCustomers" 
-          :value="customers" 
-          :paginator="true"
-          :first="lazyParams.page * lazyParams.size" 
-          :rows="lazyParams.size" 
-          :totalRecords="totalRecords"
-          emptyMessage="Không tìm thấy khách hàng nào." 
-          :loading="loading" @page="onPage"
-          :rowsPerPageOptions="[5, 10, 20, 50]" 
-          class="p-datatable-gridlines"
-          :rowHover="true"
+        <DataTable v-model:selection="selectedCustomers" :value="customers" :paginator="true"
+          :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
+          emptyMessage="Không tìm thấy khách hàng nào." :loading="loading" @page="onPage"
+          :rowsPerPageOptions="[5, 10, 20, 50]" class="p-datatable-gridlines" :rowHover="true"
           :globalFilterFields="['username', 'email', 'phoneNumber']">
           <template #header>
             <div class="flex justify-content-between align-items-center">
@@ -135,8 +233,8 @@ const formatGender = (gender: string | null | undefined) => {
             </div>
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
-          <Column field="username" header="Tên khách hàng" sortable/>
-          <Column field="email" header="Email" sortable/>
+          <Column field="username" header="Tên khách hàng" sortable />
+          <Column field="email" header="Email" sortable />
           <Column field="phoneNumber" header="Số điện thoại" sortable />
           <Column header="Địa chỉ" sortable>
             <template #body="slotProps">
@@ -156,7 +254,7 @@ const formatGender = (gender: string | null | undefined) => {
               {{ formatGender(slotProps.data.gender) }}
             </template>
           </Column>
-          <Column field="status" header="Trạng thái" >
+          <Column field="status" header="Trạng thái">
             <template #body="slotProps">
               <Tag :value="getCustomerStatus(slotProps.data).text"
                 :severity="getCustomerStatus(slotProps.data).severity" />

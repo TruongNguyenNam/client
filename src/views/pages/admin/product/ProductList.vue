@@ -3,6 +3,96 @@ import { ref, onMounted } from 'vue';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
 import type { ProductResponse, VariantCountDTO } from '../../../../model/admin/product';
 import { RouterLink } from 'vue-router';
+import { exportToExcel, importFromExcel } from '../../../../utils/excel';
+import { useToast } from 'primevue/usetoast';
+import * as XLSX from 'xlsx';
+
+const toast = useToast();
+
+const exportAllProducts = async () => {
+  try {
+    const parentProducts = await ProductService.getAllParentProducts();
+
+    const allAttributeNames = new Set<string>();
+    const exportData: any[] = [];
+
+    // Bước 1: Thu thập toàn bộ tên thuộc tính có thể có
+    for (const parent of parentProducts) {
+      const childProducts = await ProductService.getProductsByParentId(parent.id);
+      for (const child of childProducts) {
+        if (child.productAttributeValueResponses && Array.isArray(child.productAttributeValueResponses)) {
+          child.productAttributeValueResponses.forEach((attr: any) => {
+            allAttributeNames.add(attr.name);
+          });
+        }
+      }
+    }
+
+    const attributeList = Array.from(allAttributeNames);
+
+    // Bước 2: Tạo exportData với đầy đủ thuộc tính động
+    for (const parent of parentProducts) {
+      const childProducts = await ProductService.getProductsByParentId(parent.id);
+
+      if (childProducts.length > 0) {
+        for (const child of childProducts) {
+          const row: Record<string, any> = {
+            "Mã SP cha": parent.sku || "",
+            "Tên SP cha": parent.name || "",
+            "Mã SP con": child.sku || "",
+            "Tên SP con": child.name || "",
+            "Mô tả SP con": child.description || "",
+            "Loại thể thao": parent.sportType || "",
+            "Danh mục": parent.categoryName || "",
+            "Nhà cung cấp": parent.supplierName || "",
+            "Số lượng": child.stockQuantity || 0,
+            "Giá": child.price || 0,
+            "Nhãn": child.tagName?.map((t: any) => t.name).join(", ") || "",
+          };
+
+          // Thêm thuộc tính động
+          const attributeMap: Record<string, string> = {};
+          if (child.productAttributeValueResponses && Array.isArray(child.productAttributeValueResponses)) {
+            child.productAttributeValueResponses.forEach((attr: any) => {
+              attributeMap[attr.name] = attr.value;
+            });
+          }
+
+          // Gán giá trị cho tất cả thuộc tính đã thu thập
+          attributeList.forEach(attrName => {
+            row[attrName] = attributeMap[attrName] || "";
+          });
+console.log(">>> Child:", child);
+
+          exportData.push(row);
+        }
+      } else {
+        exportData.push({
+          "Mã SP cha": parent.sku || "",
+          "Tên SP cha": parent.name || "",
+          "Tên SP con": "(Không có biến thể)",
+          "Mô tả SP con": "",
+          "Loại thể thao": parent.sportType || "",
+          "Danh mục": parent.categoryName || "",
+          "Nhà cung cấp": parent.supplierName || "",
+          "Số lượng": parent.stockQuantity || 0,
+          "Giá": "",
+          "Nhãn": parent.tagName || "",
+        });
+      }
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sách sản phẩm");
+    XLSX.writeFile(workbook, "SanPham_Full.xlsx");
+  } catch (error) {
+    console.error("Xuất Excel thất bại:", error);
+  }
+  
+};
+
+
 
 const listProduct = ref<ProductResponse[]>([]);
 const loading = ref(false);
@@ -55,7 +145,7 @@ const searchProducts = async () => {
     await getAllParentProduct();
     return;
   }
-  
+
   loading.value = true;
   try {
     const products = await ProductService.searchProducts(searchTerm.value);
@@ -89,63 +179,42 @@ const onPageChange = (event: any) => {
     <div class="col-12">
       <div class="card">
         <h5>Danh sách Sản phẩm</h5>
-        
+
         <Toolbar class="mb-4">
           <template v-slot:start>
             <div class="my-2">
               <RouterLink to="/productadd">
                 <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" />
               </RouterLink>
-              <Button label="Delete" 
-                      icon="pi pi-trash" 
-                      class="p-button-danger" 
-                      :disabled="!selectedProducts.length"
-                     />
+              <Button label="Delete" icon="pi pi-trash" class="p-button-danger" :disabled="!selectedProducts.length" />
             </div>
           </template>
 
           <template v-slot:end>
             <Button label="Import" icon="pi pi-upload" class="p-button-help mr-2" />
-            <Button label="Export" icon="pi pi-download" class="p-button-info" />
+            <Button label="Xuất Excel" icon="pi pi-file-excel" class="p-button-success" @click="exportAllProducts" />
+
           </template>
         </Toolbar>
 
         <!-- Thay thế phần tìm kiếm bằng ô input nâng cao -->
         <div class="flex justify-content-between align-items-center mb-4">
-          <Button 
-            icon="pi pi-filter-slash" 
-            label="Clear" 
-            class="p-button-outlined" 
-            @click="clearSearch"
-          />
+          <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined" @click="clearSearch" />
           <span class="p-input-icon-left">
             <i class="pi pi-search" />
-            <InputText 
-              v-model="searchTerm" 
-              placeholder="Tìm kiếm nâng cao (tên, danh mục, nhà cung cấp, loại thể thao)..." 
-              @input="searchProducts"
-              class="w-full"
-            />
+            <InputText v-model="searchTerm"
+              placeholder="Tìm kiếm nâng cao (tên, danh mục, nhà cung cấp, loại thể thao)..." @input="searchProducts"
+              class="w-full" />
           </span>
         </div>
 
-        <DataTable
-          v-model:selection="selectedProducts"
-          :value="listProduct"
-          :paginator="true"
-          :rows="rows"
-          :totalRecords="totalRecords"
-          :first="first"
+        <DataTable v-model:selection="selectedProducts" :value="listProduct" :paginator="true" :rows="rows"
+          :totalRecords="totalRecords" :first="first"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-          :rowsPerPageOptions="[5,10,20,50]"
+          :rowsPerPageOptions="[5, 10, 20, 50]"
           currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} sản phẩm"
-          class="p-datatable-gridlines"
-          dataKey="id"
-          :rowHover="true"
-          :loading="loading"
-          responsiveLayout="scroll"
-          @page="onPageChange"
-        >
+          class="p-datatable-gridlines" dataKey="id" :rowHover="true" :loading="loading" responsiveLayout="scroll"
+          @page="onPageChange">
           <template #header>
             <div class="flex justify-content-between align-items-center">
               <span class="text-xl font-semibold">Sản phẩm</span>
@@ -157,10 +226,8 @@ const onPageChange = (event: any) => {
 
           <Column header="Ảnh" style="width: 100px">
             <template #body="{ data }">
-              <img :src="data.imageUrl?.[0] || 'https://via.placeholder.com/50'" 
-                   :alt="data.name" 
-                   class="product-image"
-                   v-if="data.imageUrl?.length > 0" />
+              <img :src="data.imageUrl?.[0] || 'https://via.placeholder.com/50'" :alt="data.name" class="product-image"
+                v-if="data.imageUrl?.length > 0" />
             </template>
           </Column>
 
@@ -169,15 +236,13 @@ const onPageChange = (event: any) => {
           <Column field="categoryName" header="Danh mục" sortable style="min-width: 150px"></Column>
           <Column field="supplierName" header="Nhà cung cấp" sortable style="min-width: 150px"></Column>
           <Column field="sportType" header="Loại thể thao" sortable style="min-width: 150px"></Column>
-        
+
 
           <Column header="Thao tác" style="min-width: 120px">
             <template #body="{ data }">
               <div class="flex align-items-center gap-2">
                 <RouterLink :to="`/productupdateparent/${data.id}`">
-                  <Button icon="pi pi-pencil" 
-                        class="p-button-rounded p-button-success" 
-                        v-tooltip.top="'Sửa'" />
+                  <Button icon="pi pi-pencil" class="p-button-rounded p-button-success" v-tooltip.top="'Sửa'" />
                 </RouterLink>
                 <!-- <Button icon="pi pi-trash" 
                       class="p-button-rounded p-button-danger"
@@ -199,7 +264,7 @@ const onPageChange = (event: any) => {
   object-fit: cover;
   border-radius: 4px;
   transition: transform 0.2s ease;
-  
+
   &:hover {
     transform: scale(1.1);
   }
@@ -214,7 +279,7 @@ const onPageChange = (event: any) => {
 
 :deep(.p-button.p-button-text) {
   padding: 0.5rem;
-  
+
   &:focus {
     box-shadow: none;
   }
