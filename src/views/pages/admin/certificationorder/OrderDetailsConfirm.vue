@@ -49,173 +49,180 @@
       />
     </div>
 
-    <div class="grid">
-      <div class="card mb-4">
-        <div class="space-y-1 text-gray-700">
-          <p><strong>Mã đơn hàng:</strong> {{ order?.orderCode }}</p>
-          <p><strong>Trạng thái:</strong> {{ order?.orderStatus }}</p>
-          <p><strong>Loại đơn:</strong> {{ order?.isPos ? "Tại quầy" : "Ship" }}</p>
-          <p><strong>Tổng tiền:</strong> {{ order?.orderTotal?.toLocaleString("vi-VN") }} đ</p>
-        </div>
-      </div>
-
-      <div class="card mb-4">
-        <h3>👤 Thông tin khách hàng</h3>
-        <div class="space-y-1 text-gray-700">
-          <p><strong>Người nhận:</strong> {{ order?.address?.username }}</p>
-          <p><strong>SĐT:</strong> {{ order?.address?.phoneNumber }}</p>
-          <p><strong>Email:</strong> {{ order?.address?.email }}</p>
-          <p><strong>Địa chỉ:</strong>
-            {{ order?.address?.addressStreet }}, {{ order?.address?.addressDistrict }},
-            {{ order?.address?.addressCity }}, {{ order?.address?.addressProvince }}
-          </p>
-        </div>
-      </div>
-
-      <div class="card mb-4">
-        <h3>💳 Thông tin thanh toán</h3>
-        <DataTable :value="paymentInfo" class="p-datatable-gridlines p-datatable-sm" responsiveLayout="scroll">
-          <Column field="key" header="Thông tin" />
-          <Column field="value" header="Giá trị">
-            <template #body="{ data }: DataTablePaymentSlotProps">
-              {{ data.value }}
-            </template>
-          </Column>
-        </DataTable>
-        <Button 
-          label="Cập nhật thanh toán" 
-          icon="pi pi-money-bill" 
-          class="p-button-info" 
-          @click="openPaymentDialog" 
-          style="margin-top: 10px;" 
-        />
-      </div>
-
-      <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
-        <h3>🚚 Vận chuyển</h3>
-        <div class="space-y-1 text-gray-700">
-          <p><strong>Trạng thái:</strong> {{ order?.shipments[0].shipmentStatus }}</p>
-          <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p>
-          <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
-          <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
-          <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card mb-4">
-      <DataTable :value="orderItems" class="p-datatable-gridlines" responsiveLayout="scroll">
-        <Column field="productName" header="Tên sản phẩm" />
-        <Column header="Hình ảnh">
-          <template #body="{ data, index }: DataTableSlotProps">
-            <img :src="data.productImage" alt="Hình ảnh sản phẩm" class="w-10 h-10 rounded-full" style="width: 100px; height: 100px;" />
-          </template>
-        </Column>
-        <Column header="Số lượng">
-          <template #body="{ data, index }: DataTableSlotProps">
-            <div class="flex align-items-center gap-2">
-              <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(index)" />
-              <span>{{ data.quantity }}</span>
-              <Button icon="pi pi-plus" rounded text @click="increaseQuantity(index)" />
-            </div>
-          </template>
-        </Column>
-        <Column header="Giá sản phẩm">
-          <template #body="{ data }: DataTableSlotProps">
-            {{ data.unitPrice.toLocaleString('vi-VN') }} đ
-          </template>
-        </Column>
-        <Column header="Thành tiền">
-          <template #body="{ data }: DataTableSlotProps">
-            {{ (data.quantity * data.unitPrice).toLocaleString('vi-VN') }} đ
-          </template>
-        </Column>
-        <Column header="Hành động">
-          <template #body="{ index }: DataTableSlotProps">
-            <Button label="Xoá" severity="danger" @click="removeItem(index)" style="margin-left: 40px;" />
-          </template>
-        </Column>
-      </DataTable>
-
-      <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
-        <Button 
-          label="Thêm sản phẩm" 
-          icon="pi pi-plus" 
-          class="p-button-primary" 
-          style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" 
-          @click="showProductDialog = true" 
-        />
-      </div>
-
-      <Dialog v-model:visible="showProductDialog" modal header="Chọn sản phẩm" :style="{ width: '80vw' }">
-        <ListProduct @select="handleAddProduct" />
-      </Dialog>
-
-      <Dialog v-model:visible="showPaymentDialog" modal header="Cập nhật thanh toán" :style="{ width: '50vw', zIndex: 1000 }">
-        <div v-if="loadingPaymentMethods">
-          <p>Đang tải phương thức thanh toán...</p>
-        </div>
-        <div v-else-if="!paymentMethods || paymentMethods.length === 0">
-          <p>Không có phương thức thanh toán nào khả dụng.</p>
-        </div>
-        <div v-else class="p-field">
-          <label for="paymentMethod">Phương thức thanh toán</label>
-          <Dropdown
-            id="paymentMethod"
-            v-model="tempPayment.paymentMethodId"
-            :options="paymentMethods"
-            option-label="name"
-            option-value="id"
-            class="w-full"
-            placeholder="Chọn phương thức thanh toán"
-          />
-        </div>
-        <div class="p-field">
-          <label for="additionalAmount">Số tiền cần thêm ({{ paymentShortage.toLocaleString('vi-VN') }} đ)</label>
-          <InputNumber
-            id="additionalAmount"
-            v-model="tempPayment.additionalAmount"
-            mode="currency"
-            currency="VND"
-            locale="vi-VN"
-            class="w-full"
-            :min="0"
-          />
-        </div>
-        <div class="flex justify-content-end gap-2">
-          <Button label="Hủy" class="p-button-text" @click="showPaymentDialog = false" />
-          <Button 
-            label="Lưu" 
-            class="p-button-primary" 
-            @click="savePayment" 
-            :disabled="loadingPaymentMethods || !paymentMethods || paymentMethods.length === 0" 
-          />
-        </div>
-      </Dialog>
-
-      <Dialog v-model:visible="showConfirmDialog" modal :header="confirmHeader" :style="{ width: '50vw' }">
-        <div class="p-field">
-          <p>{{ confirmMessage }}</p>
-          <label for="notes">Ghi chú (tùy chọn)</label>
-          <InputText
-            id="notes"
-            v-model="confirmNotes"
-            class="w-full"
-            placeholder="Nhập ghi chú (nếu có)"
-          />
-        </div>
-        <div class="flex justify-content-end gap-2">
-          <Button label="Hủy" class="p-button-text" @click="showConfirmDialog = false" />
-          <Button 
-            label="Xác nhận" 
-            class="p-button-primary" 
-            @click="updateOrderStatus" 
-            :loading="loading"
-          />
-        </div>
-      </Dialog>
+    <div class="grid grid-cols-2 gap-4 items-stretch" style="margin-left: 3px;">
+  <!-- Card Đơn Hàng -->
+  <div class="card h-full" style="width: 45%;">
+    <h3 class="mb-2 font-semibold text-lg">Đơn Hàng</h3>
+    <div class="space-y-1 text-gray-700">
+      <p><strong>Mã đơn hàng:</strong> {{ order?.orderCode }}</p>
+      <p><strong>Trạng thái:</strong> {{ order?.orderStatus }}</p>
+      <p><strong>Loại đơn:</strong> {{ order?.isPos ? "Tại quầy" : "Ship" }}</p>
+      <p><strong>Tổng tiền:</strong> {{ order?.orderTotal?.toLocaleString("vi-VN") }} đ</p>
     </div>
   </div>
+
+  <!-- Card Vận chuyển -->
+  <div class="card h-full" style="width: 52%;">
+    <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
+    <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
+      <p><strong>Trạng thái:</strong> {{ order?.shipments[0].shipmentStatus }}</p>
+      <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
+      <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
+      <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
+    </div>
+    <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <h3 class="mb-2 font-semibold text-lg">👤 Thông tin khách hàng</h3>
+  <DataTable :value="customerInfo" class="p-datatable-gridlines p-datatable-sm" responsiveLayout="scroll">
+    <Column field="label" header="Thông tin" />
+    <Column field="value" header="Giá trị" />
+  </DataTable>
+
+  <Button 
+    label="Cập nhật thông tin khách hàng" 
+    icon="pi pi-money-bill" 
+    class="p-button-info" 
+    @click="openPaymentDialog" 
+    style="margin-top: 10px;" 
+  />
+</div>
+
+<div class="card mb-4">
+  <h3>💳 Thông tin thanh toán</h3>
+  <DataTable :value="paymentInfo" class="p-datatable-gridlines p-datatable-sm" responsiveLayout="scroll">
+    <Column field="key" header="Thông tin" />
+    <Column field="value" header="Giá trị">
+      <template #body="{ data }: DataTablePaymentSlotProps">
+        {{ data.value }}
+      </template>
+    </Column>
+  </DataTable>
+  <Button 
+    label="Cập nhật thanh toán" 
+    icon="pi pi-money-bill" 
+    class="p-button-info" 
+    @click="openPaymentDialog" 
+    style="margin-top: 10px;" 
+  />
+</div>
+
+<div class="card mb-4">
+  <h3>Sản phẩm của đơn hàng</h3>
+  <DataTable :value="orderItems" class="p-datatable-gridlines" responsiveLayout="scroll">
+    <Column field="productName" header="Tên sản phẩm" />
+    <Column header="Hình ảnh">
+      <template #body="{ data, index }: DataTableSlotProps">
+        <img :src="data.productImage" alt="Hình ảnh sản phẩm" class="w-10 h-10 rounded-full" style="width: 100px; height: 100px;" />
+      </template>
+    </Column>
+    <Column header="Số lượng">
+      <template #body="{ data, index }: DataTableSlotProps">
+        <div class="flex align-items-center gap-2">
+          <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(index)" />
+          <span>{{ data.quantity }}</span>
+          <Button icon="pi pi-plus" rounded text @click="increaseQuantity(index)" />
+        </div>
+      </template>
+    </Column>
+    <Column header="Giá sản phẩm">
+      <template #body="{ data }: DataTableSlotProps">
+        {{ data.unitPrice.toLocaleString('vi-VN') }} đ
+      </template>
+    </Column>
+    <Column header="Thành tiền">
+      <template #body="{ data }: DataTableSlotProps">
+        {{ (data.quantity * data.unitPrice).toLocaleString('vi-VN') }} đ
+      </template>
+    </Column>
+    <Column header="Hành động">
+      <template #body="{ index }: DataTableSlotProps">
+        <Button label="Xoá" severity="danger" @click="removeItem(index)" style="margin-left: 40px;" />
+      </template>
+    </Column>
+  </DataTable>
+
+  <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
+    <Button 
+      label="Thêm sản phẩm" 
+      icon="pi pi-plus" 
+      class="p-button-primary" 
+      style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" 
+      @click="showProductDialog = true" 
+    />
+  </div>
+
+  <Dialog v-model:visible="showProductDialog" modal header="Chọn sản phẩm" :style="{ width: '80vw' }">
+    <ListProduct @select="handleAddProduct" />
+  </Dialog>
+
+  <Dialog v-model:visible="showPaymentDialog" modal header="Cập nhật thanh toán" :style="{ width: '50vw', zIndex: 1000 }">
+    <div v-if="loadingPaymentMethods">
+      <p>Đang tải phương thức thanh toán...</p>
+    </div>
+    <div v-else-if="!paymentMethods || paymentMethods.length === 0">
+      <p>Không có phương thức thanh toán nào khả dụng.</p>
+    </div>
+    <div v-else class="p-field">
+      <label for="paymentMethod">Phương thức thanh toán</label>
+      <Dropdown
+        id="paymentMethod"
+        v-model="tempPayment.paymentMethodId"
+        :options="paymentMethods"
+        option-label="name"
+        option-value="id"
+        class="w-full"
+        placeholder="Chọn phương thức thanh toán"
+      />
+    </div>
+    <div class="p-field">
+      <label for="additionalAmount">Số tiền cần thêm ({{ paymentShortage.toLocaleString('vi-VN') }} đ)</label>
+      <InputNumber
+        id="additionalAmount"
+        v-model="tempPayment.additionalAmount"
+        mode="currency"
+        currency="VND"
+        locale="vi-VN"
+        class="w-full"
+        :min="0"
+      />
+    </div>
+    <div class="flex justify-content-end gap-2">
+      <Button label="Hủy" class="p-button-text" @click="showPaymentDialog = false" />
+      <Button 
+        label="Lưu" 
+        class="p-button-primary" 
+        @click="savePayment" 
+        :disabled="loadingPaymentMethods || !paymentMethods || paymentMethods.length === 0" 
+      />
+    </div>
+  </Dialog>
+
+  <Dialog v-model:visible="showConfirmDialog" modal :header="confirmHeader" :style="{ width: '50vw' }">
+    <div class="p-field">
+      <p>{{ confirmMessage }}</p>
+      <label for="notes">Ghi chú (tùy chọn)</label>
+      <InputText
+        id="notes"
+        v-model="confirmNotes"
+        class="w-full"
+        placeholder="Nhập ghi chú (nếu có)"
+      />
+    </div>
+    <div class="flex justify-content-end gap-2">
+      <Button label="Hủy" class="p-button-text" @click="showConfirmDialog = false" />
+      <Button 
+        label="Xác nhận" 
+        class="p-button-primary" 
+        @click="updateOrderStatus" 
+        :loading="loading"
+      />
+    </div>
+  </Dialog>
+</div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -307,9 +314,38 @@ interface DataTablePaymentSlotProps {
 
 // Dữ liệu cho bảng thông tin thanh toán
 const paymentInfo = computed(() => {
+  const payment = order.value?.payment;
+  
+  if (!payment) return [
+    { key: 'Phương thức thanh toán', value: 'Chưa xác định' },
+    { key: 'Số tiền thanh toán', value: '0 đ' },
+    { key: 'Trạng thái', value: 'Chưa thanh toán' },
+    { key: 'Ngày thanh toán', value: 'Chưa thanh toán' }
+  ];
+
   return [
-    { key: 'Phương thức thanh toán', value: order.value?.payment?.paymentMethodName || 'Chưa xác định' },
-    { key: 'Số tiền', value: order.value?.payment?.amount.toLocaleString('vi-VN') + ' đ' || '0 đ' }
+    { key: 'Phương thức thanh toán', value: payment.paymentMethodName || 'Chưa xác định' },
+    { key: 'Số tiền thanh toán', value: payment.amount ? payment.amount.toLocaleString('vi-VN') + ' đ' : '0 đ' },
+    { key: 'Trạng thái', value: payment.paymentStatus || 'Chưa thanh toán' },
+    { key: 'Ngày thanh toán', value: payment.paymentDate ? new Date(payment.paymentDate).toLocaleString('vi-VN') : 'Chưa thanh toán' }
+  ];
+});
+
+// Dữ liệu cho bảng thông tin khách hàng
+const customerInfo = computed(() => {
+  const address = order.value?.address;
+  if (!address) return [
+    { label: 'Người nhận', value: 'Chưa xác định' },
+    { label: 'SĐT', value: 'Chưa xác định' },
+    { label: 'Email', value: 'Chưa xác định' },
+    { label: 'Địa chỉ', value: 'Chưa xác định' }
+  ];
+
+  return [
+    { label: 'Người nhận', value: address.username || 'Chưa xác định' },
+    { label: 'SĐT', value: address.phoneNumber || 'Chưa xác định' },
+    { label: 'Email', value: address.email || 'Chưa xác định' },
+    { label: 'Địa chỉ', value: `${address.addressStreet || ''}, ${address.addressDistrict || ''}, ${address.addressCity || ''}, ${address.addressProvince || ''}`.trim() || 'Chưa xác định' }
   ];
 });
 
@@ -397,8 +433,7 @@ const getOrderDetails = async () => {
   if (response.data) {
     order.value = response.data;
     tempPayment.value.paymentMethodId = order.value.payment?.paymentMethodId || 0;
-    console.log('Fetched Order Details - Status:', order.value.orderStatus);
-    console.log("order", order.value);
+    console.log('Fetched Order Details - Payment:', order.value.payment); // Log để debug
     renderKey.value += 1;
   } else {
     order.value = undefined;

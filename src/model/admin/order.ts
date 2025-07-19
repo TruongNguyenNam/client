@@ -63,8 +63,8 @@ export interface OrderRequest {
     paymentMethodName: string;
     paymentMethodId:number;
     amount: number;
-    status: string;
-    paidDate?: string; 
+    paymentStatus: string;
+    paymentDate?: string; 
   }
   
   export interface AddressResponse {
