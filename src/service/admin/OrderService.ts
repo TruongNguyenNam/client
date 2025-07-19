@@ -29,6 +29,11 @@ export enum OrderStatus {
   RETURNED = 'RETURNED'
 }
 
+export interface OrderStatusCount {
+  orderStatus: OrderStatus;
+  count: number;
+}
+
 
 export interface UpdateOrderRequest {
   id?: number;
@@ -71,7 +76,15 @@ axiosInstance.interceptors.request.use(
 
 export const OrderService = {
 
- 
+  getOrderStatusCounts: async (): Promise<ApiResponse<OrderStatusCount[]>> => {
+    try {
+      const response = await axiosInstance.get<ApiResponse<OrderStatusCount[]>>('/status-counts');
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy thống kê trạng thái đơn hàng:', error);
+      throw new Error('Không thể tải thống kê trạng thái đơn hàng. Vui lòng thử lại sau.');
+    }
+  },
   
   createOrder: async (orderRequest: CreateInvoiceRequest): Promise<ApiResponse<OrderResponse>> => {
     try {
