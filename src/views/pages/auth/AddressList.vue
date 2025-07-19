@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Address } from '@/types';
-import { AddressService } from '@/service/address/AddressService';
+import { AddressService } from '../services/AddressService';
 
 const addresses = ref<Address[]>([]);
 

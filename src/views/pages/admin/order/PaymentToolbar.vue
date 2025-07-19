@@ -16,9 +16,6 @@
 
       <CustomerDialog v-model="showDialog" @selected="handleCustomerSelect" />
 
-
-
-      <!-- Thông tin khách hàng -->
       <!-- Thông tin khách hàng -->
       <div v-if="selectedCustomer" class="mb-4 bg-gray-50 rounded-lg p-5 shadow-sm">
         <div class="space-y-4">
