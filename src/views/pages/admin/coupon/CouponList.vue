@@ -309,8 +309,11 @@ const goToGiftCoupon = (coupon: Coupon) => {
                             <span class="filter-separator">-</span>
                             <InputNumber v-model="maxDiscount" :min="0" placeholder="Đến" class="filter-input" />
                         </div>
-                        <InputText v-model="searchTerm" placeholder="Tìm theo mã phiếu..." class="search-input-box"
-                            @keyup="debouncedSearch" />
+                        <span class="p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <InputText v-model="searchTerm" placeholder="Tìm theo mã phiếu..." class="search-input-box"
+                                @keyup="debouncedSearch" />
+                        </span>
                     </div>
                 </div>
 
@@ -407,7 +410,10 @@ const goToGiftCoupon = (coupon: Coupon) => {
                 <DataTable v-model:selection="selectedCoupons" :value="coupons" :paginator="true"
                     :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
                     emptyMessage="Không tìm thấy phiếu giảm giá nào." :loading="loading" @page="onPage"
-                    :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['codeCoupon', 'couponName']">
+                    :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['codeCoupon', 'couponName']"
+                    class="p-datatable-gridlines"
+                    :rowHover="true"
+                    >
                     <template #header>
                         <div class="flex justify-content-between align-items-center">
                             <span class="text-xl font-semibold">Danh sách phiếu giảm giá</span>
@@ -415,9 +421,9 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     </template>
                     <Column selectionMode="multiple" headerStyle="width: 3em" />
                     <Column field="codeCoupon" header="Mã phiếu" />
-                    <Column field="couponName" header="Tên phiếu" />
-                    <Column header="Đã tặng">
-                        <template #body="slotProps">
+                    <Column field="couponName" header="Tên phiếu" sortable />
+                    <Column header="Đã tặng" sortable>
+                        <template #body="slotProps" >
                             {{ slotProps.data.usedCount ?? 0 }}
                         </template>
                     </Column>
@@ -436,13 +442,13 @@ const goToGiftCoupon = (coupon: Coupon) => {
                             {{ formatDate(slotProps.data.expirationDate) }}
                         </template>
                     </Column>
-                    <Column field="couponStatus" header="Trạng thái" sortable>
+                    <Column field="couponStatus" header="Trạng thái" >
                         <template #body="slotProps">
                             <Tag :value="getCouponStatus(slotProps.data).text"
                                 :severity="getCouponStatus(slotProps.data).severity" />
                         </template>
                     </Column>
-                    <Column header="Hành động">
+                    <Column header="Thao Tác">
                         <template #body="slotProps">
                             <div class="flex">
                                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"

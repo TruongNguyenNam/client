@@ -53,43 +53,32 @@ const clearSearch = (): void => {
 };
 
 //tìm kiếm theo tên hoặc số điện thoại
-// const searchCustomers = async (): Promise<void> => {
-//   if (!searchTerm.value.trim()) {
-//     await loadCustomers();
-//     lazyParams.value.page = 0;
-//     return;
-//   }
-//   loading.value = true;
-//   try {
-//     const response = await CustomerService.getCustomersByNameOrPhone(searchTerm.value);
-//     customers.value = Array.isArray(response.data) ? response.data : [];
-//     totalRecords.value = customers.value.length;
-//     lazyParams.value.page = 0;
-//   } catch (error) {
-//     customers.value = [];
-//     totalRecords.value = 0;
-//   } finally {
-//     loading.value = false;
-//   }
-// };
-
-// let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-// const debouncedSearch = () => {
-//   if (searchTimeout) clearTimeout(searchTimeout);
-//   searchTimeout = setTimeout(() => { searchCustomers(); }, 500);
-// };
-
-const formatDate = (date: Date | string | null): string => {
-  if (!date) return '';
-  return new Date(date).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+const searchCustomers = async (): Promise<void> => {
+  if (!searchTerm.value.trim()) {
+    await loadCustomers();
+    lazyParams.value.page = 0;
+    return;
+  }
+  loading.value = true;
+  try {
+    const response = await CustomerService.searchCustomers(searchTerm.value);
+    customers.value = Array.isArray(response.data) ? response.data : [];
+    totalRecords.value = customers.value.length;
+    lazyParams.value.page = 0;
+  } catch (error) {
+    customers.value = [];
+    totalRecords.value = 0;
+  } finally {
+    loading.value = false;
+  }
 };
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+const debouncedSearch = () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => { searchCustomers(); }, 500);
+};
+
 
 const getCustomerStatus = (customer: CustomerResponse) => {
   return { text: customer.active === true ? 'Hoạt động' : 'Không hoạt động', severity: customer.active === false ? 'warning' : 'success' };
@@ -121,24 +110,35 @@ const formatGender = (gender: string | null | undefined) => {
         <div class="flex align-items-center justify-content-between mb-4">
           <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />
           <div class="search-bar-vertical">
-            <InputText v-model="searchTerm" placeholder="Tìm theo tên hoặc SĐT..." class="search-input-box"
-              @keyup="" />
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <InputText v-model="searchTerm" placeholder="Tìm theo Tên, Email hoặc SĐT" class="search-input-box"
+                @keyup="debouncedSearch" />
+            </span>
           </div>
         </div>
-        <DataTable v-model:selection="selectedCustomers" :value="customers" :paginator="true"
-          :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
-          emptyMessage="Không tìm thấy khách hàng nào." :loading="loading" @page="onPage"
-          :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['username', 'email', 'phoneNumber']">
+        <DataTable v-model:selection="selectedCustomers" 
+          :value="customers" 
+          :paginator="true"
+          :first="lazyParams.page * lazyParams.size" 
+          :rows="lazyParams.size" 
+          :totalRecords="totalRecords"
+          emptyMessage="Không tìm thấy khách hàng nào." 
+          :loading="loading" @page="onPage"
+          :rowsPerPageOptions="[5, 10, 20, 50]" 
+          class="p-datatable-gridlines"
+          :rowHover="true"
+          :globalFilterFields="['username', 'email', 'phoneNumber']">
           <template #header>
             <div class="flex justify-content-between align-items-center">
               <span class="text-xl font-semibold">Danh sách khách hàng</span>
             </div>
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
-          <Column field="username" header="Tên khách hàng" />
-          <Column field="email" header="Email" />
-          <Column field="phoneNumber" header="Số điện thoại" />
-          <Column header="Địa chỉ">
+          <Column field="username" header="Tên khách hàng" sortable/>
+          <Column field="email" header="Email" sortable/>
+          <Column field="phoneNumber" header="Số điện thoại" sortable />
+          <Column header="Địa chỉ" sortable>
             <template #body="slotProps">
               {{
                 [
@@ -151,18 +151,18 @@ const formatGender = (gender: string | null | undefined) => {
               }}
             </template>
           </Column>
-          <Column field="gender" header="Giới tính">
+          <Column field="gender" header="Giới tính" sortable>
             <template #body="slotProps">
               {{ formatGender(slotProps.data.gender) }}
             </template>
           </Column>
-          <Column field="status" header="Trạng thái" sortable>
+          <Column field="status" header="Trạng thái" >
             <template #body="slotProps">
               <Tag :value="getCustomerStatus(slotProps.data).text"
                 :severity="getCustomerStatus(slotProps.data).severity" />
             </template>
           </Column>
-          <Column header="Hành động">
+          <Column header="Thao Tác">
             <template #body="slotProps">
               <div class="flex">
                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
@@ -238,7 +238,7 @@ const formatGender = (gender: string | null | undefined) => {
 }
 
 .search-input-box {
-  width: 230px;
+  width: 250px;
   min-width: 120px;
 }
 

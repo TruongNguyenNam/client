@@ -1,4 +1,4 @@
-import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild} from "../../model/admin/product";
+import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild,VariantCountDTO} from "../../model/admin/product";
 import axios from 'axios';
 import type { ApiResponse } from "../../utils/ApiResponse";         
 const API_URL = "http://localhost:8080/api/v1/admin/product";
@@ -21,6 +21,18 @@ axiosInstance.interceptors.request.use(
 );
 export const ProductService = {
 
+  getVariantCounts: async (): Promise<VariantCountDTO[]> => {
+    try {
+      const response = await axiosInstance.get<ApiResponse<VariantCountDTO[]>>(`${API_URL}/variant-counts`);
+      if (!response.data.status) {
+        throw new Error(response.data.message || 'Không thể lấy số lượng biến thể');
+      }
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Get Variant Counts Error:', error);
+      throw new Error('Không thể lấy dữ liệu biến thể. Vui lòng thử lại sau.');
+    }
+  },
   
   getAllParentProducts: async (): Promise<ProductResponse[]> => {
     try {
@@ -212,6 +224,7 @@ export const ProductService = {
         throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
     }
   },
+
 
   //   try {
   //     const response = await fetch(`${API_URL}/parent/${id}`, {

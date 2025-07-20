@@ -127,7 +127,7 @@ const handleLogin = async () => {
 
       // Chuyển hướng dựa trên vai trò
       if (response.data.role === 'ADMIN') {
-        router.push('/category');
+        router.push('/home');
       } else if (response.data.role === 'CUSTOMER') {
         router.push('/client');
       } else {

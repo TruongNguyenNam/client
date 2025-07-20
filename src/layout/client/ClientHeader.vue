@@ -90,66 +90,87 @@ import type { UserResponse } from '../../service/auth/AuthService';
 import { useAuthStore } from '../../stores/auth';
 import { RouterLink } from 'vue-router';
 
+
+
 const router = useRouter();
 const userMenuRef = ref();
 const authStore = useAuthStore();
 const isAuthenticated = ref(false);
 const userInfo = ref<UserResponse | null>(null);
 const wishlistCount = computed(() => authStore.wishlistCount || 0);
-const cartCount = computed(() => authStore.cartCount || 0);
+const cartCount = computed(() => {
+  console.log('Cart count accessed:', authStore.cartCount); // Log để kiểm tra
+  return authStore.cartCount || 0;
+});
 const userId = computed(() => authStore.userId);
 const headerKey = ref(0);
 
 onMounted(async () => {
+  const storedUserId = sessionStorage.getItem('userId');
   const storedUserInfo = sessionStorage.getItem('userInfo');
-  const userId = parseInt(sessionStorage.getItem('userId') || '0');
-  if (storedUserInfo && userId && !isNaN(userId)) {
-    userInfo.value = JSON.parse(storedUserInfo);
-    isAuthenticated.value = true;
-    authStore.setUser(userId, userInfo.value);
-    await authStore.fetchWishlist();
-    await authStore.fetchCart();
-    updateHeaderKey();
+
+  if (storedUserId && storedUserInfo) {
+    const userIdNum = parseInt(storedUserId);
+    if (!isNaN(userIdNum)) {
+      try {
+        const parsedUserInfo = JSON.parse(storedUserInfo) as UserResponse;
+        userInfo.value = parsedUserInfo;
+        isAuthenticated.value = true;
+        authStore.setUser(userIdNum, parsedUserInfo);
+        await Promise.all([authStore.fetchWishlist(), authStore.fetchCart()]);
+        updateHeaderKey();
+        return;
+      } catch (error) {
+        console.error('Lỗi khi phân tích thông tin người dùng từ session:', error);
+      }
+    }
   }
 
-  if (userId && !isNaN(userId)) {
-    try {
-      const response = await AuthService.findByUserId(userId);
-      if (response.data) {
-        isAuthenticated.value = true;
-        userInfo.value = response.data;
-        sessionStorage.setItem('userInfo', JSON.stringify(response.data));
-        sessionStorage.setItem('userId', response.data.userId.toString());
-        authStore.setUser(userId, response.data);
-        await authStore.fetchWishlist();
-        await authStore.fetchCart();
-        updateHeaderKey();
-      } else {
-        isAuthenticated.value = false;
-        userInfo.value = null;
-        sessionStorage.clear();
-        authStore.clearUser();
+  if (storedUserId) {
+    const userIdNum = parseInt(storedUserId);
+    if (!isNaN(userIdNum)) {
+      try {
+        const response = await AuthService.findByUserId(userIdNum);
+        if (response.data) {
+          userInfo.value = response.data;
+          isAuthenticated.value = true;
+          authStore.setUser(userIdNum, response.data);
+          sessionStorage.setItem('userInfo', JSON.stringify(response.data));
+          sessionStorage.setItem('userId', response.data.userId.toString());
+          await Promise.all([authStore.fetchWishlist(), authStore.fetchCart()]);
+          updateHeaderKey();
+        } else {
+          clearSession();
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin người dùng:', error);
+        clearSession();
       }
-    } catch (error) {
-      isAuthenticated.value = false;
-      userInfo.value = null;
-      sessionStorage.clear();
-      authStore.clearUser();
+    } else {
+      clearSession();
     }
   } else {
-    isAuthenticated.value = false;
-    userInfo.value = null;
-    sessionStorage.clear();
-    authStore.clearUser();
+    clearSession();
   }
 });
 
-const updateHeaderKey = () => {
-  headerKey.value += 1; // Force re-render Menubar
+const clearSession = () => {
+  isAuthenticated.value = false;
+  userInfo.value = null;
+  sessionStorage.clear();
+  authStore.clearUser();
 };
 
+const updateHeaderKey = () => {
+  console.log('Header key updated, cartCount:', authStore.cartCount); // Log để kiểm tra
+  headerKey.value += 1; // Buộc render lại Menubar
+};
+
+watch(() => authStore.cartCount, () => {
+  console.log('Watch triggered for cartCount:', authStore.cartCount); // Log để kiểm tra
+  updateHeaderKey();
+});
 watch(() => authStore.wishlistCount, updateHeaderKey);
-watch(() => authStore.cartCount, updateHeaderKey);
 watch(() => authStore.userId, updateHeaderKey);
 
 const toggleUserMenu = (event: Event) => {
@@ -162,10 +183,7 @@ const navigate = (path: string) => {
 };
 
 const logout = () => {
-  sessionStorage.removeItem('accessToken');
-  sessionStorage.removeItem('refreshToken');
-  sessionStorage.removeItem('userId');
-  sessionStorage.removeItem('userInfo');
+  sessionStorage.clear();
   isAuthenticated.value = false;
   userInfo.value = null;
   authStore.clearUser();
@@ -174,50 +192,36 @@ const logout = () => {
 };
 
 const items = computed(() => {
+  const baseItems = [
+    { label: 'TRANG CHỦ', icon: 'pi pi-home', command: () => router.push('/client') },
+    { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
+    {
+      label: 'Sản Phẩm',
+      icon: 'pi pi-tags',
+      items: [
+        { label: 'Áo Nam', command: () => router.push('/client/product') },
+        { label: 'Giày', command: () => router.push({ path: '/client/product/collection', query: { category: 'Giày' } }) },
+        { label: 'ÁO', command: () => router.push({ path: '/client/product/collection', query: { category: 'Áo' } }) },
+        { label: 'Quần', command: () => router.push({ path: '/client/product/collection', query: { category: 'Quần' } }) },
+        { label: 'Khác', command: () => router.push({ path: '/client/product/collection', query: { category: 'Khác' } }) },
+        { label: 'Addidass', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Addidass' } }) },
+        { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
+      ],
+    },
+    { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
+  ];
+
   if (userInfo.value?.role === 'ADMIN') {
     return [];
   } else if (userInfo.value?.role === 'CUSTOMER') {
     return [
-      { label: 'TRANG CHỦ', icon: 'pi pi-home', command: () => router.push('/client') },
-      { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
-      {
-        label: 'Sản Phẩm',
-        icon: 'pi pi-tags',
-        items: [
-          { label: 'Áo Nam', command: () => router.push('/client/product') },
-          { label: 'Giày', command: () => router.push({ path: '/client/product/collection', query: { category: 'Giày' } }) },
-          { label: 'ÁO', command: () => router.push({ path: '/client/product/collection', query: { category: 'Áo' } }) },
-          { label: 'Quần', command: () => router.push({ path: '/client/product/collection', query: { category: 'Quần' } }) },
-          { label: 'Khác', command: () => router.push({ path: '/client/product/collection', query: { category: 'Khác' } }) },
-          { label: 'Addidass', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Addidass' } }) },
-          { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
-        ],
-      },
-      { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
+      ...baseItems,
       { label: 'MIX & MATCH', icon: 'pi pi-sliders-h', command: () => router.push('/client/mix-match') },
       { label: 'ICONIC', icon: 'pi pi-star', command: () => router.push('/client/iconic') },
       { label: 'KIDS', icon: 'pi pi-users', command: () => router.push('/client/kids') },
     ];
-  } else {
-    return [
-      { label: 'TRANG CHỦ', icon: 'pi pi-home', command: () => router.push('/client') },
-      { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
-      {
-        label: 'Sản Phẩm',
-        icon: 'pi pi-tags',
-        items: [
-          { label: 'Áo Nam', command: () => router.push('/client/product') },
-          { label: 'Giày', command: () => router.push({ path: '/client/product/collection', query: { category: 'Giày' } }) },
-          { label: 'ÁO', command: () => router.push({ path: '/client/product/collection', query: { category: 'Áo' } }) },
-          { label: 'Quần', command: () => router.push({ path: '/client/product/collection', query: { category: 'Quần' } }) },
-          { label: 'Khác', command: () => router.push({ path: '/client/product/collection', query: { category: 'Khác' } }) },
-          { label: 'Addidass', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Addidass' } }) },
-          { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
-        ],
-      },
-      { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
-    ];
   }
+  return baseItems;
 });
 const returnMenuRef = ref();
 const toggleMenu = (event: Event) => {

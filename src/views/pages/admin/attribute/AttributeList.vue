@@ -224,7 +224,7 @@
 
       <Column field="name" header="Tên thuộc tính" sortable />
       <Column field="description" header="Mô tả" sortable />
-      <Column header="Hành động" style="width: 120px">
+      <Column header="Thao Tác" style="width: 120px">
         <template #body="slotProps">
           <Button
             icon="pi pi-pencil"

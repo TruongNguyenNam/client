@@ -190,7 +190,7 @@
                 />
               </template>
             </Column>
-            <Column header="Kho">
+            <Column header="Số Lượng">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.stockQuantity"

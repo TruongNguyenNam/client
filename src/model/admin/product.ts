@@ -104,6 +104,12 @@ export interface AddProductChild {
 }
 
 
+export interface VariantCountDTO {
+    parentProductId: number;
+    variantCount: number;
+  }
+  
+
 
 
   

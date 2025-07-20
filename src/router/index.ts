@@ -88,44 +88,44 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore();
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const requiredRole = to.matched[0]?.meta.role;
-  const userId = parseInt(sessionStorage.getItem('userId') || '0');
+    const authStore = useAuthStore();
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+    const requiredRole = to.matched[0]?.meta.role;
+    const userId = parseInt(sessionStorage.getItem('userId') || '0');
 
-  if (userId && !isNaN(userId)) {
-    try {
-      const response = await AuthService.findByUserId(userId);
-      if (response.data) {
-        const user = response.data;
-        sessionStorage.setItem('userInfo', JSON.stringify(user));
-        sessionStorage.setItem('userId', user.userId.toString());
-        authStore.setUser(user.userId, user);
-        await authStore.fetchWishlist(); // Tải wishlist trước khi chuyển hướng
-        await authStore.fetchCart();
-      } else {
-        sessionStorage.clear();
-        authStore.clearUser();
-      }
-    } catch (error) {
-      sessionStorage.clear();
-      authStore.clearUser();
+    if (userId && !isNaN(userId)) {
+        try {
+            const response = await AuthService.findByUserId(userId);
+            if (response.data) {
+                const user = response.data;
+                sessionStorage.setItem('userInfo', JSON.stringify(user));
+                sessionStorage.setItem('userId', user.userId.toString());
+                authStore.setUser(user.userId, user);
+                await authStore.fetchWishlist(); // Tải wishlist trước khi chuyển hướng
+                await authStore.fetchCart();
+            } else {
+                sessionStorage.clear();
+                authStore.clearUser();
+            }
+        } catch (error) {
+            sessionStorage.clear();
+            authStore.clearUser();
+        }
     }
-  }
 
-  if (requiresAuth && !authStore.userId) {
-    next('/auth/login');
-  } else if (requiresAuth && authStore.userId && requiredRole && authStore.userInfo?.role !== requiredRole) {
-    if (authStore.userInfo?.role === 'ADMIN') {
-      next('/category');
-    } else if (authStore.userInfo?.role === 'CUSTOMER') {
-      next('/client');
+    if (requiresAuth && !authStore.userId) {
+        next('/auth/login');
+    } else if (requiresAuth && authStore.userId && requiredRole && authStore.userInfo?.role !== requiredRole) {
+        if (authStore.userInfo?.role === 'ADMIN') {
+            next('/category');
+        } else if (authStore.userInfo?.role === 'CUSTOMER') {
+            next('/client');
+        } else {
+            next('/auth/login');
+        }
     } else {
-      next('/auth/login');
+        next();
     }
-  } else {
-    next();
-  }
 });
 
 export default router;

@@ -194,7 +194,7 @@ onMounted(fetchProducts);
     <Column field="startDate" header="Ngày bắt đầu" />
     <Column field="endDate" header="Ngày kết thúc" />
 
-    <Column header="Hành động" style="width: 180px">
+    <Column header="Thao Tác" style="width: 180px">
       <template #body="slotProps">
         <div class="flex align-items-center gap-2">
           <RouterLink :to="`/discountupdate/${slotProps.data.id}`">

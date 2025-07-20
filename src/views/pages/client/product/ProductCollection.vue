@@ -4,7 +4,8 @@
     <div class="filter">
       <div class="card p-4">
         <h3 class="text-lg font-semibold mb-2">PHÂN LOẠI HÀNG HÓA</h3>
-        <div class="flex flex-col gap-2" style="border: 1px solid red; flex-direction: column;">
+        <button class="clear-button" @click="clearSportType">Clear</button>
+        <div class="flex flex-col gap-2" style="flex-direction: column;">
           <div v-for="category in categories" :key="category.key" class="flex items-center gap-2">
             <RadioButton v-model="selectedSportType" :inputId="category.key" name="sportType" :value="category.name" />
             <label :for="category.key">{{ category.name }}</label>
@@ -14,7 +15,8 @@
 
       <div class="card p-4 mt-4">
         <h3 class="text-lg font-semibold mb-2">MỨC GIÁ</h3>
-        <div class="flex flex-col gap-2" style="border: 1px solid red; flex-direction: column;">
+        <button class="clear-button" @click="clearPriceRange">Clear</button>
+        <div class="flex flex-col gap-2" style="flex-direction: column;">
           <div v-for="priceRange in priceRanges" :key="priceRange.key" class="flex items-center gap-2">
             <RadioButton v-model="selectedPriceRange" :inputId="priceRange.key" name="price" :value="priceRange.name" />
             <label :for="priceRange.key">{{ priceRange.name }}</label>
@@ -26,7 +28,7 @@
     <!-- Product List Section -->
     <div class="header">
       <div class="p-4 bg-white min-h-screen">
-        <h2 class="text-2xl font-semibold mb-4 text-gray-800 text-center">Danh sách sản phẩm ({{ products.length }})</h2>
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800 text-center">Danh sách sản phẩm</h2>
 
         <div v-if="isLoading" class="text-center text-gray-500 animate-pulse py-10">
           Đang tải dữ liệu...
@@ -42,7 +44,7 @@
 
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
           <div
-            v-for="group in groupedProducts"
+            v-for="group in paginatedGroups"
             :key="group.parentProductId ?? 'no-parent'"
             class="product-card"
             @click="goToDetails(group.parentProductId)"
@@ -93,7 +95,20 @@
           </div>
         </div>
       </div>
+
+      <div class="page">
+        <div class="cardv2">
+          <Paginator 
+            :rows="rowsPerPage" 
+            :first="currentPage * rowsPerPage"
+            :totalRecords="groupedProducts.length"
+            :rowsPerPageOptions="[8, 16, 24]"
+            @page="onPageChange"
+          />
+        </div>
+      </div>
     </div>
+   
   </div>
 </template>
 
@@ -115,6 +130,17 @@ const categories = ref([
   { name: 'Basketball', key: 'B' },
 ]);
 
+const clearSportType = () => {
+  selectedSportType.value = '';
+  toast.add({ severity: 'info', summary: 'Thông báo', detail: 'Đã xóa bộ lọc phân loại hàng hóa', life: 3000 });
+};
+
+// Hàm xóa bộ lọc mức giá
+const clearPriceRange = () => {
+  selectedPriceRange.value = '';
+  toast.add({ severity: 'info', summary: 'Thông báo', detail: 'Đã xóa bộ lọc mức giá', life: 3000 });
+};
+
 const selectedPriceRange = ref('');
 const priceRanges = ref([
   { name: 'Dưới 600,000đ', key: 'under600' },
@@ -131,6 +157,15 @@ const imageError = ref(false);
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+
+const currentPage = ref(0);
+const rowsPerPage = ref(8);
+
+const onPageChange = (event: any) => {
+  currentPage.value = event.page;
+  rowsPerPage.value = event.rows;
+};
+
 
 const getPriceRangeValues = (range: string): { minPrice: number | undefined; maxPrice: number | undefined } => {
   switch (range) {
@@ -208,6 +243,12 @@ const groupedProducts = computed(() => {
     }
   });
   return groups;
+});
+
+const paginatedGroups = computed(() => {
+  const start = currentPage.value * rowsPerPage.value;
+  const end = start + rowsPerPage.value;
+  return groupedProducts.value.slice(start, end);
 });
 
 const getFirstImage = (images: string[]) => {
@@ -344,6 +385,10 @@ const toggleCart = async (parentProductId: number | null) => {
   margin-top: 100px;
 }
 
+.clear-button{
+    margin-left: 173px;
+}
+
 .filter {
   width: 20%;
   padding: 20px;
@@ -384,7 +429,7 @@ const toggleCart = async (parentProductId: number | null) => {
 
 .product-image {
   width: 100%;
-  height: 240px;
+  height: au;
   overflow: hidden;
   position: relative;
 }
