@@ -41,9 +41,15 @@ export interface ReturnRequestResponse {
   userId: number;
   note: string;
   requestDate: Date;
+  bankAccountNumber:string;
+  bankAccountName:string;
+  bankName:string
   items: ReturnRequestItemResponse[];
+  returnMediaResponses:returnMediaResponses[]
+
 }
 export interface ReturnRequestItemRequest {
+  mediaRequests:ReturnMediaRequest[]
   orderItemId: number;
   quantity: number;
   reason: string;
@@ -52,8 +58,46 @@ export interface ReturnRequestItemRequest {
 export interface ReturnRequestRequest {
   orderId: number;
   note: string;
-  requestDate: Date; // ISO string (e.g., 2025-07-01T10:00:00)
+  requestDate: Date; 
+  bankAccountNumber:string;
+  bankAccountName:string;
+  bankName:string
   items: ReturnRequestItemRequest[];
+}
+
+export interface returnMediaResponses {
+  returnRequestItemId: number;
+  url: string;
+  type: string; 
+
+}
+export interface ReturnMediaRequest {
+
+
+  type: string; 
+  fileName:string
+
+}
+export interface returnHistoryResponse{
+  code:string,
+  requestDate:Date,
+  bankAccountName:String,
+  bankAccountNumber:String,
+  bankName:string,
+  note:string,
+  totalProduct:number
+  thumbnailUrl:string
+}
+export interface returnHistoryItemResponse{
+  productName:string
+  imageProduct:string
+  quantity:number
+  reason:string
+  note:string
+  status:string
+  unitPrice:number
+  totalRefundAmount:number
+  attributes: { [key: string]: string }; 
 }
 
 

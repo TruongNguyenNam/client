@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ReturnOrderResponse ,ReturnOrderDetailResponse,ReturnProductResponse,ReturnRequestRequest,ReturnRequestItemRequest} from '../../model/client/ReturnOrder';
+import type { ReturnOrderResponse ,ReturnOrderDetailResponse,ReturnProductResponse,ReturnRequestRequest,ReturnRequestItemRequest, ReturnRequestResponse,returnHistoryResponse,returnHistoryItemResponse} from '../../model/client/ReturnOrder';
 import type { ApiResponse } from '../../utils/ApiResponse';
 
 const API_URL = 'http://localhost:8080/api/v1/client/returnorder';
@@ -41,13 +41,45 @@ export const ReturnOrderClientService = {
       console.error(`Lỗi khi lấy chi tiết đơn hàng với mã ${code}:`, error);
       throw new Error('Không thể lấy chi tiết đơn hàng. Vui lòng thử lại sau.');
     }
-  },
-   createReturnOrderRequest: async (payload: ReturnRequestRequest): Promise<void> => {
-    try {
-      await axiosInstance.post('/create_return_oder', payload);
-    } catch (error) {
-      console.error('Lỗi khi tạo yêu cầu hoàn hàng:', error);
-      throw error
-    }
   }
-};
+  ,createReturnOrderRequest: async (
+  formData: FormData
+): Promise<ApiResponse<ReturnRequestResponse>> => {
+  try {
+    const response = await axiosInstance.post<ApiResponse<ReturnRequestResponse>>(
+      '/create_return_oder',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi tạo yêu cầu hoàn hàng:', error);
+    throw error;
+  }
+},
+fetchReturnHistory: async (): Promise<returnHistoryResponse[]> => {
+  try {
+    const response = await axiosInstance.get<returnHistoryResponse[]>('/history');
+    console.log('✅ API response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Lỗi khi gọi API /history:', error);
+    return [];
+  }
+},
+fetchReturnHistoryItem: async (code: string): Promise<returnHistoryItemResponse[]> => {
+  try {
+    const response = await axiosInstance.get<returnHistoryItemResponse[]>(`/history_item/${code}`);
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi gọi API /history_item/:code:', error);
+    return [];
+  }
+}
+
+
+}

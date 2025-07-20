@@ -63,9 +63,12 @@ const model = ref([
     },
     {
         label: 'Đơn Hàng',
-        items:  [{ label: 'Đơn Hàng', icon: 'pi pi-fw pi-tags', to: '/findByShip', class: 'rotated-icon' },]
+        items:  [{ label: 'Đơn Hàng', icon: 'pi pi-fw pi-tags', to: '/findByShip', class: 'rotated-icon' },
+            { label: 'Đơn Hoàn', icon: 'pi pi-fw pi-tags', to: '/adReturnOder', class: 'rotated-icon' },
+        ]
     
     },
+   
     {
         label: 'Prime Blocks',
         items: [

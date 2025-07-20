@@ -265,6 +265,7 @@
   padding: 1rem;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
 }
 
 .menuat {
@@ -277,12 +278,12 @@
   padding: 0.5rem;
   gap: 0.5rem;
 }
+
 .imandex {
   margin-left: auto;
   display: flex;
   gap: 0.5rem;
 }
-
 
 .search-wrapper {
   display: flex;
@@ -297,4 +298,33 @@
   box-sizing: border-box;
 }
 
+/* ====================== GẠCH PHÂN CÁCH MỜ CHO BẢNG ====================== */
+:deep(.p-datatable-table) {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+
+/* Gạch ngang + dọc mờ giữa các ô */
+:deep(.p-datatable-thead > tr > th),
+:deep(.p-datatable-tbody > tr > td) {
+  border: 1px solid #eee !important; /* Gạch mờ nhẹ */
+  padding: 0.75rem;
+  vertical-align: middle;
+  background-color: #fff;
+}
+
+/* Header rõ hơn 1 chút */
+:deep(.p-datatable-thead > tr > th) {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #ddd !important;
+}
+
+/* Hover từng dòng */
+:deep(.p-datatable-tbody > tr:hover) {
+  background-color: #f6f6f6;
+  transition: background-color 0.2s ease-in-out;
+}
 </style>
+

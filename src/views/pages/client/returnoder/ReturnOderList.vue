@@ -6,7 +6,9 @@
     <div v-if="orders.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
       <i class="pi pi-inbox text-5xl text-gray-400 mb-4"></i>
       <p class="text-gray-600 text-lg mb-4">Bạn chưa có đơn hàng nào</p>
+      <RouterLink to="/client/product">
       <Button label="Tiếp tục mua sắm" icon="pi pi-shopping-cart" class="p-button-outlined" />
+      </RouterLink>
     </div>
 
     <!-- Danh sách đơn hàng, không cuộn ngang, tự xuống dòng -->

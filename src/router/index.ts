@@ -38,6 +38,13 @@ const router = createRouter({
         { path: '/tag', name: 'tag', component: () => import('@/views/pages/admin/tag/TagList.vue') },
         { path: '/order', name: 'order', component: () => import('@/views/pages/admin/order/Invoice.vue') },
         { path: '/home', name: 'home', component: () => import('@/views/pages/admin/statistical/Statistical.vue') },
+       {path: '/management',name: 'management',component: () => import('@/views/pages/admin/management/ManagementList.vue')},
+       {path: '/management/order/:id',name: 'order-detail',component: () => import('@/views/pages/admin/management/Management.vue')},
+        // {path: '/findByShip',name: 'order-ship',component: () => import('@/views/pages/admin/management/ManagementShip.vue')},
+        {path: '/findByShip',name: 'certificationorder',component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue')},
+         {path: '/certificationorder/:id',name: 'certificationorder-detail',component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue')},
+          {path: '/adReturnOder',name: 'adReturnOder',component: () => import('../views/pages/admin/returnorder/Return.vue')},
+          {path: '/admin/return-request/detail/:orderCode',name: 'adReturnOderDetail',component: () => import('../views/pages/admin/returnorder/ReturnRequestDetail.vue')}
       ],
     },
 
@@ -53,7 +60,8 @@ const router = createRouter({
         { path: 'wishlist/:userId', name: 'client-wishlist-details', component: () => import('@/views/pages/client/wishlist/FavoriteProductlist.vue') },
          { path: 'returnoder', name: 'client-returnOder', component: () => import('../views/pages/client/returnoder/ReturnOderList.vue') },
           { path: '/returnoderdetail/:code', name: 'oderdetail', component: () => import('../views/pages/client/returnoder/ReturnOderDetail.vue')},
-           { path: 'return', name: 'return', component: () => import('../views/pages/client/returnoder/ReturnRequest.vue')},
+           { path: 'return', name: 'return', component: () => import('../views/pages/client/returnoder/ReturnHistoy.vue')},
+                { path: '/return/history/:code', name: 'return-history', component: () => import('../views/pages/client/returnoder/ReturnHistoryDetail.vue')},
         { path: 'cart/:userId', name: 'cart-view', component: () => import('@/views/pages/client/cart/CartView.vue'),
            
         meta: { requiresAuth: true, role: 'CUSTOMER' }, },
