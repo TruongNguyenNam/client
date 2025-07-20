@@ -3,6 +3,7 @@ export interface OrderRequest {
     orderCode?: string; 
     notes?:string;
     userId?: number;  
+    addressId?:number;
     items?: OrderItemRequest[]; 
     payment?: PaymentRequest;   
     couponUsageIds?: number[]; 

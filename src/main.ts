@@ -106,6 +106,10 @@ import { createPinia } from 'pinia';
 const app = createApp(App);
 const pinia = createPinia();
 
+
+app.use(ConfirmationService);
+app.component('ConfirmDialog', ConfirmDialog);
+
 app.use(pinia);
 app.use(router);
 app.use(PrimeVue, { ripple: true });

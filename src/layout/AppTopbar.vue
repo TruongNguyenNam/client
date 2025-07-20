@@ -111,7 +111,6 @@ const unbindOutsideClickListener = () => {
 };
 
 const isOutsideClicked = (event: Event) => {
-  if (!topbarMenuActive.value && !profileMenuRef.value?.isVisible()) return false;
 
   const sidebarEl = document.querySelector('.layout-topbar-menu');
   const topbarEl = document.querySelector('.layout-topbar-menu-button');

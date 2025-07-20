@@ -5,7 +5,7 @@
       <h3 class="text-xl font-semibold mb-4">{{ invoice.orderCode }}</h3>
 
       <!-- Chọn khách hàng -->
-      <div class="mb-4">
+       <div class="mb-4">
         <label class="block mb-1 font-medium">Khách hàng</label>
         <div class="flex items-center gap-2">
           <InputText v-model="selectedCustomerName" placeholder="Chọn khách hàng" class="flex-1" :disabled="true"
@@ -19,7 +19,8 @@
       <!-- Thông tin khách hàng -->
       <div v-if="selectedCustomer" class="mb-4 bg-gray-50 rounded-lg p-5 shadow-sm">
         <div class="space-y-4">
-          <label class="block text-sm text-gray-600 mb-2">Thông Tin Khách Hàng</label>
+          <!-- Họ tên & SĐT -->
+          <label class="block text-sm text-gray-600 mb-3">Thông Tin Khách Hàng</label>
           <div class="flex gap-4">
             <div class="flex-1">
               <label class="block text-sm text-gray-600 mb-1">Họ tên</label>
@@ -32,35 +33,39 @@
                 placeholder="Số điện thoại" />
             </div>
           </div>
+
+          <!-- Email -->
+          <!-- <div>
+          <label class="block text-sm text-gray-600 mb-1">Email</label>
+          <InputText
+            v-model="selectedCustomer.email"
+            class="w-full bg-gray-100"
+            :disabled="true"
+            placeholder="Email"
+          />
+        </div> -->
+
+          <!-- Địa chỉ giao hàng -->
+          <AddressSelectDialog v-model:visible="showAddressDialog" :addresses="selectedCustomer?.addresses || []"
+            :customer-id="selectedCustomer.id" @select="handleAddressSelect" @submitAddress="handleAddressSubmit"
+            :key="addressDialogKey" @cancel="showAddressDialog = false" 
+             @deleteAddress="refreshSelectedCustomer"/>
+
           <div>
             <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
-            <div class="mb-3">
-              <label class="block text-sm text-gray-600 mb-2">Số nhà</label>
-              <InputText v-model="selectedCustomer.addressStreet" class="w-full bg-gray-100" :disabled="true"
-                placeholder="Số nhà, tên đường" />
-            </div>
-            <div class="flex gap-4 mb-3">
-              <div class="flex-1">
-                <label class="block text-sm text-gray-600 mb-2">Phường / Quận</label>
-                <InputText v-model="selectedCustomer.addressWard" class="w-full bg-gray-100" :disabled="true"
-                  placeholder="Phường/Xã" />
+
+            <!-- Địa chỉ giao hàng (cải tiến) -->
+            <div class="bg-white p-3 rounded border mb-3">
+              <div class="mb-2">
+                <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
               </div>
-              <div class="flex-1">
-                <label class="block text-sm text-gray-600 mb-2">Quận/Huyện</label>
-                <InputText v-model="selectedCustomer.addressDistrict" class="w-full bg-gray-100" :disabled="true"
-                  placeholder="Quận/Huyện" />
+
+              <div class="text-sm text-gray-700 leading-relaxed">
+                {{ fullAddress }}
               </div>
-            </div>
-            <div class="flex gap-4">
-              <div class="flex-1">
-                <label class="block text-sm text-gray-600 mb-2">Tỉnh/Thành phố</label>
-                <InputText v-model="selectedCustomer.addressProvince" class="w-full bg-gray-100" :disabled="true"
-                  placeholder="Tỉnh/Thành phố" />
-              </div>
-              <div class="flex-1">
-                <label class="block text-sm text-gray-600 mb-2">Mã Code</label>
-                <InputText v-model="selectedCustomer.addressZipcode" class="w-full bg-gray-100" :disabled="true"
-                  placeholder="Mã bưu chính" />
+              <div v-if="!invoice.isPos && selectedCustomer?.addresses?.length > 1" class="mt-3">
+                <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"
+                  @click="showAddressDialog = true" />
               </div>
             </div>
           </div>
@@ -148,7 +153,7 @@
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
         <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" />
       </div>
-    </div>
+    </div>  
     <InvoicePrint v-if="showPrintPreview" :invoice="invoice" :changeAmount="changeAmount" />
   </Sidebar>
   <ConfirmDialog />
@@ -171,10 +176,16 @@ import type { PaymentMethodResponse } from '../../../../model/admin/paymentMetho
 import type { CouponUsageResponse } from '../../../../model/admin/couponUsage';
 import type { CarrierResponse } from '../../../../model/admin/carrier';
 import { CouponUsageService } from '../../../../service/admin/CouponUsageService';
+import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
 import { OrderService } from '../../../../service/admin/OrderService';
 import CustomerDialog from './CustomerDialog.vue';
 import InvoicePrint from './InvoicePrint.vue';
 import { useConfirm } from 'primevue/useconfirm';
+import type { AddressResponse } from '../../../../model/admin/address';
+import provincesData from '../../../../assets/data/vietnam_provinces.json';
+import { AddressService } from '../../../../service/admin/AddressService';
+import AddressSelectDialog from './AddressSelectDialog.vue';
+import type { OrderRequest } from '../../../../model/admin/order';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -191,6 +202,7 @@ const props = defineProps<{
     customerName: string;
     phoneNumber: string;
     email: string;
+    addressId: number | null;
     addressStreet: string;
     addressWard: string;
     addressDistrict: string;
@@ -207,6 +219,8 @@ const props = defineProps<{
     paidAmount: number | null;
     paymentMethodId: number | null;
     paymentMethod: string;
+    receiverName: string;
+    receiverPhone: string;
     notes: string;
     items: { id: number; name: string; price: number; quantity: number }[];
   };
@@ -291,9 +305,10 @@ const initiateVNPayPayment = async () => {
   isPaymentProcessing.value = true;
   try {
     const finalTotal = calculateFinalTotal();
-    const payload = {
+    const payload: OrderRequest = {
       orderCode: props.invoice.orderCode,
       userId: selectedCustomerId.value || undefined,
+      addressId: props.invoice.isPos ? undefined : props.invoice.addressId ?? undefined, // Convert null to undefined
       items: props.invoice.items.map(item => ({
         productId: item.id,
         quantity: item.quantity,
@@ -318,7 +333,7 @@ const initiateVNPayPayment = async () => {
     };
     const response = await OrderService.addProductToOrder(props.invoice.orderCode, payload);
     if (response && response.data && response.data.paymentUrl) {
-      window.location.href = response.data.paymentUrl; // Chuyển hướng đến VNPay
+      window.location.href = response.data.paymentUrl;
     } else {
       throw new Error('Không nhận được URL thanh toán từ server');
     }
@@ -419,39 +434,237 @@ const fetchCouponUsage = async () => {
   }
 };
 
+const fullAddress = computed(() => {
+  if (!selectedAddress.value) return '';
+  const addr = selectedAddress.value;
+  return [
+    addr.street,
+    addr.ward,
+    addr.district,
+    addr.province,
+    addr.city,
+    addr.zipcode
+  ].filter(Boolean).join(', ');
+});
+
+// const handleAddressSelect = (address: AddressResponse) => {
+//   selectedAddressId.value = address.id;
+//   props.invoice.addressStreet = address.street;
+//   props.invoice.addressWard = address.ward;
+//   props.invoice.addressDistrict = address.district;
+//   props.invoice.addressProvince = address.province;
+//   props.invoice.addressCity = address.city || '';
+//   props.invoice.addressZipcode = address.zipcode || '';
+//   props.invoice.receiverName = address.receiverName;
+//   props.invoice.receiverPhone = address.receiverPhone;
+
+// };
+
 const handleCustomerSelect = (customer: CustomerResponse) => {
   selectedCustomerId.value = customer.id;
   selectedCustomerName.value = customer.username;
   showDialog.value = false;
-  if (!customer) {
-    props.invoice.userId = null;
-    props.invoice.customerName = '';
-    props.invoice.phoneNumber = '';
-    props.invoice.email = '';
-    if (!props.invoice.isPos) {
+
+  props.invoice.userId = customer.id;
+  props.invoice.customerName = customer.username;
+  props.invoice.phoneNumber = customer.phoneNumber;
+  props.invoice.email = customer.email;
+
+  if (!props.invoice.isPos) {
+    const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
+    if (defaultAddress) {
+      selectedAddressId.value = defaultAddress.id;
+      props.invoice.addressId = defaultAddress.id;
+      props.invoice.addressStreet = defaultAddress.street;
+      props.invoice.addressWard = defaultAddress.ward;
+      props.invoice.addressDistrict = defaultAddress.district;
+      props.invoice.addressProvince = defaultAddress.province;
+      props.invoice.addressCity = defaultAddress.city || '';
+      props.invoice.addressZipcode = defaultAddress.zipcode || '';
+      props.invoice.receiverName = defaultAddress.receiverName;
+      props.invoice.receiverPhone = defaultAddress.receiverPhone;
+    } else {
+      selectedAddressId.value = null;
+      props.invoice.addressId = null;
       props.invoice.addressStreet = '';
       props.invoice.addressWard = '';
       props.invoice.addressDistrict = '';
       props.invoice.addressProvince = '';
       props.invoice.addressCity = '';
       props.invoice.addressZipcode = '';
+      props.invoice.receiverName = '';
+      props.invoice.receiverPhone = '';
+      toast.add({
+        severity: 'warn',
+        summary: 'Chưa có địa chỉ',
+        detail: 'Khách hàng chưa có địa chỉ giao hàng',
+        life: 3000
+      });
     }
   } else {
-    props.invoice.userId = customer.id;
-    props.invoice.customerName = customer.username;
-    props.invoice.phoneNumber = customer.phoneNumber;
-    props.invoice.email = customer.email;
-    if (!props.invoice.isPos) {
-      props.invoice.addressStreet = customer.addressStreet;
-      props.invoice.addressWard = customer.addressWard;
-      props.invoice.addressDistrict = customer.addressDistrict;
-      props.invoice.addressProvince = customer.addressProvince;
-      props.invoice.addressCity = customer.addressCity;
-      props.invoice.addressZipcode = customer.addressZipcode;
-    }
+    selectedAddressId.value = null;
+    props.invoice.addressId = null;
+    props.invoice.addressStreet = '';
+    props.invoice.addressWard = '';
+    props.invoice.addressDistrict = '';
+    props.invoice.addressProvince = '';
+    props.invoice.addressCity = '';
+    props.invoice.addressZipcode = '';
+    props.invoice.receiverName = '';
+    props.invoice.receiverPhone = '';
   }
   fetchCouponUsage();
 };
+
+const handleAddressSelect = (address: AddressResponse) => {
+  selectedAddressId.value = address.id;
+  props.invoice.addressId = address.id;
+  props.invoice.addressStreet = address.street;
+  props.invoice.addressWard = address.ward;
+  props.invoice.addressDistrict = address.district;
+  props.invoice.addressProvince = address.province;
+  props.invoice.addressCity = address.city || '';
+  props.invoice.addressZipcode = address.zipcode || '';
+  props.invoice.receiverName = address.receiverName;
+  props.invoice.receiverPhone = address.receiverPhone;
+  showAddressDialog.value = false;
+};
+
+
+
+const showAddressDialog = ref(false);
+
+const provinceOptions = provincesData.data;
+
+const handleAddressSubmit = async (submittedData: any) => {
+  if (!selectedCustomer.value) return;
+  const province = provinceOptions.find(p => p.level1_id === submittedData.province);
+  const district = province?.level2s.find(d => d.level2_id === submittedData.district);
+  const ward = district?.level3s.find(w => w.level3_id === submittedData.ward);
+
+  const finalAddress = {
+    ...submittedData,
+    province: province?.name || '',
+    district: district?.name || '',
+    ward: ward?.name || '',
+    country: 'Việt Nam'
+  };
+
+  try {
+    if (submittedData.id) {
+      // Cập nhật địa chỉ
+      const resAdd = await AddressService.updateAddressForCustomer(selectedCustomer.value.id, submittedData.id, finalAddress);
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã cập nhật địa chỉ thành công.',
+        life: 3000
+      });
+      if (resAdd.data?.id) {
+        selectedAddressId.value = resAdd.data.id;
+        await refreshSelectedCustomer(); // Đồng bộ lại dữ liệu
+        addressDialogKey.value++; // Reset dialog nếu cần
+      }
+      selectedAddressId.value = submittedData.id; // Cập nhật lại địa chỉ đang chọn
+    } else {
+      // Thêm mới địa chỉ
+      const resAdd = await CustomerService.addAddressForCustomer(selectedCustomer.value.id, finalAddress);
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã thêm địa chỉ mới cho khách hàng.',
+        life: 3000
+      });
+      // Sau khi thêm xong, lấy ID địa chỉ vừa thêm nếu API trả về
+      const newAddressId = resAdd.data?.id;
+      if (resAdd.data?.id) {
+        selectedAddressId.value = resAdd.data.id;
+        await refreshSelectedCustomer(); // Đồng bộ lại dữ liệu
+        addressDialogKey.value++; // Reset dialog nếu cần
+      }
+    }
+
+  } catch (error) {
+    console.error('Lỗi xử lý địa chỉ:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xử lý địa chỉ', life: 3000 });
+  }
+};
+
+
+// id của địa chỉ được chọn
+const selectedAddressId = ref<number | null>(null);
+// Xử lý khi khách hàng được chọn từ CustomerDialog
+// const handleCustomerSelect = (customer: CustomerResponse) => {
+//   selectedCustomerId.value = customer.id;
+//   selectedCustomerName.value = customer.username;
+//   showDialog.value = false;
+
+//   props.invoice.userId = customer.id;
+//   props.invoice.customerName = customer.username;
+//   props.invoice.phoneNumber = customer.phoneNumber;
+//   props.invoice.email = customer.email;
+
+//   if (!props.invoice.isPos) {
+//     // Nếu là đơn giao hàng, cho phép chọn địa chỉ cụ thể
+//     // Giả sử bạn có dialog hoặc dropdown chọn địa chỉ ở đây
+//     // (hoặc đơn giản chọn địa chỉ mặc định trong danh sách)
+//     const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
+//     if (defaultAddress) {
+//       selectedAddressId.value = defaultAddress.id;
+
+//       props.invoice.addressStreet = defaultAddress.street;
+//       props.invoice.addressWard = defaultAddress.ward;
+//       props.invoice.addressDistrict = defaultAddress.district;
+//       props.invoice.addressProvince = defaultAddress.province;
+//       props.invoice.addressCity = defaultAddress.city || '';
+//       props.invoice.addressZipcode = defaultAddress.zipcode || '';
+//       props.invoice.receiverName = defaultAddress.receiverName;
+//       props.invoice.receiverPhone = defaultAddress.receiverPhone;
+//     } else {
+//       toast.add({
+//         severity: 'warn',
+//         summary: 'Chưa có địa chỉ',
+//         detail: 'Khách hàng chưa có địa chỉ giao hàng',
+//         life: 3000
+//       });
+//     }
+
+//   } else {
+//     // Đơn tại cửa hàng, không cần nhập địa chỉ
+//     props.invoice.addressStreet = '';
+//     props.invoice.addressWard = '';
+//     props.invoice.addressDistrict = '';
+//     props.invoice.addressProvince = '';
+//     props.invoice.addressCity = '';
+//     props.invoice.addressZipcode = '';
+//   }
+//   fetchCouponUsage();
+// };
+
+// lấy điạ chỉ mặc định hoặc đầu tiên
+const selectedAddress = computed(() => {
+  if (!selectedCustomer.value?.addresses) return null;
+  return selectedCustomer.value.addresses.find(a => a.id === selectedAddressId.value)
+    || selectedCustomer.value.addresses[0];
+});
+
+const addressDialogKey = ref(0);
+
+// đồng bộ lại thông tin khách hàng
+const refreshSelectedCustomer = async () => {
+  if (!selectedCustomer.value) return;
+  try {
+    const res = await CustomerService.getCustomerById(selectedCustomer.value.id);
+    if (res.data) {
+      Object.assign(selectedCustomer.value, res.data); // Cập nhật lại toàn bộ
+    }
+  } catch (error) {
+    console.error('Lỗi đồng bộ khách hàng:', error);
+    toast.add({ severity: 'error', summary: 'Không thể đồng bộ khách hàng', life: 3000 });
+  }
+};
+
+
 
 const updatePaymentMethod = () => {
   const method = props.paymentMethods.find(m => m.id === props.invoice.paymentMethodId);

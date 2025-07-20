@@ -15,8 +15,11 @@ const customer = ref({
     province: "",
     district: "",
     ward: "",
-    street: ""
+    street: "",
+    receiverName: "",
+    receiverPhone: ""
 });
+
 
 const genderOptions = [
     { label: "Nam", value: "MALE" },
@@ -76,6 +79,9 @@ const handleSubmit = async () => {
     if (!customer.value.ward) {
         errors.value.ward = "Vui lòng chọn phường/xã";
     }
+    if (customer.value.receiverPhone && !validatePhone(customer.value.receiverPhone)) {
+        errors.value.receiverPhone = "Số điện thoại người nhận không hợp lệ";
+    }
     // Nếu lỗi, không submit
     if (Object.keys(errors.value).length > 0) return;
 
@@ -86,8 +92,11 @@ const handleSubmit = async () => {
         province: provinceOptions.find(p => p.level1_id === customer.value.province)?.name || "",
         city: "",
         state: "",
-        country: "",
-        zipcode: ""
+        country: "Việt Nam",
+        zipcode: "",
+        isDefault: true,
+        receiverName: customer.value.receiverName || customer.value.username,
+        receiverPhone: customer.value.receiverPhone || customer.value.phoneNumber
     };
     try {
         await CustomerService.createCustomer({
@@ -131,95 +140,116 @@ const handleCancel = () => {
 </script>
 
 <template>
-        <div class="grid" >
-         <div class="col-12">
-        <div class="customer-add-page" style="max-width: 1300px;">
-        <div class="form-title">Thêm Khách Hàng</div>
-        <form class="customer-form" @submit.prevent="handleSubmit">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="username">Tên Khách Hàng</label>
-                    <input id="username" v-model="customer.username" type="text" placeholder="Nhập tên khách hàng" />
-                    <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input id="email" v-model="customer.email" type="email" placeholder="Nhập địa chỉ email" required />
-                    <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
-                </div>
+    <div class="grid">
+        <div class="col-12">
+            <div class="customer-add-page" style="max-width: 1300px;">
+                <div class="form-title">Thêm Khách Hàng</div>
+                <form class="customer-form" @submit.prevent="handleSubmit">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">Tên Khách Hàng</label>
+                            <input id="username" v-model="customer.username" type="text"
+                                placeholder="Nhập tên khách hàng" />
+                            <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input id="email" v-model="customer.email" type="email" placeholder="Nhập địa chỉ email"
+                                required />
+                            <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phoneNumber">Số Điện Thoại</label>
+                            <input id="phoneNumber" v-model="customer.phoneNumber" type="text"
+                                placeholder="Nhập số điện thoại" required />
+                            <div v-if="errors.phoneNumber" class="error-message">{{ errors.phoneNumber }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Giới Tính</label>
+                            <select id="gender" v-model="customer.gender" required>
+                                <option value="" disabled>Chọn giới tính</option>
+                                <option v-for="g in genderOptions" :value="g.value" :key="g.value">{{ g.label }}
+                                </option>
+                            </select>
+                            <div v-if="errors.gender" class="error-message">{{ errors.gender }}</div>
+                        </div>
+                    </div>
+                    <div class="form-title-1">Địa Chỉ</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="receiverName">Tên người nhận</label>
+                            <input id="receiverName" v-model="customer.receiverName" type="text"
+                                placeholder="Nhập tên người nhận" />
+                        </div>
+                        <div class="form-group">
+                            <label for="receiverPhone">SĐT người nhận</label>
+                            <input id="receiverPhone" v-model="customer.receiverPhone" type="text"
+                                placeholder="Nhập số điện thoại người nhận" />
+                            <div v-if="errors.receiverPhone" class="error-message">{{ errors.receiverPhone }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="province">Tỉnh/Thành phố</label>
+                            <select id="province" v-model="customer.province" required>
+                                <option value="">Chọn tỉnh/thành</option>
+                                <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name
+                                    }}
+                                </option>
+                            </select>
+                            <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="district">Quận/Huyện</label>
+                            <select id="district" v-model="customer.district" :disabled="!customer.province" required>
+                                <option value="">Chọn quận/huyện</option>
+                                <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name
+                                    }}
+                                </option>
+                            </select>
+                            <div v-if="errors.district" class="error-message">{{ errors.district }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ward">Phường/Xã</label>
+                            <select id="ward" v-model="customer.ward" :disabled="!customer.district" required>
+                                <option value="">Chọn phường/xã</option>
+                                <option v-for="w in wardOptions" :key="w.level3_id" :value="w.level3_id">{{ w.name }}
+                                </option>
+                            </select>
+                            <div v-if="errors.ward" class="error-message">{{ errors.ward }}</div>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="street">Địa chỉ chi tiết (số nhà, ngõ...)</label>
+                        <input id="street" v-model="customer.street" type="text" placeholder="Nhập chi tiết địa chỉ" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Địa chỉ đầy đủ</label>
+                        <input :value="fullAddress" type="text" readonly placeholder="" />
+                    </div>
+                    <div v-if="errors.global" class="error-message">{{ errors.global }}</div>
+                    <div class="form-actions">
+                        <button class="btn btn-cancel" type="button" @click="handleCancel">
+                            <span class="icon">✖</span>
+                            <span>Huỷ</span>
+                        </button>
+                        <button class="btn btn-submit" type="submit">
+                            <span class="icon">✔</span>
+                            <span>Thêm Khách Hàng</span>
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="phoneNumber">Số Điện Thoại</label>
-                    <input id="phoneNumber" v-model="customer.phoneNumber" type="text" placeholder="Nhập số điện thoại"
-                        required />
-                    <div v-if="errors.phoneNumber" class="error-message">{{ errors.phoneNumber }}</div>
-                </div>
-                <div class="form-group">
-                    <label for="gender">Giới Tính</label>
-                    <select id="gender" v-model="customer.gender" required>
-                        <option value="" disabled>Chọn giới tính</option>
-                        <option v-for="g in genderOptions" :value="g.value" :key="g.value">{{ g.label }}</option>
-                    </select>
-                    <div v-if="errors.gender" class="error-message">{{ errors.gender }}</div>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="province">Tỉnh/Thành phố</label>
-                    <select id="province" v-model="customer.province" required>
-                        <option value="">Chọn tỉnh/thành</option>
-                        <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}
-                        </option>
-                    </select>
-                    <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
-                </div>
-                <div class="form-group">
-                    <label for="district">Quận/Huyện</label>
-                    <select id="district" v-model="customer.district" :disabled="!customer.province" required>
-                        <option value="">Chọn quận/huyện</option>
-                        <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}
-                        </option>
-                    </select>
-                    <div v-if="errors.district" class="error-message">{{ errors.district }}</div>
-                </div>
-                <div class="form-group">
-                    <label for="ward">Phường/Xã</label>
-                    <select id="ward" v-model="customer.ward" :disabled="!customer.district" required>
-                        <option value="">Chọn phường/xã</option>
-                        <option v-for="w in wardOptions" :key="w.level3_id" :value="w.level3_id">{{ w.name }}</option>
-                    </select>
-                    <div v-if="errors.ward" class="error-message">{{ errors.ward }}</div>
-                </div>
-            </div>
-            <div class="form-group full-width">
-                <label for="street">Địa chỉ chi tiết (số nhà, ngõ...)</label>
-                <input id="street" v-model="customer.street" type="text" placeholder="Nhập chi tiết địa chỉ" />
-            </div>
-            <div class="form-group full-width">
-                <label>Địa chỉ đầy đủ</label>
-                <input :value="fullAddress" type="text" readonly placeholder="" />
-            </div>
-            <div v-if="errors.global" class="error-message">{{ errors.global }}</div>
-            <div class="form-actions">
-                <button class="btn btn-cancel" type="button" @click="handleCancel">
-                    <span class="icon">✖</span>
-                    <span>Huỷ</span>
-                </button>
-                <button class="btn btn-submit" type="submit">
-                    <span class="icon">✔</span>
-                    <span>Thêm Khách Hàng</span>
-                </button>
-            </div>
-        </form>
-    </div>
-                   
-             </div>
+
         </div>
+    </div>
 
 
-   
-   
+
+
 
 
 </template>
@@ -237,6 +267,11 @@ const handleCancel = () => {
     font-size: 2rem;
     font-weight: 600;
     margin-bottom: 24px;
+}
+
+.form-title-1 {
+    font-size: 20px;
+    font-weight: 500;
 }
 
 .customer-form {
