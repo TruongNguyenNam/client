@@ -3,6 +3,7 @@ export interface OrderRequest {
     orderCode?: string; 
     notes?:string;
     userId?: number;  
+    addressId?:number;
     items?: OrderItemRequest[]; 
     payment?: PaymentRequest;   
     couponUsageIds?: number[]; 
@@ -63,8 +64,8 @@ export interface OrderRequest {
     paymentMethodName: string;
     paymentMethodId:number;
     amount: number;
-    status: string;
-    paidDate?: string; 
+    paymentStatus: string;
+    paymentDate?: string; 
   }
   
   export interface AddressResponse {

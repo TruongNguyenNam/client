@@ -273,6 +273,8 @@ const getCouponStatus = (coupon: Coupon) => {
     if (endDate < now) return { text: 'Đã hết hạn', severity: 'danger' };
     return { text: 'Đang hoạt động', severity: 'success' };
 };
+
+
 //chuyển hướng đến trang tặng coupon
 const goToGiftCoupon = (coupon: Coupon) => {
     if (!coupon.id) return;

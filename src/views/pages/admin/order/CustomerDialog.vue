@@ -12,7 +12,7 @@
       <div class="mb-3">
         <span class="p-input-icon-left w-\">
           <i class="pi pi-search" />
-          <InputText  v-model="filters.global.value" placeholder="Tìm theo tên, email, số điện thoại..."
+          <InputText v-model="filters.global.value" placeholder="Tìm theo tên, email, số điện thoại..."
             class="search-input-box w-full" />
         </span>
       </div>
@@ -24,8 +24,8 @@
         <Column field="username" header="Tên người dùng" style="min-width: 10rem" />
         <Column field="email" header="Email" style="min-width: 14rem" />
         <Column field="phoneNumber" header="SĐT" style="min-width: 10rem" />
-        <Column field="addressDistrict" header="Quận/Huyện" />
-        <Column field="addressProvince" header="Tỉnh/TP" />
+        <!-- <Column field="addressDistrict" header="Quận/Huyện" />
+        <Column field="addressProvince" header="Tỉnh/TP" /> -->
         <Column field="active" header="Trạng thái">
           <template #body="{ data }">
             <Tag :value="data.active ? 'Hoạt động' : 'Không hoạt động'"
@@ -38,6 +38,7 @@
 
     <!-- Form thêm khách hàng -->
     <div v-else>
+      <div class="form-title">Thông Tin Khách Hàng</div>
       <form class="customer-form" @submit.prevent="submitCustomer">
         <div class="form-row">
           <div class="form-group">
@@ -47,6 +48,7 @@
           <div class="form-group">
             <label for="email">Email</label>
             <input id="email" v-model="customer.email" type="email" placeholder="Nhập địa chỉ email" required />
+            <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
           </div>
         </div>
         <div class="form-row">
@@ -54,6 +56,7 @@
             <label for="phoneNumber">Số Điện Thoại</label>
             <input id="phoneNumber" v-model="customer.phoneNumber" type="text" placeholder="Nhập số điện thoại"
               required />
+            <div v-if="errors.phoneNumber" class="error-message">{{ errors.phoneNumber }}</div>
           </div>
           <div class="form-group">
             <label for="gender">Giới Tính</label>
@@ -64,6 +67,20 @@
           </div>
         </div>
         <!-- Địa chỉ dạng cấp -->
+        <!-- Người nhận + SĐT người nhận -->
+        <div class="form-title">Địa Chỉ</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="receiverName">Tên người nhận</label>
+            <input id="receiverName" v-model="customer.receiverName" type="text" placeholder="Nhập tên người nhận" />
+          </div>
+          <div class="form-group">
+            <label for="receiverPhone">SĐT người nhận</label>
+            <input id="receiverPhone" v-model="customer.receiverPhone" type="text" placeholder="Nhập SĐT người nhận" />
+            <div v-if="errors.receiverPhone" class="error-message">{{ errors.receiverPhone }}</div>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="province">Tỉnh/Thành phố</label>
@@ -108,9 +125,11 @@
 
     <template #footer>
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
+
       <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" />
     </template>
+
   </Dialog>
 </template>
 
@@ -140,8 +159,11 @@ const customer = ref({
   province: "",
   district: "",
   ward: "",
-  street: ""
+  street: "",
+  receiverName: "",
+  receiverPhone: ""
 });
+
 
 const genderOptions = [
   { label: "Nam", value: "MALE" },
@@ -201,7 +223,70 @@ const getAllCustomers = async () => {
   }
 };
 
+const errors = ref<{ [key: string]: string }>({});
+
+function validateEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function validatePhone(phone: string) {
+  return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+}
 const submitCustomer = async () => {
+  errors.value = {};
+
+  // Kiểm tra rỗng & định dạng
+  if (!customer.value.username.trim()) {
+    errors.value.username = "Tên khách hàng không được để trống";
+  }
+  if (!validateEmail(customer.value.email)) {
+    errors.value.email = "Email không hợp lệ";
+  }
+  if (!validatePhone(customer.value.phoneNumber)) {
+    errors.value.phoneNumber = "Số điện thoại không hợp lệ";
+  }
+  if (!customer.value.gender) {
+    errors.value.gender = "Vui lòng chọn giới tính";
+  }
+  if (!customer.value.province) {
+    errors.value.province = "Vui lòng chọn tỉnh/thành";
+  }
+  if (!customer.value.district) {
+    errors.value.district = "Vui lòng chọn quận/huyện";
+  }
+  if (!customer.value.ward) {
+    errors.value.ward = "Vui lòng chọn phường/xã";
+  }
+  if (customer.value.receiverPhone && !validatePhone(customer.value.receiverPhone)) {
+    errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
+  }
+
+  // Kiểm tra trùng email
+  const emailExists = customers.value.some(
+    c => c.email.toLowerCase() === customer.value.email.toLowerCase()
+  );
+  if (emailExists) {
+    errors.value.email = "Email này đã tồn tại";
+  }
+
+  // Kiểm tra trùng số điện thoại
+  const phoneExists = customers.value.some(
+    c => c.phoneNumber === customer.value.phoneNumber
+  );
+  if (phoneExists) {
+    errors.value.phoneNumber = "Số điện thoại này đã tồn tại";
+  }
+if (Object.keys(errors.value).length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Dữ liệu không hợp lệ',
+            detail: 'Vui lòng kiểm tra lại các thông tin.',
+            life: 3000
+        });
+        return;
+    }
+  // Nếu có lỗi thì return
+  if (Object.keys(errors.value).length > 0) return;
+
   const address = {
     street: customer.value.street,
     ward: wardOptions.value.find(w => w.level3_id === customer.value.ward)?.name || "",
@@ -209,27 +294,31 @@ const submitCustomer = async () => {
     province: provinceOptions.find(p => p.level1_id === customer.value.province)?.name || "",
     city: "",
     state: "",
-    country: "",
-    zipcode: ""
+    country: "Việt Nam",
+    zipcode: "",
+    isDefault: true,
+    receiverName: customer.value.receiverName || customer.value.username,
+    receiverPhone: customer.value.receiverPhone || customer.value.phoneNumber
   };
+
   try {
     await CustomerService.createCustomer({
       username: customer.value.username,
       email: customer.value.email,
       phoneNumber: customer.value.phoneNumber,
       gender: customer.value.gender as Gender,
-      role: "CUSTOMER",                 // <-- thêm role mặc định
-      active: true,                   // <-- luôn active mặc định khi tạo mới
+      role: "CUSTOMER",
+      active: true,
       address
     });
-    // Hiển thị thông báo thành công
+
     toast.add({
       severity: 'success',
       summary: 'Thành công',
       detail: 'Thêm khách hàng thành công!',
       life: 3000
     });
-    // Reset form
+
     customer.value = {
       username: "",
       email: "",
@@ -238,22 +327,25 @@ const submitCustomer = async () => {
       province: "",
       district: "",
       ward: "",
-      street: ""
+      street: "",
+      receiverName: "",
+      receiverPhone: ""
     };
-    // Chuyển sang tab danh sách và reload lại danh sách
+
     currentTab.value = 'list';
     await getAllCustomers();
   } catch (err) {
     const error = err as any;
-     toast.add({
+    toast.add({
       severity: 'error',
       summary: 'Lỗi',
       detail: error.response?.data?.message || 'Có lỗi xảy ra khi thêm khách hàng!',
       life: 3000
     });
-    console.log(error.response?.data || error);
+    console.error(error.response?.data || error);
   }
 };
+
 
 
 const selectCustomer = () => {
@@ -266,7 +358,7 @@ const selectCustomer = () => {
 
 <style scoped lang="scss">
 .form-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 24px;
 }
@@ -292,9 +384,11 @@ const selectCustomer = () => {
 .full-width {
   flex: 100%;
 }
+
 .p-input-icon-left {
-    width: 100%;
+  width: 100%;
 }
+
 label {
   font-size: 1.06rem;
   color: #333;
@@ -378,5 +472,11 @@ textarea:focus {
   .customer-add-page {
     padding: 18px 8px;
   }
+}
+.error-message {
+    color: #e11d48;
+    font-size: 0.96rem;
+    margin-top: 5px;
+    margin-bottom: 2px;
 }
 </style>

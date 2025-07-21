@@ -256,18 +256,23 @@ const formatGender = (gender: string | null | undefined) => {
           <Column field="username" header="Tên khách hàng" sortable />
           <Column field="email" header="Email" sortable />
           <Column field="phoneNumber" header="Số điện thoại" sortable />
-          <Column header="Địa chỉ" sortable>
+          <Column header="Địa chỉ mặc định" sortable>
             <template #body="slotProps">
               {{
-                [
-                  slotProps.data.addressStreet,
-                  slotProps.data.addressWard,
-                  slotProps.data.addressDistrict,
-                  slotProps.data.addressProvince,
-                  slotProps.data.addressCity
-                ].filter(Boolean).join(', ')
+                (() => {
+                  const defaultAddress = slotProps.data.addresses?.find((addr: any) => addr.isDefault);
+                  if (!defaultAddress) return '—';
+                  return [
+                    defaultAddress.street,
+                    defaultAddress.ward,
+                    defaultAddress.district,
+                    defaultAddress.province,
+                    defaultAddress.city
+              ].filter(Boolean).join(', ');
+              })()
               }}
             </template>
+
           </Column>
           <Column field="gender" header="Giới tính" sortable>
             <template #body="slotProps">
