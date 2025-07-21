@@ -8,32 +8,28 @@ import { useToast } from 'primevue/usetoast';
 import * as XLSX from 'xlsx';
 
 const toast = useToast();
-
 const exportAllProducts = async () => {
   try {
     const parentProducts = await ProductService.getAllParentProducts();
-
     const allAttributeNames = new Set<string>();
     const exportData: any[] = [];
-
-    // Bước 1: Thu thập toàn bộ tên thuộc tính có thể có
+    // Gộp tất cả tên thuộc tính động
     for (const parent of parentProducts) {
       const childProducts = await ProductService.getProductsByParentId(parent.id);
       for (const child of childProducts) {
-        if (child.productAttributeValueResponses && Array.isArray(child.productAttributeValueResponses)) {
+        if (Array.isArray(child.productAttributeValueResponses)) {
           child.productAttributeValueResponses.forEach((attr: any) => {
-            allAttributeNames.add(attr.name);
+            if (attr?.attributeName) {
+              allAttributeNames.add(attr.attributeName);
+            }
           });
         }
       }
     }
-
     const attributeList = Array.from(allAttributeNames);
-
-    // Bước 2: Tạo exportData với đầy đủ thuộc tính động
+    // Duyệt lần nữa để xuất dữ liệu
     for (const parent of parentProducts) {
       const childProducts = await ProductService.getProductsByParentId(parent.id);
-
       if (childProducts.length > 0) {
         for (const child of childProducts) {
           const row: Record<string, any> = {
@@ -47,23 +43,23 @@ const exportAllProducts = async () => {
             "Nhà cung cấp": parent.supplierName || "",
             "Số lượng": child.stockQuantity || 0,
             "Giá": child.price || 0,
-            "Nhãn": child.tagName?.map((t: any) => t.name).join(", ") || "",
+            "Nhãn": Array.isArray(child.tagName)
+              ? child.tagName.join(", ")
+              : typeof child.tagName === "string"
+                ? child.tagName
+                : "",
           };
-
-          // Thêm thuộc tính động
           const attributeMap: Record<string, string> = {};
-          if (child.productAttributeValueResponses && Array.isArray(child.productAttributeValueResponses)) {
+          if (Array.isArray(child.productAttributeValueResponses)) {
             child.productAttributeValueResponses.forEach((attr: any) => {
-              attributeMap[attr.name] = attr.value;
+              if (attr?.attributeName && attr?.value) {
+                attributeMap[attr.attributeName] = attr.value;
+              }
             });
           }
-
-          // Gán giá trị cho tất cả thuộc tính đã thu thập
           attributeList.forEach(attrName => {
             row[attrName] = attributeMap[attrName] || "";
           });
-console.log(">>> Child:", child);
-
           exportData.push(row);
         }
       } else {
@@ -77,11 +73,14 @@ console.log(">>> Child:", child);
           "Nhà cung cấp": parent.supplierName || "",
           "Số lượng": parent.stockQuantity || 0,
           "Giá": "",
-          "Nhãn": parent.tagName || "",
+          "Nhãn": Array.isArray(parent.tagName)
+            ? parent.tagName.join(", ")
+            : typeof parent.tagName === "string"
+              ? parent.tagName
+              : "",
         });
       }
     }
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sách sản phẩm");
@@ -89,10 +88,7 @@ console.log(">>> Child:", child);
   } catch (error) {
     console.error("Xuất Excel thất bại:", error);
   }
-  
 };
-
-
 
 const listProduct = ref<ProductResponse[]>([]);
 const loading = ref(false);

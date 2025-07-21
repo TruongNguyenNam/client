@@ -246,19 +246,17 @@ const confirmDeleteTag = (selectedTag) => {
                 <Toolbar class="mb-4">
                     <template v-slot:start>
                         <div class="my-2">
-                            <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
-                                @click="deleteSelectedTags" :disabled="!selectedTags.length" />
+                            <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
                         </div>
                     </template>
                     <template v-slot:end>
                         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
                             @click="downloadTagTemplate" />
 
-                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
+                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
                             class="mr-2 inline-block" @select="importTagsFromExcel" :auto="true" />
 
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportTagsToExcel" />
+                        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportTagsToExcel" />
                     </template>
 
                 </Toolbar>

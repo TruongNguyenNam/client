@@ -12,6 +12,7 @@
     "dependencies": {
         "@tailwindcss/vite": "^4.1.6",
         "@vueuse/core": "^13.1.0",
+        "@zxing/browser": "^0.1.5",
         "axios": "^1.7.9",
         "chart.js": "4.4.1",
         "date-fns": "^4.1.0",

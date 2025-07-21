@@ -318,9 +318,7 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                 <Toolbar class="mb-4">
                     <template v-slot:start>
                         <div class="my-2">
-                            <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
-                                @click="deleteSelectedCategories" :disabled="!selectedCategories.length" />
+                            <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
                         </div>
                     </template>
 
@@ -331,7 +329,7 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                         <FileUpload mode="basic" accept=".xlsx, .xls" :auto="true" chooseLabel="Nhập Excel"
                             @select="handleExcelUpload" class="mr-2 inline-block" />
 
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportCategories" />
+                        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportCategories" />
 
                     </template>
                 </Toolbar>

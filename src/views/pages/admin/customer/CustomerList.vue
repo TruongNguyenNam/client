@@ -9,27 +9,35 @@ const toast = useToast();
 // Tải file mẫu Excel
 const downloadCustomerTemplate = () => {
   const exampleData = [
-  {
-    Name: 'Nguyễn Văn A',
-    Email: 'vana@example.com',
-    PhoneNumber: '0912345678',
-    Address: '123 Đường A, Phường B, Quận C, TP.HCM',
-    Gender: 'MALE',
-  },
-  {
-    Name: 'Trần Thị B',
-    Email: 'thib@example.com',
-    PhoneNumber: '0987654321',
-    Address: '456 Đường D, Phường E, Quận F, Hà Nội',
-    Gender: 'FEMALE',
-  },
-];
-  exportToExcel(exampleData, 'Template_KhachHang', 'KhachHangTemplate');
+    {
+      Name: 'Nguyễn Văn A',
+      Email: 'vana@example.com',
+      PhoneNumber: '0912345678',
+      AddressStreet: '123 Đường ABC',
+      Ward: 'Phường 1',
+      District: 'Quận 1',
+      Province: 'TP.HCM',
+      City: 'Hồ Chí Minh',
+      Gender: 'MALE',
+    },
+    {
+      Name: 'Trần Thị B',
+      Email: 'thib@example.com',
+      PhoneNumber: '0987654321',
+      AddressStreet: '456 Đường DEF',
+      Ward: 'Phường 3',
+      District: 'Quận 2',
+      Province: 'Hà Nội',
+      City: 'Hà Nội',
+      Gender: 'FEMALE',
+    },
+  ];
+  exportToExcel(exampleData, 'Template_KhachHang', 'KhachHangTemplate-DayDu');
   toast.add({
     severity: 'info',
     summary: 'Tải mẫu thành công',
-    detail: 'File mẫu đã được tải về cùng 3 dòng ví dụ',
-    life: 3000
+    detail: 'File mẫu đã được tải về với các cột đầy đủ',
+    life: 3000,
   });
 };
 
@@ -55,6 +63,7 @@ const exportCustomers = () => {
   exportToExcel(data, 'DanhSachKhachHang');
   toast.add({ severity: 'success', summary: 'Xuất thành công', detail: 'Đã xuất file Excel', life: 3000 });
 };
+import type { CustomerRequest } from "../../../../model/admin/customer"; // hoặc đúng đường dẫn file chứa định nghĩa
 
 // Import danh sách khách hàng từ Excel
 const importCustomers = async (event: any) => {
@@ -63,25 +72,37 @@ const importCustomers = async (event: any) => {
 
   try {
     const importedData = await importFromExcel(file);
-    console.log("File Excel import:", importedData); // Gợi ý thêm
     let added = 0;
 
     for (const item of importedData) {
       if (item.Name && item.Email && item.PhoneNumber) {
-        const gender = item.Gender?.toUpperCase() || 'OTHER'; // ✅ Đã sửa chỗ này
+        const gender = item.Gender?.toUpperCase() || 'OTHER';
 
-        const customerData = {
-          username: item.Name.trim(),
-          email: item.Email.trim(),
-          phoneNumber: item.PhoneNumber.trim(),
-          addressStreet: item.Address || '',
-          address: item.Address || '',
+        const customerData: CustomerRequest = {
+          username: item.Name?.trim(),
+          email: item.Email?.trim(),
+          phoneNumber: item.PhoneNumber?.trim(),
           gender: ['MALE', 'FEMALE', 'OTHER'].includes(gender) ? gender : 'OTHER',
           role: 'CUSTOMER',
+          address: {
+            street: item.AddressStreet?.trim() || '',
+            ward: item.Ward?.trim() || '',
+            district: item.District?.trim() || '',
+            province: item.Province?.trim() || '',
+            city: item.City?.trim() || '',
+            state: item.State?.trim() || '',         // thêm vào
+            country: item.Country?.trim() || 'Vietnam',  // thêm vào
+            zipcode: item.Zipcode?.trim() || '',     // thêm vào
+          },
         };
 
-        await CustomerService.createCustomer(customerData);
-        added++;
+
+        try {
+          await CustomerService.createCustomer(customerData);
+          added++;
+        } catch (error) {
+          console.error("❌ Lỗi tạo khách hàng:", customerData, error);
+        }
       }
     }
 
@@ -89,7 +110,7 @@ const importCustomers = async (event: any) => {
       severity: 'success',
       summary: 'Import thành công',
       detail: `Đã thêm ${added} khách hàng`,
-      life: 3000
+      life: 3000,
     });
 
     await loadCustomers();
@@ -99,11 +120,10 @@ const importCustomers = async (event: any) => {
       severity: 'error',
       summary: 'Lỗi import',
       detail: 'Vui lòng kiểm tra lại file hoặc định dạng cột',
-      life: 4000
+      life: 4000,
     });
   }
 };
-
 
 const customers = ref<CustomerResponse[]>([]);
 const loading = ref<boolean>(true);

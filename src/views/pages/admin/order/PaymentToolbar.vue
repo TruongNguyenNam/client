@@ -418,40 +418,71 @@ const fetchCouponUsage = async () => {
     props.couponUsage.splice(0, props.couponUsage.length);
   }
 };
-
 const handleCustomerSelect = (customer: CustomerResponse) => {
   selectedCustomerId.value = customer.id;
   selectedCustomerName.value = customer.username;
   showDialog.value = false;
+
   if (!customer) {
     props.invoice.userId = null;
     props.invoice.customerName = '';
     props.invoice.phoneNumber = '';
     props.invoice.email = '';
-    if (!props.invoice.isPos) {
-      props.invoice.addressStreet = '';
-      props.invoice.addressWard = '';
-      props.invoice.addressDistrict = '';
-      props.invoice.addressProvince = '';
-      props.invoice.addressCity = '';
-      props.invoice.addressZipcode = '';
-    }
+    props.invoice.addressStreet = '';
+    props.invoice.addressWard = '';
+    props.invoice.addressDistrict = '';
+    props.invoice.addressProvince = '';
+    props.invoice.addressCity = '';
+    props.invoice.addressZipcode = '';
   } else {
     props.invoice.userId = customer.id;
     props.invoice.customerName = customer.username;
     props.invoice.phoneNumber = customer.phoneNumber;
     props.invoice.email = customer.email;
-    if (!props.invoice.isPos) {
-      props.invoice.addressStreet = customer.addressStreet;
-      props.invoice.addressWard = customer.addressWard;
-      props.invoice.addressDistrict = customer.addressDistrict;
-      props.invoice.addressProvince = customer.addressProvince;
-      props.invoice.addressCity = customer.addressCity;
-      props.invoice.addressZipcode = customer.addressZipcode;
-    }
+    props.invoice.addressStreet = customer.addressStreet;
+    props.invoice.addressWard = customer.addressWard;
+    props.invoice.addressDistrict = customer.addressDistrict;
+    props.invoice.addressProvince = customer.addressProvince;
+    props.invoice.addressCity = customer.addressCity;
+    props.invoice.addressZipcode = customer.addressZipcode;
   }
+
   fetchCouponUsage();
 };
+
+// const handleCustomerSelect = (customer: CustomerResponse) => {
+//   selectedCustomerId.value = customer.id;
+//   selectedCustomerName.value = customer.username;
+//   showDialog.value = false;
+//   if (!customer) {
+//     props.invoice.userId = null;
+//     props.invoice.customerName = '';
+//     props.invoice.phoneNumber = '';
+//     props.invoice.email = '';
+//     if (!props.invoice.isPos) {
+//       props.invoice.addressStreet = '';
+//       props.invoice.addressWard = '';
+//       props.invoice.addressDistrict = '';
+//       props.invoice.addressProvince = '';
+//       props.invoice.addressCity = '';
+//       props.invoice.addressZipcode = '';
+//     }
+//   } else {
+//     props.invoice.userId = customer.id;
+//     props.invoice.customerName = customer.username;
+//     props.invoice.phoneNumber = customer.phoneNumber;
+//     props.invoice.email = customer.email;
+//     if (!props.invoice.isPos) {
+//       props.invoice.addressStreet = customer.addressStreet;
+//       props.invoice.addressWard = customer.addressWard;
+//       props.invoice.addressDistrict = customer.addressDistrict;
+//       props.invoice.addressProvince = customer.addressProvince;
+//       props.invoice.addressCity = customer.addressCity;
+//       props.invoice.addressZipcode = customer.addressZipcode;
+//     }
+//   }
+//   fetchCouponUsage();
+// };
 
 const updatePaymentMethod = () => {
   const method = props.paymentMethods.find(m => m.id === props.invoice.paymentMethodId);
