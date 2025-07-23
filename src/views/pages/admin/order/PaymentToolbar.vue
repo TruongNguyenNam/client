@@ -5,7 +5,7 @@
       <h3 class="text-xl font-semibold mb-4">{{ invoice.orderCode }}</h3>
 
       <!-- Chọn khách hàng -->
-       <div class="mb-4">
+      <div class="mb-4">
         <label class="block mb-1 font-medium">Khách hàng</label>
         <div class="flex items-center gap-2">
           <InputText v-model="selectedCustomerName" placeholder="Chọn khách hàng" class="flex-1" :disabled="true"
@@ -48,8 +48,7 @@
           <!-- Địa chỉ giao hàng -->
           <AddressSelectDialog v-model:visible="showAddressDialog" :addresses="selectedCustomer?.addresses || []"
             :customer-id="selectedCustomer.id" @select="handleAddressSelect" @submitAddress="handleAddressSubmit"
-            :key="addressDialogKey" @cancel="showAddressDialog = false" 
-             @deleteAddress="refreshSelectedCustomer"/>
+            :key="addressDialogKey" @cancel="showAddressDialog = false" @deleteAddress="refreshSelectedCustomer" />
 
           <div>
             <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
@@ -80,8 +79,8 @@
       </div>
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Phí vận chuyển</label>
-        <InputNumber v-model="invoice.shippingCost" @input="handleShippingCostChange" class="w-full"
-          :min="0" :useGrouping="true" placeholder="Nhập phí vận chuyển" />
+        <InputNumber v-model="invoice.shippingCost" @input="handleShippingCostChange" class="w-full" :min="0"
+          :useGrouping="true" placeholder="Nhập phí vận chuyển" />
       </div>
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Ngày giao dự kiến</label>
@@ -153,7 +152,7 @@
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
         <Button label="Hoàn tất" icon="pi pi-check" severity="success" @click="completeAndPrint" />
       </div>
-    </div>  
+    </div>
     <InvoicePrint v-if="showPrintPreview" :invoice="invoice" :changeAmount="changeAmount" />
   </Sidebar>
   <ConfirmDialog />
@@ -313,13 +312,13 @@ const initiateVNPayPayment = async () => {
       shipments: props.invoice.isPos
         ? undefined
         : [
-            {
-              carrierId: props.invoice.carrierId!,
-              shippingCost: props.invoice.shippingCost ?? 0,
-              estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
-              orderItemIds: props.invoice.items.map(item => item.id),
-            },
-          ],
+          {
+            carrierId: props.invoice.carrierId!,
+            shippingCost: props.invoice.shippingCost ?? 0,
+            estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
+            orderItemIds: props.invoice.items.map(item => item.id),
+          },
+        ],
       couponUsageIds: props.invoice.couponUsageIds?.length ? props.invoice.couponUsageIds : undefined,
       payment: {
         paymentMethodId: props.invoice.paymentMethodId!,
@@ -532,28 +531,28 @@ const handleCustomerSelect = (customer: CustomerResponse) => {
   props.invoice.email = customer.email;
 
   if (!props.invoice.isPos) {
-    // Nếu là đơn giao hàng, cho phép chọn địa chỉ cụ thể
-    // Giả sử bạn có dialog hoặc dropdown chọn địa chỉ ở đây
-    // (hoặc đơn giản chọn địa chỉ mặc định trong danh sách)
-    const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
-    if (defaultAddress) {
-      selectedAddressId.value = defaultAddress.id;
+    // Nếu chưa chọn địa chỉ cụ thể, mới lấy mặc định
+    if (!selectedAddressId.value) {
+      const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
+      if (defaultAddress) {
+        selectedAddressId.value = defaultAddress.id;
 
-      props.invoice.addressStreet = defaultAddress.street;
-      props.invoice.addressWard = defaultAddress.ward;
-      props.invoice.addressDistrict = defaultAddress.district;
-      props.invoice.addressProvince = defaultAddress.province;
-      props.invoice.addressCity = defaultAddress.city || '';
-      props.invoice.addressZipcode = defaultAddress.zipcode || '';
-      props.invoice.receiverName = defaultAddress.receiverName;
-      props.invoice.receiverPhone = defaultAddress.receiverPhone;
-    } else {
-      toast.add({
-        severity: 'warn',
-        summary: 'Chưa có địa chỉ',
-        detail: 'Khách hàng chưa có địa chỉ giao hàng',
-        life: 3000
-      });
+        props.invoice.addressStreet = defaultAddress.street;
+        props.invoice.addressWard = defaultAddress.ward;
+        props.invoice.addressDistrict = defaultAddress.district;
+        props.invoice.addressProvince = defaultAddress.province;
+        props.invoice.addressCity = defaultAddress.city || '';
+        props.invoice.addressZipcode = defaultAddress.zipcode || '';
+        props.invoice.receiverName = defaultAddress.receiverName;
+        props.invoice.receiverPhone = defaultAddress.receiverPhone;
+      } else {
+        toast.add({
+          severity: 'warn',
+          summary: 'Chưa có địa chỉ',
+          detail: 'Khách hàng chưa có địa chỉ giao hàng',
+          life: 3000
+        });
+      }
     }
 
   } else {
@@ -573,6 +572,21 @@ const selectedAddress = computed(() => {
   if (!selectedCustomer.value?.addresses) return null;
   return selectedCustomer.value.addresses.find(a => a.id === selectedAddressId.value)
     || selectedCustomer.value.addresses[0];
+});
+
+
+watch(selectedAddressId, (newId) => {
+  const addr = selectedCustomer.value?.addresses?.find(a => a.id === newId);
+  if (addr) {
+    props.invoice.addressStreet = addr.street;
+    props.invoice.addressWard = addr.ward;
+    props.invoice.addressDistrict = addr.district;
+    props.invoice.addressProvince = addr.province;
+    props.invoice.addressCity = addr.city || '';
+    props.invoice.addressZipcode = addr.zipcode || '';
+    props.invoice.receiverName = addr.receiverName;
+    props.invoice.receiverPhone = addr.receiverPhone;
+  }
 });
 
 const addressDialogKey = ref(0);
