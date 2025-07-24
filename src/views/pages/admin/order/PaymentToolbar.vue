@@ -303,12 +303,14 @@ const validateBeforeComplete = () => {
 const initiateVNPayPayment = async () => {
   if (!validateBeforeComplete()) return;
   isPaymentProcessing.value = true;
+
   try {
     const finalTotal = calculateFinalTotal();
+
     const payload: OrderRequest = {
       orderCode: props.invoice.orderCode,
       userId: selectedCustomerId.value || undefined,
-      addressId: props.invoice.isPos ? undefined : props.invoice.addressId ?? undefined, // Convert null to undefined
+      addressId: props.invoice.isPos ? undefined : props.invoice.addressId ?? undefined,
       items: props.invoice.items.map(item => ({
         productId: item.id,
         quantity: item.quantity,
@@ -323,7 +325,9 @@ const initiateVNPayPayment = async () => {
               orderItemIds: props.invoice.items.map(item => item.id),
             },
           ],
-      couponUsageIds: props.invoice.couponUsageIds?.length ? props.invoice.couponUsageIds : undefined,
+      couponUsageIds: props.invoice.couponUsageIds?.length
+        ? props.invoice.couponUsageIds
+        : undefined,
       payment: {
         paymentMethodId: props.invoice.paymentMethodId!,
         amount: finalTotal,
@@ -331,8 +335,29 @@ const initiateVNPayPayment = async () => {
       },
       notes: props.invoice.notes || undefined,
     };
+
     const response = await OrderService.addProductToOrder(props.invoice.orderCode, payload);
+
+    // ✅ Nếu gọi API thành công, lưu full thông tin hóa đơn để callback dùng
     if (response && response.data && response.data.paymentUrl) {
+      let invoiceTabs = JSON.parse(localStorage.getItem('invoiceTabs') || '[]');
+
+      const customer = props.customers.find(c => c.id === selectedCustomerId.value);
+
+      const fullInvoice = {
+        ...props.invoice,
+        customerName: customer?.username || props.invoice.customerName,
+        phoneNumber: customer?.phoneNumber || props.invoice.phoneNumber,
+        email: customer?.email || props.invoice.email
+      };
+
+      invoiceTabs = invoiceTabs.filter(
+        (tab: any) => tab.orderCode !== fullInvoice.orderCode
+      );
+      invoiceTabs.push(fullInvoice);
+      localStorage.setItem('invoiceTabs', JSON.stringify(invoiceTabs));
+
+      // ✅ Điều hướng đến VNPay sau khi lưu localStorage
       window.location.href = response.data.paymentUrl;
     } else {
       throw new Error('Không nhận được URL thanh toán từ server');
@@ -342,12 +367,13 @@ const initiateVNPayPayment = async () => {
       severity: 'error',
       summary: 'Lỗi',
       detail: error.message || 'Không thể khởi tạo thanh toán VNPay',
-      life: 3000
+      life: 3000,
     });
   } finally {
     isPaymentProcessing.value = false;
   }
 };
+
 
 const completeAndPrint = () => {
   if (!validateBeforeComplete()) return;
@@ -433,8 +459,6 @@ const fetchCouponUsage = async () => {
     props.couponUsage.splice(0, props.couponUsage.length);
   }
 };
-<<<<<<< HEAD
-=======
 
 const fullAddress = computed(() => {
   if (!selectedAddress.value) return '';
@@ -449,85 +473,29 @@ const fullAddress = computed(() => {
   ].filter(Boolean).join(', ');
 });
 
-// const handleAddressSelect = (address: AddressResponse) => {
-//   selectedAddressId.value = address.id;
-//   props.invoice.addressStreet = address.street;
-//   props.invoice.addressWard = address.ward;
-//   props.invoice.addressDistrict = address.district;
-//   props.invoice.addressProvince = address.province;
-//   props.invoice.addressCity = address.city || '';
-//   props.invoice.addressZipcode = address.zipcode || '';
-//   props.invoice.receiverName = address.receiverName;
-//   props.invoice.receiverPhone = address.receiverPhone;
-
-// };
-
->>>>>>> 8b5aff8c483572345f26c2c77dde3f77c7e47514
 const handleCustomerSelect = (customer: CustomerResponse) => {
   selectedCustomerId.value = customer.id;
   selectedCustomerName.value = customer.username;
   showDialog.value = false;
 
-<<<<<<< HEAD
-  if (!customer) {
-    props.invoice.userId = null;
-    props.invoice.customerName = '';
-    props.invoice.phoneNumber = '';
-    props.invoice.email = '';
-    props.invoice.addressStreet = '';
-    props.invoice.addressWard = '';
-    props.invoice.addressDistrict = '';
-    props.invoice.addressProvince = '';
-    props.invoice.addressCity = '';
-    props.invoice.addressZipcode = '';
-  } else {
-    props.invoice.userId = customer.id;
-    props.invoice.customerName = customer.username;
-    props.invoice.phoneNumber = customer.phoneNumber;
-    props.invoice.email = customer.email;
-    props.invoice.addressStreet = customer.addressStreet;
-    props.invoice.addressWard = customer.addressWard;
-    props.invoice.addressDistrict = customer.addressDistrict;
-    props.invoice.addressProvince = customer.addressProvince;
-    props.invoice.addressCity = customer.addressCity;
-    props.invoice.addressZipcode = customer.addressZipcode;
-=======
   props.invoice.userId = customer.id;
   props.invoice.customerName = customer.username;
   props.invoice.phoneNumber = customer.phoneNumber;
   props.invoice.email = customer.email;
 
-  if (!props.invoice.isPos) {
-    const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
-    if (defaultAddress) {
-      selectedAddressId.value = defaultAddress.id;
-      props.invoice.addressId = defaultAddress.id;
-      props.invoice.addressStreet = defaultAddress.street;
-      props.invoice.addressWard = defaultAddress.ward;
-      props.invoice.addressDistrict = defaultAddress.district;
-      props.invoice.addressProvince = defaultAddress.province;
-      props.invoice.addressCity = defaultAddress.city || '';
-      props.invoice.addressZipcode = defaultAddress.zipcode || '';
-      props.invoice.receiverName = defaultAddress.receiverName;
-      props.invoice.receiverPhone = defaultAddress.receiverPhone;
-    } else {
-      selectedAddressId.value = null;
-      props.invoice.addressId = null;
-      props.invoice.addressStreet = '';
-      props.invoice.addressWard = '';
-      props.invoice.addressDistrict = '';
-      props.invoice.addressProvince = '';
-      props.invoice.addressCity = '';
-      props.invoice.addressZipcode = '';
-      props.invoice.receiverName = '';
-      props.invoice.receiverPhone = '';
-      toast.add({
-        severity: 'warn',
-        summary: 'Chưa có địa chỉ',
-        detail: 'Khách hàng chưa có địa chỉ giao hàng',
-        life: 3000
-      });
-    }
+  const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
+
+  if (defaultAddress) {
+    selectedAddressId.value = defaultAddress.id;
+    props.invoice.addressId = defaultAddress.id;
+    props.invoice.addressStreet = defaultAddress.street;
+    props.invoice.addressWard = defaultAddress.ward;
+    props.invoice.addressDistrict = defaultAddress.district;
+    props.invoice.addressProvince = defaultAddress.province;
+    props.invoice.addressCity = defaultAddress.city || '';
+    props.invoice.addressZipcode = defaultAddress.zipcode || '';
+    props.invoice.receiverName = defaultAddress.receiverName;
+    props.invoice.receiverPhone = defaultAddress.receiverPhone;
   } else {
     selectedAddressId.value = null;
     props.invoice.addressId = null;
@@ -539,14 +507,18 @@ const handleCustomerSelect = (customer: CustomerResponse) => {
     props.invoice.addressZipcode = '';
     props.invoice.receiverName = '';
     props.invoice.receiverPhone = '';
->>>>>>> 8b5aff8c483572345f26c2c77dde3f77c7e47514
+    toast.add({
+      severity: 'warn',
+      summary: 'Chưa có địa chỉ',
+      detail: 'Khách hàng chưa có địa chỉ giao hàng',
+      life: 3000
+    });
   }
 
   fetchCouponUsage();
 };
 
-<<<<<<< HEAD
-=======
+
 const handleAddressSelect = (address: AddressResponse) => {
   selectedAddressId.value = address.id;
   props.invoice.addressId = address.id;
@@ -625,39 +597,10 @@ const handleAddressSubmit = async (submittedData: any) => {
 // id của địa chỉ được chọn
 const selectedAddressId = ref<number | null>(null);
 // Xử lý khi khách hàng được chọn từ CustomerDialog
->>>>>>> 8b5aff8c483572345f26c2c77dde3f77c7e47514
 // const handleCustomerSelect = (customer: CustomerResponse) => {
 //   selectedCustomerId.value = customer.id;
 //   selectedCustomerName.value = customer.username;
 //   showDialog.value = false;
-<<<<<<< HEAD
-//   if (!customer) {
-//     props.invoice.userId = null;
-//     props.invoice.customerName = '';
-//     props.invoice.phoneNumber = '';
-//     props.invoice.email = '';
-//     if (!props.invoice.isPos) {
-//       props.invoice.addressStreet = '';
-//       props.invoice.addressWard = '';
-//       props.invoice.addressDistrict = '';
-//       props.invoice.addressProvince = '';
-//       props.invoice.addressCity = '';
-//       props.invoice.addressZipcode = '';
-//     }
-//   } else {
-//     props.invoice.userId = customer.id;
-//     props.invoice.customerName = customer.username;
-//     props.invoice.phoneNumber = customer.phoneNumber;
-//     props.invoice.email = customer.email;
-//     if (!props.invoice.isPos) {
-//       props.invoice.addressStreet = customer.addressStreet;
-//       props.invoice.addressWard = customer.addressWard;
-//       props.invoice.addressDistrict = customer.addressDistrict;
-//       props.invoice.addressProvince = customer.addressProvince;
-//       props.invoice.addressCity = customer.addressCity;
-//       props.invoice.addressZipcode = customer.addressZipcode;
-//     }
-=======
 
 //   props.invoice.userId = customer.id;
 //   props.invoice.customerName = customer.username;
@@ -697,13 +640,10 @@ const selectedAddressId = ref<number | null>(null);
 //     props.invoice.addressProvince = '';
 //     props.invoice.addressCity = '';
 //     props.invoice.addressZipcode = '';
->>>>>>> 8b5aff8c483572345f26c2c77dde3f77c7e47514
 //   }
 //   fetchCouponUsage();
 // };
 
-<<<<<<< HEAD
-=======
 // lấy điạ chỉ mặc định hoặc đầu tiên
 const selectedAddress = computed(() => {
   if (!selectedCustomer.value?.addresses) return null;
@@ -729,7 +669,6 @@ const refreshSelectedCustomer = async () => {
 
 
 
->>>>>>> 8b5aff8c483572345f26c2c77dde3f77c7e47514
 const updatePaymentMethod = () => {
   const method = props.paymentMethods.find(m => m.id === props.invoice.paymentMethodId);
   props.invoice.paymentMethod = method?.name || 'Tiền mặt';
