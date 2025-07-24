@@ -83,8 +83,12 @@ export interface OrderRequest {
     addressZipcode: string;
     addressDistrict: string;
     addressProvince: string;
+    receiverName:string;
+    receiverPhone:string;
+    isDefault:boolean;
     isActive: boolean;
   }
+
   
   export interface ShipmentResponse {
     id: number;

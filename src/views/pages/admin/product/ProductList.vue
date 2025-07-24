@@ -154,7 +154,11 @@ const onPageChange = (event: any) => {
           </template>
 
           <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-
+          <Column header="STT" style="width: 80px">
+            <template #body="slotProps">
+              {{ first + slotProps.index + 1 }}
+            </template>
+          </Column>
           <Column header="Ảnh" style="width: 100px">
             <template #body="{ data }">
               <img :src="data.imageUrl?.[0] || 'https://via.placeholder.com/50'" 
