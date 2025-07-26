@@ -3,6 +3,127 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
 import type { CustomerResponse } from "../../../../model/admin/customer";
+import { exportToExcel, importFromExcel, downloadExcelTemplate } from '../../../../utils/excel';
+import { useToast } from 'primevue/usetoast';
+const toast = useToast();
+// Tải file mẫu Excel
+const downloadCustomerTemplate = () => {
+  const exampleData = [
+    {
+      Name: 'Nguyễn Văn A',
+      Email: 'vana@example.com',
+      PhoneNumber: '0912345678',
+      AddressStreet: '123 Đường ABC',
+      Ward: 'Phường 1',
+      District: 'Quận 1',
+      Province: 'TP.HCM',
+      City: 'Hồ Chí Minh',
+      Gender: 'MALE',
+    },
+    {
+      Name: 'Trần Thị B',
+      Email: 'thib@example.com',
+      PhoneNumber: '0987654321',
+      AddressStreet: '456 Đường DEF',
+      Ward: 'Phường 3',
+      District: 'Quận 2',
+      Province: 'Hà Nội',
+      City: 'Hà Nội',
+      Gender: 'FEMALE',
+    },
+  ];
+  exportToExcel(exampleData, 'Template_KhachHang', 'KhachHangTemplate-DayDu');
+  toast.add({
+    severity: 'info',
+    summary: 'Tải mẫu thành công',
+    detail: 'File mẫu đã được tải về với các cột đầy đủ',
+    life: 3000,
+  });
+};
+
+
+// Xuất danh sách khách hàng ra Excel
+const exportCustomers = () => {
+  if (!customers.value.length) {
+    toast.add({ severity: 'warn', summary: 'Không có dữ liệu', detail: 'Danh sách khách hàng trống', life: 3000 });
+    return;
+  }
+
+  const data = customers.value.map(c => ({
+    Name: c.username,
+    Email: c.email,
+    PhoneNumber: c.phoneNumber,
+    // Address: [
+    //   c.addressStreet, c.addressWard, c.addressDistrict,
+    //   c.addressProvince, c.addressCity
+    // ].filter(Boolean).join(', '),
+    Gender: c.gender
+  }));
+
+  exportToExcel(data, 'DanhSachKhachHang');
+  toast.add({ severity: 'success', summary: 'Xuất thành công', detail: 'Đã xuất file Excel', life: 3000 });
+};
+import type { CustomerRequest } from "../../../../model/admin/customer"; // hoặc đúng đường dẫn file chứa định nghĩa
+
+// Import danh sách khách hàng từ Excel
+const importCustomers = async (event: any) => {
+  const file = event.files?.[0];
+  if (!file) return;
+
+  try {
+    const importedData = await importFromExcel(file);
+    let added = 0;
+
+    for (const item of importedData) {
+      if (item.Name && item.Email && item.PhoneNumber) {
+        const gender = item.Gender?.toUpperCase() || 'OTHER';
+
+        const customerData: CustomerRequest = {
+          username: item.Name?.trim(),
+          email: item.Email?.trim(),
+          phoneNumber: item.PhoneNumber?.trim(),
+          gender: ['MALE', 'FEMALE', 'OTHER'].includes(gender) ? gender : 'OTHER',
+          role: 'CUSTOMER',
+          // address: {
+          //   street: item.AddressStreet?.trim() || '',
+          //   ward: item.Ward?.trim() || '',
+          //   district: item.District?.trim() || '',
+          //   province: item.Province?.trim() || '',
+          //   city: item.City?.trim() || '',
+          //   state: item.State?.trim() || '',         // thêm vào
+          //   country: item.Country?.trim() || 'Vietnam',  // thêm vào
+          //   zipcode: item.Zipcode?.trim() || '',     // thêm vào
+          // },
+        };
+
+
+        try {
+          await CustomerService.createCustomer(customerData);
+          added++;
+        } catch (error) {
+          console.error("❌ Lỗi tạo khách hàng:", customerData, error);
+        }
+      }
+    }
+
+    toast.add({
+      severity: 'success',
+      summary: 'Import thành công',
+      detail: `Đã thêm ${added} khách hàng`,
+      life: 3000,
+    });
+
+    await loadCustomers();
+  } catch (err) {
+    console.error("Lỗi khi import Excel:", err);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi import',
+      detail: 'Vui lòng kiểm tra lại file hoặc định dạng cột',
+      life: 4000,
+    });
+  }
+};
 
 const customers = ref<CustomerResponse[]>([]);
 const loading = ref<boolean>(true);
@@ -103,9 +224,13 @@ const formatGender = (gender: string | null | undefined) => {
             <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2" @click="addCustomer" />
           </template>
           <template v-slot:end>
-            <Button label="Nhập" icon="pi pi-upload" class="p-button-help mr-2" />
-            <Button label="Xuất" icon="pi pi-download" class="p-button-info" />
+            <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
+              @click="downloadCustomerTemplate" />
+            <FileUpload mode="basic" accept=".xlsx" :auto="true" :maxFileSize="1000000" chooseLabel="Nhập Excel"
+              class="mr-2 inline-block" @select="importCustomers" />
+            <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportCustomers" />
           </template>
+
         </Toolbar>
         <div class="flex align-items-center justify-content-between mb-4">
           <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />

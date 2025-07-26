@@ -1,6 +1,6 @@
-import type { ProductRequest, ProductResponse,ProductUpdateChild,ProductUpdateParent,AddProductChild,VariantCountDTO} from "../../model/admin/product";
+import type { ProductRequest, ProductResponse, ProductUpdateChild, ProductUpdateParent, AddProductChild, VariantCountDTO } from "../../model/admin/product";
 import axios from 'axios';
-import type { ApiResponse } from "../../utils/ApiResponse";         
+import type { ApiResponse } from "../../utils/ApiResponse";
 const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
 
@@ -33,7 +33,7 @@ export const ProductService = {
       throw new Error('Không thể lấy dữ liệu biến thể. Vui lòng thử lại sau.');
     }
   },
-  
+
   getAllParentProducts: async (): Promise<ProductResponse[]> => {
     try {
       const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/parent`);
@@ -169,7 +169,7 @@ export const ProductService = {
 
 
   addProduct: async (productRequest: ProductRequest, parentUploadedFiles: File[], variantUploadedFiles: File[][]): Promise<string> => {
-   try {
+    try {
       console.log("Create Product Request:", productRequest);
 
       const formData = new FormData();
@@ -217,11 +217,11 @@ export const ProductService = {
 
   getAllChildProducts: async (): Promise<ApiResponse<ProductResponse[]>> => {
     try {
-        const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/child`);
-        return response.data; 
+      const response = await axiosInstance.get<ApiResponse<ProductResponse[]>>(`${API_URL}/child`);
+      return response.data;
     } catch (error) {
-        console.error("Get All Child Products Error:", error);
-        throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
+      console.error("Get All Child Products Error:", error);
+      throw new Error("Không thể lấy danh sách sản phẩm con. Vui lòng thử lại sau.");
     }
   },
 
@@ -232,13 +232,13 @@ export const ProductService = {
   //       body: formData
   //       // Note: Don't set Content-Type header, let browser set it automatically
   //     });
-  
+
   //     const data = await response.json();
-      
+
   //     if (!response.ok) {
   //       throw new Error(data.message || 'Cập nhật sản phẩm cha thất bại');
   //     }
-  
+
   //     return data.message;
   //   } catch (error) {
   //     console.error("Update Parent Product Error:", error);
@@ -284,7 +284,7 @@ export const ProductService = {
         stockQuantity: childProduct.stockQuantity,
         productAttributeValues: childProduct.productAttributeValues,
       };
-  
+
       formData.append('product', JSON.stringify(payload));
       if (images.length > 0 && !images.every((image) => image instanceof File)) {
         throw new Error('Một hoặc nhiều hình ảnh không hợp lệ');
@@ -292,12 +292,12 @@ export const ProductService = {
       images.forEach((image) => {
         formData.append('images', image);
       });
-  
+
       console.log("FormData entries for updateChildProduct:");
       for (const [key, value] of formData.entries()) {
         console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
-  
+
       const response = await axiosInstance.put<ApiResponse<string>>(
         `${API_URL}/child/${childId}`,
         formData,
@@ -307,13 +307,13 @@ export const ProductService = {
           },
         }
       );
-  
+
       console.log("Update Child Product Response:", JSON.stringify(response.data, null, 2));
-  
+
       if (response.status !== 200) {
         throw new Error(response.data.message || 'Cập nhật sản phẩm con thất bại');
       }
-  
+
       return response.data.message || 'Cập nhật sản phẩm con thành công';
     } catch (error: any) {
       console.error("Update Child Product Error:", error);
@@ -393,15 +393,24 @@ export const ProductService = {
       throw new Error("Không thể xóa sản phẩm. Vui lòng thử lại sau.");
     }
   },
-  
-
-getChildProductsByCategoryId: async (categoryId: number): Promise<ProductResponse[]> => {
-  const res = await axiosInstance.get<ProductResponse[]>(
-    `${API_URL}/findChildProductsByCate/${categoryId}`
-  );
-  return res.data; // ✅ không có .data
-},
- findChildProductsByName: async (keyword: string): Promise<ProductResponse[]> => {
+  getChildProductsBySku: async (sku: string): Promise<ProductResponse[]> => {
+    try {
+      const res = await axiosInstance.get<ProductResponse[]>(
+        `${API_URL}/findBySkuProductChild/${sku}`
+      );
+      return res.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy sản phẩm con theo SKU:", error);
+      throw new Error("Không thể lấy sản phẩm con. Vui lòng thử lại sau.");
+    }
+  },
+  getChildProductsByCategoryId: async (categoryId: number): Promise<ProductResponse[]> => {
+    const res = await axiosInstance.get<ProductResponse[]>(
+      `${API_URL}/findChildProductsByCate/${categoryId}`
+    );
+    return res.data; // ✅ không có .data
+  },
+  findChildProductsByName: async (keyword: string): Promise<ProductResponse[]> => {
     const encodedKeyword = encodeURIComponent(keyword);
     const res = await axiosInstance.get<ProductResponse[]>(
       `${API_URL}/finByNameProductChild/${encodedKeyword}`
