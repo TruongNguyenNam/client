@@ -261,6 +261,8 @@ interface AddressForm {
 }
 console.log('Selected userInfo:', authStore.userInfo);
 console.log('Selected address:', authStore.userInfo?.addresses);
+
+
 // dia chi
 
 // Map UserAddress[] -> AddressResponse[]
@@ -282,10 +284,11 @@ const addresses = computed(() => {
   }));
 });
 
+
 const handleAddressDelete = async () => {
-  await authStore.fetchUserInfo(); // Đồng bộ lại dữ liệu user và địa chỉ
-  addressDialogKey.value++;        // Nếu cần reset dialog
-  // Vue sẽ tự động cập nhật addresses và selectedAddress nếu bạn dùng computed như hướng dẫn ở trên
+  await authStore.fetchUserInfo(); //đồng bộ lại dữ liệu user và địa chỉ
+  addressDialogKey.value++;        //reset dialog
+ 
 };
 
 const showAddressDialog = ref(false);
@@ -302,7 +305,7 @@ function handleAddressSelect(address: AddressResponse) {
   form.value.addressWard = addr.addressWard;
   form.value.receiverName = addr.receiverName || '';
   form.value.receiverPhone = addr.receiverPhone || '';
-  form.value.shippingMethod = null; // reset nếu muốn chọn lại
+  form.value.shippingMethod = null; //reset nếu muốn chọn lại
 }
 
 // Chuyển đổi AddressResponse sang UserAddress
@@ -403,8 +406,9 @@ const handleAddressSubmit = async (submittedData: any) => {
   }
 };
 
+// hết
 
-//
+
 // Computed properties
 const subtotal: ComputedRef<number> = computed(() =>
   authStore.cart.reduce((sum, item) => {
