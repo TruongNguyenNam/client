@@ -68,9 +68,8 @@ export interface ShipmentRequest {
   estimatedDeliveryDate: string; // ISO 8601 format
   orderItemIds?: number[];
   shippingCost?: number;
+  
 }
-
-
 
 
 export interface OrderResponseClient {

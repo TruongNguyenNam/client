@@ -1,6 +1,7 @@
+<!-- File: InvoiceManagement.vue -->
 <template>
   <div class="layout-container">
-    <InvoiceHeader 
+    <InvoiceHeader
       :currentIsPos="currentIsPos"
       @set-invoice-type="setInvoiceType"
       @add-invoice="addInvoiceTab"
@@ -29,7 +30,7 @@
       :customers="customers"
       :paymentMethods="paymentMethods"
       :couponUsage="couponUsage"
-      :carriers="carriers" 
+      :carriers="carriers"
       :changeAmount="changeAmount"
       @update-total="updateTotal"
       @update-change="updateChange"
@@ -169,11 +170,11 @@ const getAllCustomers = async () => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách khách hàng:", error);
     customers.value = [];
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách khách hàng', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách khách hàng',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -189,11 +190,11 @@ const getAllPaymentMethods = async () => {
     }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách phương thức thanh toán:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách phương thức thanh toán', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách phương thức thanh toán',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -209,11 +210,11 @@ const getAllCouponUsage = async (customerId: number) => {
     }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách mã giảm giá:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách mã giảm giá', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách mã giảm giá',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -232,11 +233,11 @@ const getAllCarriers = async () => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách đơn vị vận chuyển:", error);
     carriers.value = [];
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải danh sách đơn vị vận chuyển', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách đơn vị vận chuyển',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -256,11 +257,11 @@ onMounted(async () => {
     loadInvoicesFromStorage();
   } catch (error) {
     console.error("Lỗi khi tải dữ liệu:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -298,6 +299,7 @@ const addInvoiceTab = async () => {
         id: orderData.id,
         orderCode: orderData.orderCode,
         userId: null,
+        addressId: null,
         orderStatus: orderData.orderStatus,
         orderTotal: orderData.orderTotal || 0,
         isPos: orderData.isPos,
@@ -306,34 +308,44 @@ const addInvoiceTab = async () => {
         createdAt: new Date().toISOString(),
         items: [],
         customerName: '',
+        phoneNumber: '',
+        email: '',
+        addressStreet: '',
+        addressWard: '',
+        addressDistrict: '',
+        addressProvince: '',
+        addressCity: '',
+        addressZipcode: '',
+        receiverName: '',
+        receiverPhone: '',
         discount: 0,
-        paidAmount: 0, 
+        paidAmount: 0,
         paymentMethod: paymentMethods.value[0]?.name || 'Tiền mặt',
         paymentMethodId: paymentMethods.value[0]?.id || 1,
         notes: '',
         carrierId: carriers.value[0]?.id || null,
         shippingCost: 0,
         estimatedDeliveryDate: null,
-        couponUsageIds: [] 
+        couponUsageIds: []
       };
       invoiceTabs.value.push(newInvoice);
       activeTabIndex.value = invoiceTabs.value.length - 1;
       saveInvoicesToStorage();
       startAutoRemoveTimer(newInvoice);
-      toast.add({ 
-        severity: 'success', 
-        summary: 'Thành công', 
-        detail: `Đã tạo hóa đơn ${newInvoice.orderCode}`, 
-        life: 3000 
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: `Đã tạo hóa đơn ${newInvoice.orderCode}`,
+        life: 3000
       });
     }
   } catch (error) {
     console.error('Lỗi khi tạo hóa đơn:', error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tạo hóa đơn. Vui lòng thử lại sau.', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tạo hóa đơn. Vui lòng thử lại sau.',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -371,10 +383,10 @@ const addProductToActiveInvoice = (product: any) => {
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
-    activeInvoice.items.push({ 
-      ...product, 
-      quantity: 1, 
-      price: product.price || 0 
+    activeInvoice.items.push({
+      ...product,
+      quantity: 1,
+      price: product.price || 0
     });
   }
   recalculateTotal(activeInvoice);
@@ -424,6 +436,7 @@ const openPaymentToolbar = (invoice: any) => {
   selectedInvoice.value = { ...invoice };
   selectedInvoice.value.paidAmount = 0;
   selectedInvoice.value.shippingCost = selectedInvoice.value.shippingCost || 0;
+  selectedInvoice.value.addressId = invoice.addressId ?? undefined; // Convert null to undefined
   updateChange();
   resetTimerOnInteraction(invoice);
 };
@@ -438,7 +451,7 @@ const closePaymentToolbar = () => {
     resetTimerOnInteraction(selectedInvoice.value);
   }
   selectedInvoice.value = null;
-  couponUsage.value = []; 
+  couponUsage.value = [];
 };
 
 const calculateFinalTotal = () => {
@@ -465,61 +478,61 @@ const updateChange = () => {
 };
 
 const handleVNPayCallback = async (queryParams: any) => {
-try {
-  const response = await VnPayService.verifyVnpayCallback(queryParams);
-  if (response.status && response.data.success) {
-    const orderCode = response.data.orderCode;
-    if (!orderCode) {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không tìm thấy mã đơn hàng trong phản hồi VNPay',
-        life: 3000,
-      });
-      return;
-    }
+  try {
+    const response = await VnPayService.verifyVnpayCallback(queryParams);
+    if (response.status && response.data.success) {
+      const orderCode = response.data.orderCode;
+      if (!orderCode) {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không tìm thấy mã đơn hàng trong phản hồi VNPay',
+          life: 3000,
+        });
+        return;
+      }
 
-    const invoice = invoiceTabs.value.find(tab => tab.orderCode === orderCode);
-    if (invoice) {
-      invoice.orderStatus = 'COMPLETED';
-      invoice.items.forEach((item: any) => {
-        const product = listProduct.value.find((p: any) => p.id === item.id);
-        if (product) {
-          product.stockQuantity = (product.stockQuantity ?? 0) - item.quantity;
-        }
-      });
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: `Thanh toán VNPay thành công cho đơn hàng ${orderCode}`,
-        life: 5000,
-      });
-      removeTabByOrderCode(orderCode); // Now safe to call with string
+      const invoice = invoiceTabs.value.find(tab => tab.orderCode === orderCode);
+      if (invoice) {
+        invoice.orderStatus = 'COMPLETED';
+        invoice.items.forEach((item: any) => {
+          const product = listProduct.value.find((p: any) => p.id === item.id);
+          if (product) {
+            product.stockQuantity = (product.stockQuantity ?? 0) - item.quantity;
+          }
+        });
+        toast.add({
+          severity: 'success',
+          summary: 'Thành công',
+          detail: `Thanh toán VNPay thành công cho đơn hàng ${orderCode}`,
+          life: 5000,
+        });
+        removeTabByOrderCode(orderCode);
+      } else {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: `Không tìm thấy đơn hàng ${orderCode}`,
+          life: 3000,
+        });
+      }
     } else {
       toast.add({
         severity: 'error',
         summary: 'Lỗi',
-        detail: `Không tìm thấy đơn hàng ${orderCode}`,
+        detail: response.data.message || 'Thanh toán VNPay thất bại',
         life: 3000,
       });
     }
-  } else {
+  } catch (error) {
+    console.error('Lỗi khi xử lý callback VNPay:', error);
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: response.data.message || 'Thanh toán VNPay thất bại',
+      detail: 'Lỗi hệ thống khi xử lý thanh toán VNPay',
       life: 3000,
     });
   }
-} catch (error) {
-  console.error('Lỗi khi xử lý callback VNPay:', error);
-  toast.add({
-    severity: 'error',
-    summary: 'Lỗi',
-    detail: 'Lỗi hệ thống khi xử lý thanh toán VNPay',
-    life: 3000,
-  });
-}
 };
 
 const completePayment = async () => {
@@ -530,6 +543,10 @@ const completePayment = async () => {
   }
   if (!selectedInvoice.value.isPos && !selectedInvoice.value.userId) {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn khách hàng', life: 3000 });
+    return;
+  }
+  if (!selectedInvoice.value.isPos && !selectedInvoice.value.addressId) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn địa chỉ giao hàng', life: 3000 });
     return;
   }
   if (!selectedInvoice.value.isPos && !selectedInvoice.value.carrierId) {
@@ -546,14 +563,14 @@ const completePayment = async () => {
     return;
   }
   if (selectedInvoice.value.paymentMethodId === 2) {
-    // VNPay: Thanh toán được xử lý trong initiateVNPayPayment
-    return;
+    return; // VNPay: Thanh toán được xử lý trong initiateVNPayPayment
   }
-  const customer = selectedInvoice.value.userId ? 
+  const customer = selectedInvoice.value.userId ?
     customers.value.find(c => c.id === selectedInvoice.value.userId) : null;
   const payload: OrderRequest = {
     orderCode: selectedInvoice.value.orderCode,
     userId: selectedInvoice.value.userId || undefined,
+    addressId: selectedInvoice.value.isPos ? undefined : selectedInvoice.value.addressId ?? undefined, // Convert null to undefined
     notes: selectedInvoice.value.notes || undefined,
     items: selectedInvoice.value.items.map((item: any) => ({
       productId: item.id,
@@ -571,8 +588,8 @@ const completePayment = async () => {
     payload.shipments = [{
       carrierId: selectedInvoice.value.carrierId || undefined,
       shippingCost: selectedInvoice.value.shippingCost || 0,
-      estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate 
-        ? new Date(selectedInvoice.value.estimatedDeliveryDate).toISOString() 
+      estimatedDeliveryDate: selectedInvoice.value.estimatedDeliveryDate
+        ? new Date(selectedInvoice.value.estimatedDeliveryDate).toISOString()
         : new Date().toISOString(),
       orderItemIds: orderItemIds
     }];
@@ -580,7 +597,7 @@ const completePayment = async () => {
   try {
     console.log("Payload gửi đến backend:", payload);
     const response = await OrderService.addProductToOrder(
-      selectedInvoice.value.orderCode, 
+      selectedInvoice.value.orderCode,
       payload
     );
     if (response && response.data) {
@@ -591,11 +608,11 @@ const completePayment = async () => {
         }
       });
       selectedInvoice.value.orderStatus = 'COMPLETED';
-      toast.add({ 
-        severity: 'success', 
-        summary: 'Thành công', 
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
         detail: `Đã thanh toán ${formatCurrency(finalTotal).replace('₫', 'đ')}. Tiền thừa: ${formatCurrency(changeAmount.value).replace('₫', 'đ')}`,
-        life: 5000 
+        life: 5000
       });
       const orderCode = selectedInvoice.value.orderCode;
       setTimeout(() => {

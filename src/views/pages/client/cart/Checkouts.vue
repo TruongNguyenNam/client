@@ -8,28 +8,38 @@
             <div class="user-info">
               <div class="avatar"></div>
               <div>
-                <div class="user-name">{{ authStore.userInfo?.username || authStore.userInfo?.email || 'Khách hàng' }}</div>
+                <div class="user-name">{{ authStore.userInfo?.username || authStore.userInfo?.email || 'Khách hàng' }}
+                </div>
                 <a href="#" class="logout-link" @click.prevent="logout">Đăng xuất</a>
               </div>
             </div>
-            <div class="form-group">
-              <input type="text" v-model="form.fullName" placeholder="Họ tên" class="form-input" />
-              <input type="text" v-model="form.phone" placeholder="Số điện thoại" class="form-input" />
-              <input type="text" v-model="form.email" placeholder="Email" class="form-input" />
-            </div>
-            <div class="form-group">
-              <select v-model="form.addressProvince" class="form-input" @change="onProvinceChange">
-                <option value="" disabled selected>Tỉnh / thành</option>
-                <option v-for="province in provinces" :key="province.id" :value="province.name">{{ province.name }}</option>
-              </select>
-              <select v-model="form.addressDistrict" class="form-input" :disabled="!form.addressProvince" @change="onDistrictChange">
-                <option value="" disabled selected>Quận / huyện</option>
-                <option v-for="district in districts" :key="district.id" :value="district.name">{{ district.name }}</option>
-              </select>
-              <select v-model="form.addressWard" class="form-input" :disabled="!form.addressDistrict">
-                <option value="" disabled selected>Phường / xã</option>
-                <option v-for="ward in wards" :key="ward.id" :value="ward.name">{{ ward.name }}</option>
-              </select>
+
+            <AddressSelectDialog v-model:visible="showAddressDialog" :addresses="addresses || []"
+              :customer-id="authStore.userInfo?.userId ?? 0" :key="addressDialogKey" @select="handleAddressSelect"
+              @cancel="showAddressDialog = false" @submitAddress="handleAddressSubmit"
+              @deleteAddress="handleAddressDelete" />
+            <!-- Địa chỉ giao hàng -->
+            <div class="shipping-address-block">
+              <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
+              <div class="bg-white p-3 rounded border mb-3">
+                <div v-if="addresses.length > 0" class="mt-3">
+                  <div class="mb-2">
+                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{
+                      selectedAddress?.receiverPhone }}
+                  </div>
+                  <div class="text-sm text-gray-700 leading-relaxed">
+                    <i class="pi pi-map-marker mr-2"></i> {{ fullAddress }}
+                  </div>
+                </div>
+                <div v-if="addresses.length > 1" class="mt-3">
+                  <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"
+                    @click="showAddressDialog = true" />
+                </div>
+                <div v-if="addresses.length <= 1" class="mt-3">
+                  <Button label="Thêm địa chỉ giao hàng" icon="pi pi-map-marker" outlined class="w-full"
+                    @click="showAddressDialog = true" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -37,10 +47,12 @@
         <div class="shipping-method-card card">
           <h2 class="card-title">Phương thức vận chuyển</h2>
           <div class="card-content">
-            <div v-if="!form.addressWard" class="shipping-note">Vui lòng chọn phường/xã để có danh sách phương thức vận chuyển.</div>
+            <div v-if="!form.addressWard" class="shipping-note">Vui lòng chọn phường/xã để có danh sách phương thức vận
+              chuyển.</div>
             <div v-else v-for="carrier in carriers" :key="carrier.id" class="shipping-option">
               <input type="radio" :id="carrier.name" v-model="form.shippingMethod" :value="carrier" />
-              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn phí' }})</label>
+              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost)
+                : 'Miễn Phí' }})</label>
             </div>
           </div>
         </div>
@@ -56,6 +68,8 @@
         </div>
       </div>
 
+
+
       <div class="right-section">
         <div class="order-summary-card card">
           <div class="card-content">
@@ -63,23 +77,19 @@
               <img :src="getFirstImage(item.product?.imageUrl)" alt="product" class="product-image" />
               <div class="product-details">
                 <div class="product-name">{{ item.product?.name || 'Không có tên' }}</div>
-                <div class="product-size">Thuộc tính: {{ getAttributesText(item.product?.productAttributeValueResponses) }}</div>
+                <div class="product-size">Thuộc tính: {{ getAttributesText(item.product?.productAttributeValueResponses)
+                }}</div>
               </div>
               <div class="product-price">{{ formatPrice(item.product?.price * item.quantity) }}</div>
             </div>
 
             <div class="coupon-section">
               <h3 class="text-lg font-medium text-gray-900 mb-4">Mã giảm giá</h3>
-              <MultiSelect
-                v-model="selectedCoupons"
-                :options="couponUsage"
-                optionLabel="couponCode"
-                placeholder="Chọn mã giảm giá (nếu có)"
-                class="w-full"
-                @change="applyCoupons"
-              >
+              <MultiSelect v-model="selectedCoupons" :options="couponUsage" optionLabel="couponCode"
+                placeholder="Chọn mã giảm giá (nếu có)" class="w-full" @change="applyCoupons">
                 <template #option="slotProps">
-                  <div>{{ slotProps.option.couponCode }} (-{{ formatPrice(slotProps.option.couponDiscountAmount) }})</div>
+                  <div>{{ slotProps.option.couponCode }} (-{{ formatPrice(slotProps.option.couponDiscountAmount) }})
+                  </div>
                 </template>
               </MultiSelect>
               <p v-if="couponDiscount > 0" class="text-green-600 text-sm mt-2">
@@ -90,12 +100,18 @@
 
             <div class="total-section">
               <div class="total-item">Tạm tính <span class="total-amount">{{ formatPrice(subtotal) }}</span></div>
-              <div class="total-item">Giảm giá <span class="total-amount">{{ couponDiscount > 0 ? '-' + formatPrice(couponDiscount) : '—' }}</span></div>
-              <div class="total-item">Phí vận chuyển <span class="total-amount">{{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn phí' }}</span></div>
-              <div class="total-item total-final">Tổng cộng <span class="total-amount">{{ formatPrice(total) }}</span></div>
+              <div class="total-item">Giảm giá <span class="total-amount">{{ couponDiscount > 0 ? '-' +
+                formatPrice(couponDiscount)
+                : '—' }}</span></div>
+              <div class="total-item">Phí vận chuyển <span class="total-amount">{{ shippingCost > 0 ?
+                formatPrice(shippingCost) :
+                'Miễn phí' }}</span></div>
+              <div class="total-item total-final">Tổng cộng <span class="total-amount">{{ formatPrice(total) }}</span>
+              </div>
             </div>
 
-            <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt hàng</button>
+            <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt
+              hàng</button>
           </div>
         </div>
       </div>
@@ -112,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import type { CouponUsageClientResponse } from '../../../../model/client/couponUsage';
 import type { CarrierClientResponse } from '../../../../model/client/carrier';
@@ -127,9 +143,13 @@ import { useRouter, useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../../../stores/auth';
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
-import Dialog from 'primevue/dialog';
+import Dialog from 'primevue/dialog'; 
 import Button from 'primevue/button';
 import MultiSelect from 'primevue/multiselect';
+import AddressSelectDialog from '../../../../views/pages/admin/order/AddressSelectDialog.vue';
+import type { AddressResponse } from '../../../../model/admin/address';
+import { AddressService } from '../../../../service/admin/AddressService';
+import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
 
 const formatPrice = (price: number | undefined | null): string => {
   if (price == null || isNaN(price)) {
@@ -160,6 +180,8 @@ const form = ref<CheckoutForm>({
   addressProvince: '',
   addressDistrict: '',
   addressWard: '',
+  receiverName: '',
+  receiverPhone: '',
   shippingMethod: null,
   paymentMethod: null,
 });
@@ -183,6 +205,8 @@ interface CheckoutForm {
   addressProvince: string;
   addressDistrict: string;
   addressWard: string;
+  receiverName?: string;
+  receiverPhone?: string;
   shippingMethod: CarrierClientResponse | null;
   paymentMethod: PaymentMethodClientResponse | null;
 }
@@ -196,7 +220,7 @@ interface UserResponse {
   phoneNumber: string | null;
   gender: string | null;
   isActive: boolean;
-  address: UserAddress | null;
+  address: UserAddress[] | null;
 }
 
 interface UserAddress {
@@ -209,6 +233,9 @@ interface UserAddress {
   addressZipcode: string;
   addressDistrict: string;
   addressProvince: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  isDefault?: boolean;
 }
 
 interface UpdateUserForm {
@@ -228,8 +255,156 @@ interface AddressForm {
   addressZipcode: string;
   addressDistrict: string;
   addressProvince: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  isDefault?: boolean;
+}
+console.log('Selected userInfo:', authStore.userInfo);
+console.log('Selected address:', authStore.userInfo?.addresses);
+// dia chi
+
+// Map UserAddress[] -> AddressResponse[]
+const addresses = computed(() => {
+  const addressesRaw = authStore.userInfo?.addresses ?? [];
+  return addressesRaw.map(addr => ({
+    id: addr.id,
+    street: addr.addressStreet,
+    ward: addr.addressWard,
+    city: addr.addressCity,
+    state: addr.addressState,
+    country: addr.addressCountry,
+    zipcode: addr.addressZipcode,
+    district: addr.addressDistrict,
+    province: addr.addressProvince,
+    receiverName: addr.receiverName ?? "",
+    receiverPhone: addr.receiverPhone ?? "",
+    isDefault: !!addr.isDefault,
+  }));
+});
+
+const handleAddressDelete = async () => {
+  await authStore.fetchUserInfo(); // Đồng bộ lại dữ liệu user và địa chỉ
+  addressDialogKey.value++;        // Nếu cần reset dialog
+  // Vue sẽ tự động cập nhật addresses và selectedAddress nếu bạn dùng computed như hướng dẫn ở trên
+};
+
+const showAddressDialog = ref(false);
+const selectedAddress = ref<UserAddress | null>(null);
+const addressDialogKey = ref(0);
+
+// Xử lý khi chọn địa chỉ từ dialog
+function handleAddressSelect(address: AddressResponse) {
+  const addr = mapToUserAddress(address);
+  selectedAddress.value = addr;
+  showAddressDialog.value = false;
+  form.value.addressProvince = addr.addressProvince;
+  form.value.addressDistrict = addr.addressDistrict;
+  form.value.addressWard = addr.addressWard;
+  form.value.receiverName = addr.receiverName || '';
+  form.value.receiverPhone = addr.receiverPhone || '';
+  form.value.shippingMethod = null; // reset nếu muốn chọn lại
 }
 
+// Chuyển đổi AddressResponse sang UserAddress
+function mapToUserAddress(address: AddressResponse): UserAddress {
+  return {
+    id: address.id,
+    addressStreet: address.street,
+    addressWard: address.ward,
+    addressCity: address.city,
+    addressState: address.state,
+    addressCountry: address.country,
+    addressZipcode: address.zipcode,
+    addressDistrict: address.district,
+    addressProvince: address.province,
+    receiverName: address.receiverName,
+    receiverPhone: address.receiverPhone,
+    isDefault: address.isDefault,
+  };
+}
+
+const fullAddress = computed(() => {
+  if (!selectedAddress.value) return '';
+  const addr = selectedAddress.value;
+  return [
+    addr.addressStreet,
+    addr.addressWard,
+    addr.addressDistrict,
+    addr.addressProvince,
+    addr.addressCity,
+    addr.addressZipcode,
+
+  ].filter(Boolean).join(', ');
+});
+console.log('Selected address:', selectedAddress.value);
+
+const provinceOptions = provincesData.data;
+// id của địa chỉ được chọn
+const selectedAddressId = ref<number | null>(null);
+
+// Lấy địa chỉ mặc định hoặc đầu tiên nếu không có địa chỉ mặc định
+watch(addresses, (newAddresses) => {
+  if (newAddresses.length > 0) {
+    const defaultAddress = newAddresses.find(addr => addr.isDefault) || newAddresses[0];
+    selectedAddress.value = mapToUserAddress(defaultAddress);
+  } else {
+    selectedAddress.value = null;
+  }
+}, { immediate: true });
+
+const handleAddressSubmit = async (submittedData: any) => {
+  if (!authStore.userInfo?.userId) return;
+  const province = provinceOptions.find(p => p.level1_id === submittedData.province);
+  const district = province?.level2s.find(d => d.level2_id === submittedData.district);
+  const ward = district?.level3s.find(w => w.level3_id === submittedData.ward);
+
+  const finalAddress = {
+    ...submittedData,
+    province: province?.name || '',
+    district: district?.name || '',
+    ward: ward?.name || '',
+    country: 'Việt Nam'
+  };
+  try {
+    if (submittedData.id) {
+      // Cập nhật địa chỉ
+      const resAdd = await AddressService.updateAddressForCustomer(authStore.userInfo?.userId, submittedData.id, finalAddress);
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã cập nhật địa chỉ thành công.',
+        life: 3000
+      });
+      if (resAdd.data?.id) {
+        await authStore.fetchUserInfo();
+        // RESET lại dialog
+        addressDialogKey.value++;
+        showAddressDialog.value = false;
+      }
+      selectedAddressId.value = submittedData.id; // Cập nhật lại địa chỉ đang chọn
+    } else {
+      // Thêm mới địa chỉ
+      const resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã thêm địa chỉ mới cho khách hàng.',
+        life: 3000
+      });
+
+    }
+    await authStore.fetchUserInfo();
+    // RESET lại dialog
+    addressDialogKey.value++;
+    showAddressDialog.value = false;
+  } catch (error) {
+    console.error('Lỗi xử lý địa chỉ:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xử lý địa chỉ', life: 3000 });
+  }
+};
+
+
+//
 // Computed properties
 const subtotal: ComputedRef<number> = computed(() =>
   authStore.cart.reduce((sum, item) => {
@@ -376,29 +551,13 @@ onMounted(async () => {
       authStore.cart = [];
     }
 
-    if (authStore.userInfo) {
-      form.value.fullName = authStore.userInfo.username || authStore.userInfo.email || '';
-      form.value.phone = authStore.userInfo.phoneNumber || '';
-      form.value.email = authStore.userInfo.email || '';
-      if (authStore.userInfo.address) {
-        const provinceName = normalizeLocationName(authStore.userInfo.address.addressProvince || '');
-        const province = provinces.value.find(p => normalizeLocationName(p.name) === provinceName);
-        if (province) {
-          form.value.addressProvince = province.name;
-          districts.value = province.level2s || [];
-          const districtName = normalizeLocationName(authStore.userInfo.address.addressDistrict || '');
-          const district = districts.value.find(d => normalizeLocationName(d.name) === districtName);
-          if (district) {
-            form.value.addressDistrict = district.name;
-            wards.value = district.level3s || [];
-            const wardName = normalizeLocationName(authStore.userInfo.address.addressWard || '');
-            const ward = wards.value.find(w => normalizeLocationName(w.name) === wardName);
-            if (ward) {
-              form.value.addressWard = ward.name;
-            }
-          }
-        }
-      }
+    if (authStore.userInfo && authStore.userInfo.addresses && authStore.userInfo.addresses.length > 0) {
+      const defaultAddress = authStore.userInfo.addresses.find(addr => addr.isDefault) || authStore.userInfo.addresses[0];
+      form.value.addressProvince = defaultAddress.addressProvince;
+      form.value.addressDistrict = defaultAddress.addressDistrict;
+      form.value.addressWard = defaultAddress.addressWard;
+      form.value.receiverName = defaultAddress.receiverName || '';
+      form.value.receiverPhone = defaultAddress.receiverPhone || '';
     }
     note.value = route.query.note?.toString() || localStorage.getItem('cartNote') || '';
 
@@ -591,17 +750,18 @@ const submitOrder = async () => {
       phoneNumber: form.value.phone,
       gender: authStore.userInfo?.gender || '',
       address: {
-        id: authStore.userInfo?.address?.id || 0,
+        id: authStore.userInfo?.addresses?.id || 0,
         addressStreet: '',
         addressWard: form.value.addressWard,
         addressDistrict: form.value.addressDistrict,
         addressProvince: form.value.addressProvince,
-        addressCity: authStore.userInfo?.address?.addressCity || '',
-        addressState: authStore.userInfo?.address?.addressState || '',
-        addressCountry: authStore.userInfo?.address?.addressCountry || 'Việt Nam',
-        addressZipcode: authStore.userInfo?.address?.addressZipcode || '',
+        addressCity: authStore.userInfo?.addresses?.addressCity || '',
+        addressState: authStore.userInfo?.addresses?.addressState || '',
+        addressCountry: authStore.userInfo?.addresses?.addressCountry || 'Việt Nam',
+        addressZipcode: authStore.userInfo?.addresses?.addressZipcode || '',
       },
     };
+    
     await AuthService.updateUserAddress(authStore.userId!, updateForm);
     await authStore.fetchUserInfo();
 

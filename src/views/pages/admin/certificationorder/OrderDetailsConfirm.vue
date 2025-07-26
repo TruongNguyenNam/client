@@ -59,10 +59,22 @@
       <p><strong>Người nhận:</strong> {{ order?.address?.username }}</p>
       <p><strong>SĐT:</strong> {{ order?.address?.phoneNumber }}</p>
       <p><strong>Email:</strong> {{ order?.address?.email }}</p>
-      <p><strong>Địa chỉ:</strong>
-        {{ order?.address?.addressStreet }}, {{ order?.address?.addressDistrict }},
-        {{ order?.address?.addressCity }}, {{ order?.address?.addressProvince }}
-      </p>
+
+
+      <strong>Địa chỉ:</strong>
+      <div class="address-list">
+        <div class="address-card">
+          <div class="address-info">
+            <p>
+              <strong>
+                <i class="pi pi-user mr-2"></i>{{ order?.address?.receiverName }}</strong> - {{
+                  order?.address?.receiverPhone }} <br>
+              <i class="pi pi-map-marker mr-2"></i>{{ order?.address?.addressStreet }}, {{ order?.address?.addressWard
+              }}, {{ order?.address?.addressDistrict }},{{ order?.address?.addressProvince }}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card mb-4">
@@ -673,5 +685,37 @@ watch(order, (newOrder) => {
   font-size: 0.9rem;
   color: #718096;
   font-style: italic;
+}
+
+.address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.address-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.address-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badge-default {
+  background: #6366f1;
+  color: white;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+  margin-top: 4px;
 }
 </style>

@@ -1,4 +1,4 @@
-<!-- load thông tin người dùng -->
+load thông tin người dùng
 
 <template>
   <div class="checkout-page">
@@ -186,6 +186,7 @@ interface CheckoutForm {
   addressProvince: string;
   addressDistrict: string;
   addressWard: string;
+  
   shippingMethod: CarrierClientResponse | null;
   paymentMethod: PaymentMethodClientResponse | null;
 }

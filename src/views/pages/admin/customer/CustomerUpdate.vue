@@ -284,17 +284,17 @@ const handleSubmit = async () => {
         return;
     }
 
-    // Kiểm tra địa chỉ mặc định
-    const defaultAddress = customer.value.addresses.find(a => a.isDefault);
-    if (!defaultAddress) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Thiếu địa chỉ mặc định',
-            detail: 'Khách hàng cần ít nhất một địa chỉ mặc định để cập nhật.',
-            life: 3000
-        });
-        return;
-    }
+    // // Kiểm tra địa chỉ mặc định
+    // const defaultAddress = customer.value.addresses.find(a => a.isDefault);
+    // if (!defaultAddress) {
+    //     toast.add({
+    //         severity: 'warn',
+    //         summary: 'Thiếu địa chỉ mặc định',
+    //         detail: 'Khách hàng cần ít nhất một địa chỉ mặc định để cập nhật.',
+    //         life: 3000
+    //     });
+    //     return;
+    // }
 
     const requestBody = {
         id: customer.value.id,
