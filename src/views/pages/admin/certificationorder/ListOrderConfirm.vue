@@ -7,24 +7,24 @@
   
           <!-- TabView cho các trạng thái đơn hàng -->
           <TabView v-model:activeIndex="activeTab" @update:activeIndex="onTabChange">
-  <TabPanel :header="`Tất cả (${totalRecords})`">
-    <span>Tất cả đơn hàng</span>
-  </TabPanel>
-  <TabPanel :header="`Đang chờ (${statusCounts.PENDING || 0})`">
-    <span>Đơn hàng đang chờ</span>
-  </TabPanel>
-  <TabPanel :header="`Hoàn thành (${statusCounts.COMPLETED || 0})`">
-    <span>Đơn hàng hoàn thành</span>
-  </TabPanel>
-  <TabPanel :header="`Huỷ bỏ (${statusCounts.CANCELLED || 0})`">
-    <span>Đơn hàng huỷ bỏ</span>
-  </TabPanel>
-  <TabPanel :header="`Đang giao (${statusCounts.SHIPPED || 0})`">
-    <span>Đơn hàng đang giao</span>
-  </TabPanel>
-  <TabPanel :header="`Trả hàng (${statusCounts.RETURNED || 0})`">
-    <span>Đơn hàng trả hàng</span>
-  </TabPanel>
+            <TabPanel :header="`Tất cả (${totalRecords})`">
+              <span>Tất cả đơn hàng</span>
+            </TabPanel>
+            <TabPanel :header="`Đang chờ (${statusCounts.PENDING || 0})`">
+              <span>Đơn hàng đang chờ</span>
+            </TabPanel>
+            <TabPanel :header="`Hoàn thành (${statusCounts.COMPLETED || 0})`">
+              <span>Đơn hàng hoàn thành</span>
+            </TabPanel>
+            <TabPanel :header="`Huỷ bỏ (${statusCounts.CANCELLED || 0})`">
+              <span>Đơn hàng huỷ bỏ</span>
+            </TabPanel>
+            <TabPanel :header="`Đang giao (${statusCounts.SHIPPED || 0})`">
+              <span>Đơn hàng đang giao</span>
+            </TabPanel>
+            <TabPanel :header="`Trả hàng (${statusCounts.RETURNED || 0})`">
+              <span>Đơn hàng trả hàng</span>
+            </TabPanel>
           </TabView>
 
   
@@ -89,10 +89,15 @@
                 </div>
               </div>
             </template>
-  
-            <Column header="ID" style="min-width: 6rem">
-              <template #body="slotProps">{{ slotProps.data.id }}</template>
+            <Column header="STT" style="width: 4rem">
+                    <template #body="slotProps">
+                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                    </template>
             </Column>
+            
+            <!-- <Column header="ID" style="min-width: 6rem">
+              <template #body="slotProps">{{ slotProps.data.id }}</template>
+            </Column> -->
   
             <Column header="Mã đơn hàng" style="min-width: 14rem">
               <template #body="slotProps">{{ slotProps.data.orderCode }}</template>
@@ -100,9 +105,10 @@
   
             <Column header="Người đặt" style="min-width: 12rem">
               <template #body="slotProps">
-                {{ slotProps.data.address ? slotProps.data.address.username : '---' }}
+                {{ slotProps.data.address?.username || 'Vãng lai' }}
               </template>
             </Column>
+
   
             <Column header="Tổng tiền" style="min-width: 10rem">
               <template #body="slotProps">
@@ -221,55 +227,51 @@
 
   
 const getOrderList = async () => {
-    loading.value = true;
-    try {
-      // Get status based on active tab
-      const statusMap = [
-        null, // Tab 0: Tất cả
-        OrderStatus.PENDING, // Tab 1
-        OrderStatus.COMPLETED, // Tab 2
-        OrderStatus.CANCELLED, // Tab 3
-        OrderStatus.SHIPPED, // Tab 4
-        OrderStatus.RETURNED // Tab 5
-      ];
-      const status = statusMap[activeTab.value];
-  
-      // Update filters.orderStatus.value to reflect the active tab
-      filters.value.orderStatus.value = status;
-  
-      const response = status
-        ? await OrderService.getOrdersByStatus(status)
-        : await OrderService.getAllOrders();
-      if (response.data) {
-        orderList.value = response.data
-          .filter(order => {
-            // Filter by isPos
-            const isPosFilter = filters.value.isPos.value;
-            if (isPosFilter !== null && isPosFilter !== undefined) {
-              return order.isPos === isPosFilter;
-            }
-            return true;
-          })
-          .filter(order => {
-            // Filter by global search
-            const globalSearch = filters.value.global.value;
-            if (globalSearch) {
-              const searchValue = globalSearch.toLowerCase();
-              return (
-                order.orderCode.toLowerCase().includes(searchValue) ||
-                formatOrderStatus(order.orderStatus).toLowerCase().includes(searchValue)
-              );
-            }
-            return true;
-          });
-  
-        totalRecords.value = orderList.value.length;
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách đơn hàng:', error);
+  loading.value = true;
+  try {
+    const statusMap = [
+      null,
+      OrderStatus.PENDING,
+      OrderStatus.COMPLETED,
+      OrderStatus.CANCELLED,
+      OrderStatus.SHIPPED,
+      OrderStatus.RETURNED
+    ];
+    const status = statusMap[activeTab.value];
+    filters.value.orderStatus.value = status;
+
+    const response = status
+      ? await OrderService.getOrdersByStatus(status)
+      : await OrderService.getAllOrders();
+    console.log('Fetched orders:', response.data); // Debug log
+    if (response.data) {
+      orderList.value = response.data
+        .filter(order => {
+          const isPosFilter = filters.value.isPos.value;
+          if (isPosFilter !== null && isPosFilter !== undefined) {
+            return order.isPos === isPosFilter;
+          }
+          return true;
+        })
+        .filter(order => {
+          const globalSearch = filters.value.global.value;
+          if (globalSearch) {
+            const searchValue = globalSearch.toLowerCase();
+            return (
+              order.orderCode.toLowerCase().includes(searchValue) ||
+              formatOrderStatus(order.orderStatus).toLowerCase().includes(searchValue)
+            );
+          }
+          return true;
+        });
+      console.log('Filtered orders:', orderList.value); // Debug log
+      totalRecords.value = orderList.value.length;
     }
-    loading.value = false;
-  };
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách đơn hàng:', error);
+  }
+  loading.value = false;
+};
   
   const onTabChange = (index: number) => {
     activeTab.value = index;

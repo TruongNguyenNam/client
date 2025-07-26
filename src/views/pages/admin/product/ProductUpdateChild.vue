@@ -111,7 +111,7 @@
 
           <!-- Stock Quantity -->
           <div class="field col-12 md:col-6">
-            <label for="stockQuantity">Kho</label>
+            <label for="stockQuantity">Số Lượng</label>
             <InputNumber 
               id="stockQuantity" 
               v-model="product.stockQuantity" 

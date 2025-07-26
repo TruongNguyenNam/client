@@ -128,6 +128,11 @@ const formatGender = (gender: string | null | undefined) => {
             </div>
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
+          <Column header="STT" style="width: 4rem">
+                    <template #body="slotProps">
+                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                    </template>
+          </Column>
           <Column field="username" header="Tên khách hàng" sortable />
           <Column field="email" header="Email" sortable />
           <Column field="phoneNumber" header="Số điện thoại" sortable />

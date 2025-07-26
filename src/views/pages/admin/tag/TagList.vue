@@ -231,8 +231,13 @@ const confirmDeleteTag = (selectedTag) => {
                     </template>
 
                     <Column selectionMode="multiple" header="" style="min-width: 3rem" />
-                    <Column field="id" header="ID" sortable style="min-width: 5rem"></Column>
-                    <Column field="name" header="Tên Tag" sortable style="min-width: 12rem"></Column>
+                    <Column header="STT" style="width: 4rem">
+                        <template #body="slotProps">
+                        {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                        </template>
+                     </Column>
+                    <!-- <Column field="id" header="ID" sortable style="min-width: 5rem"></Column> -->
+                    <Column field="name" header="Tên nhãn" sortable style="min-width: 12rem"></Column>
                     <Column field="description" header="Mô tả" sortable style="min-width: 20rem"></Column>
 
                     <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
