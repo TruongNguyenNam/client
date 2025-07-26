@@ -302,7 +302,6 @@ const validateBeforeComplete = () => {
   }
   return true;
 };
-
 const initiateVNPayPayment = async () => {
   if (!validateBeforeComplete()) return;
   isPaymentProcessing.value = true;
@@ -321,15 +320,6 @@ const initiateVNPayPayment = async () => {
       shipments: props.invoice.isPos
         ? undefined
         : [
-
-          {
-            carrierId: props.invoice.carrierId!,
-            shippingCost: props.invoice.shippingCost ?? 0,
-            estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
-            orderItemIds: props.invoice.items.map(item => item.id),
-          },
-        ],
-      couponUsageIds: props.invoice.couponUsageIds?.length ? props.invoice.couponUsageIds : undefined,
             {
               carrierId: props.invoice.carrierId!,
               shippingCost: props.invoice.shippingCost ?? 0,
@@ -528,7 +518,6 @@ const handleCustomerSelect = (customer: CustomerResponse) => {
   }
 
   fetchCouponUsage();
-
 };
 
 
@@ -565,6 +554,7 @@ const handleAddressSubmit = async (submittedData: any) => {
     ward: ward?.name || '',
     country: 'Việt Nam'
   };
+
   try {
     if (submittedData.id) {
       // Cập nhật địa chỉ
@@ -608,9 +598,7 @@ const handleAddressSubmit = async (submittedData: any) => {
 
 // id của địa chỉ được chọn
 const selectedAddressId = ref<number | null>(null);
-
-
-// // Xử lý khi khách hàng được chọn từ CustomerDialog
+// Xử lý khi khách hàng được chọn từ CustomerDialog
 // const handleCustomerSelect = (customer: CustomerResponse) => {
 //   selectedCustomerId.value = customer.id;
 //   selectedCustomerName.value = customer.username;
@@ -621,32 +609,6 @@ const selectedAddressId = ref<number | null>(null);
 //   props.invoice.phoneNumber = customer.phoneNumber;
 //   props.invoice.email = customer.email;
 
-
-// if (!props.invoice.isPos) {
-//   // Nếu chưa chọn địa chỉ cụ thể, mới lấy mặc định
-//   if (!selectedAddressId.value) {
-//     const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
-//     if (defaultAddress) {
-//       selectedAddressId.value = defaultAddress.id;
-
-//       props.invoice.addressStreet = defaultAddress.street;
-//       props.invoice.addressWard = defaultAddress.ward;
-//       props.invoice.addressDistrict = defaultAddress.district;
-//       props.invoice.addressProvince = defaultAddress.province;
-//       props.invoice.addressCity = defaultAddress.city || '';
-//       props.invoice.addressZipcode = defaultAddress.zipcode || '';
-//       props.invoice.receiverName = defaultAddress.receiverName;
-//       props.invoice.receiverPhone = defaultAddress.receiverPhone;
-//     } else {
-//       toast.add({
-//         severity: 'warn',
-//         summary: 'Chưa có địa chỉ',
-//         detail: 'Khách hàng chưa có địa chỉ giao hàng',
-//         life: 3000
-//       });
-//     }
-//   }
-// }
 //   if (!props.invoice.isPos) {
 //     // Nếu là đơn giao hàng, cho phép chọn địa chỉ cụ thể
 //     // Giả sử bạn có dialog hoặc dropdown chọn địa chỉ ở đây
@@ -672,7 +634,6 @@ const selectedAddressId = ref<number | null>(null);
 //       });
 //     }
 
-
 //   } else {
 //     // Đơn tại cửa hàng, không cần nhập địa chỉ
 //     props.invoice.addressStreet = '';
@@ -690,21 +651,6 @@ const selectedAddress = computed(() => {
   if (!selectedCustomer.value?.addresses) return null;
   return selectedCustomer.value.addresses.find(a => a.id === selectedAddressId.value)
     || selectedCustomer.value.addresses[0];
-});
-
-
-watch(selectedAddressId, (newId) => {
-  const addr = selectedCustomer.value?.addresses?.find(a => a.id === newId);
-  if (addr) {
-    props.invoice.addressStreet = addr.street;
-    props.invoice.addressWard = addr.ward;
-    props.invoice.addressDistrict = addr.district;
-    props.invoice.addressProvince = addr.province;
-    props.invoice.addressCity = addr.city || '';
-    props.invoice.addressZipcode = addr.zipcode || '';
-    props.invoice.receiverName = addr.receiverName;
-    props.invoice.receiverPhone = addr.receiverPhone;
-  }
 });
 
 const addressDialogKey = ref(0);
@@ -787,7 +733,6 @@ watch(() => props.invoice.paidAmount, () => {
 watch(() => props.invoice.shippingCost, () => {
   handleShippingCostChange();
 }, { immediate: true });
-
 </script>
 
 <style scoped>
@@ -833,3 +778,4 @@ watch(() => props.invoice.shippingCost, () => {
   box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
 }
 </style>
+```

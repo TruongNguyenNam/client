@@ -90,7 +90,7 @@
       </p>
       <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil" class="p-button-info" 
         @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
->>>>>>> dcc058a8f96e0a173a939c577526d83b1cae5b7a
+
     </div>
 
     <div class="card mb-4">
