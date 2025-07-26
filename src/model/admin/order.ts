@@ -86,7 +86,6 @@ export interface OrderRequest {
     receiverName: string;
     receiverPhone: string;
     isDefault:boolean;
-
     isActive: boolean;
   }
 
@@ -117,10 +116,6 @@ export interface OrderRequest {
   export interface CreateInvoiceRequest {
     isPos: boolean;
   }
-
-
-  
-
 
 
   // export interface UpdateOrderStatusRequest {
