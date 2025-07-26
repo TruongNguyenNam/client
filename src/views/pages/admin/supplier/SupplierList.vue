@@ -2,6 +2,84 @@
 import { ref, onMounted, watch, defineEmits } from "vue";
 import { SupplierService } from "../../../../service/admin/SupplierService";
 import { useRouter } from "vue-router";
+import { exportToExcel, importFromExcel, downloadExcelTemplate } from '@/utils/excel';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
+
+// Export file Excel nhà cung cấp
+const exportSupplierss = () => {
+    if (!suppliers.value.length) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu để xuất.', life: 3000 });
+        return;
+    }
+
+    const data = suppliers.value.map(supplier => ({
+        Name: supplier.name,
+        Description: supplier.description
+    }));
+
+    exportToExcel(data, 'DanhSachNhaCungCap');
+    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xuất Excel thành công', life: 3000 });
+};
+
+
+// Tải file mẫu Excel
+const downloadSupplierTemplate = () => {
+    downloadExcelTemplate(['Name', 'Description'], 'Template_Supplier');
+};
+
+const importSupplierss = async (event) => {
+    const file = event.files?.[0];
+    if (!file) return;
+
+    try {
+        const importedData = await importFromExcel(file);
+        let added = 0;
+
+        const existingNames = suppliers.value.map(s => s.name.trim().toLowerCase());
+        const duplicatedNames = [];
+
+        for (const item of importedData) {
+            if (item.Name) {
+                const name = item.Name.trim();
+                const description = item.Description || '';
+
+                if (!existingNames.includes(name.toLowerCase())) {
+                    const supplierData = { name, description };
+                    await SupplierService.saveSupplier(supplierData);
+                    added++;
+                } else {
+                    duplicatedNames.push(name);
+                }
+            }
+        }
+
+        if (added > 0) {
+            toast.add({
+                severity: 'success',
+                summary: 'Thành công',
+                detail: `Đã thêm ${added} nhà cung cấp từ Excel.`,
+                life: 4000
+            });
+        }
+
+        if (duplicatedNames.length > 0) {
+            toast.add({
+                severity: 'warn',
+                summary: 'Trùng tên',
+                detail: `Bỏ qua ${duplicatedNames.length} nhà cung cấp trùng tên: ${duplicatedNames.join(', ')}`,
+                life: 5000
+            });
+        }
+
+        await loadSuppliers();
+    } catch (error) {
+        console.error("Lỗi khi import Excel:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Import thất bại.', life: 4000 });
+    }
+};
 
 
 const suppliers = ref([]); // Danh sách nhà cung cấp
@@ -9,8 +87,8 @@ const loading = ref(true); // Trạng thái đang tải dữ liệu
 const totalRecords = ref(0); // Tổng số nhà cung cấp
 const searchTerm = ref('');
 const lazyParams = ref({
-    page: 0,  
-    size: 5, 
+    page: 0,
+    size: 5,
 });
 const selectedSuppliers = ref([]); // Danh sách nhà cung cấp được chọn
 const supplierUpdateDialog = ref(false); // Dialog sửa nhà cung cấp
@@ -172,10 +250,15 @@ const debouncedSearch = (event) => {
                             @click="deleteSelectedSuppliers" :disabled="!selectedSuppliers.length" />
                     </template>
                     <template v-slot:end>
-                        <Button label="Import" icon="pi pi-upload" class="p-button-help mr-2"
-                            @click="importSuppliers" />
-                        <Button label="Export" icon="pi pi-download" class="p-button-info" @click="exportSuppliers" />
+                        <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
+                            @click="downloadSupplierTemplate" />
+
+                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
+                            class="mr-2 inline-block" @select="importSupplierss" :auto="true" />
+
+                        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportSupplierss" />
                     </template>
+
                 </Toolbar>
                 <!-- Phần tìm kiếm -->
                 <div class="flex align-items-center justify-content-between mb-4">
@@ -189,7 +272,7 @@ const debouncedSearch = (event) => {
                         </span>
                     </div>
                 </div>
-              
+
                 <!-- Modal Thêm Nhà Cung Cấp -->
                 <Dialog v-model:visible="addSupplierDialog" :style="{ width: '500px' }" header="Thêm Nhà Cung Cấp" modal
                     class="custom-dialog">
@@ -216,8 +299,7 @@ const debouncedSearch = (event) => {
 
                     <template #footer>
                         <!-- Nút Hủy -->
-                        <Button label="Hủy" icon="pi pi-times" class="p-button-text"
-                            @click="hideAddDialog" />
+                        <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="hideAddDialog" />
                         <!-- Nút Thêm -->
                         <Button label="Thêm" icon="pi pi-check" class="p-button-primary save-button"
                             @click="addSupplier" />
@@ -259,47 +341,35 @@ const debouncedSearch = (event) => {
                 </Dialog>
 
                 <!-- Bảng hiển thị danh sách nhà cung cấp -->
-                <DataTable
-                v-model:selection="selectedSuppliers"
-                :value="suppliers"
-                :paginator="true"
-                :first="lazyParams.page * lazyParams.size"
-                :rows="lazyParams.size"
-                :totalRecords="totalRecords"
-                emptyMessage="Không tìm thấy nhà cung cấp nào."
-                :loading="loading"
-                @page="onPage"
-                :rowsPerPageOptions="[5, 10, 20, 50]"
-                :globalFilterFields="['name', 'description']"
-                class="p-datatable-gridlines"
-                :rowHover="true"
-                >
-                <template #header>
-                    <div class="flex justify-content-between align-items-center">
-                    <span class="text-xl font-semibold">Danh sách nhà cung cấp</span>
-                    </div>
-                </template>
-                <Column selectionMode="multiple" headerStyle="width: 3em" />
-                <!-- Cột số thứ tự -->
-                <Column header="STT" style="width: 4rem">
+                <DataTable v-model:selection="selectedSuppliers" :value="suppliers" :paginator="true"
+                    :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
+                    emptyMessage="Không tìm thấy nhà cung cấp nào." :loading="loading" @page="onPage"
+                    :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['name', 'description']"
+                     class="p-datatable-gridlines"
+                    :rowHover="true"
+                    >
+                    <template #header>
+                        <div class="flex justify-content-between align-items-center">
+                            <span class="text-xl font-semibold">Danh sách nhà cung cấp</span>
+                        </div>
+                    </template>
+                    <Column selectionMode="multiple" headerStyle="width: 3em" />
+                    <Column header="STT" style="width: 4rem">
                     <template #body="slotProps">
                     {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
                     </template>
-                </Column>
-              
-                <Column field="name" header="Tên nhà cung cấp" sortable class="nhaCungCap" />
-                <Column field="description" header="Mô tả" sortable />
-                <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
-                    <template #body="slotProps">
-                    <div class="flex">
-                        <Button
-                        icon="pi pi-pencil"
-                        class="p-button-rounded p-button-success mr-2"
-                        @click="editSupplier(slotProps.data)"
-                        />
-                    </div>
-                    </template>
-                </Column>
+          </Column>
+                    <!-- <Column field="id" header="ID" sortable /> -->
+                    <Column field="name" header="Tên nhà cung cấp" sortable class="nhaCungCap" />
+                    <Column field="description" header="Mô tả" sortable />
+                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem" >
+                        <template #body="slotProps">
+                            <div class="flex">
+                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
+                                    @click="editSupplier(slotProps.data)" />
+                            </div>
+                        </template>
+                    </Column>
                 </DataTable>
             </div>
         </div>
