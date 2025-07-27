@@ -53,10 +53,10 @@ const exportCustomers = () => {
     Name: c.username,
     Email: c.email,
     PhoneNumber: c.phoneNumber,
-    Address: [
-      c.addressStreet, c.addressWard, c.addressDistrict,
-      c.addressProvince, c.addressCity
-    ].filter(Boolean).join(', '),
+    // Address: [
+    //   c.addressStreet, c.addressWard, c.addressDistrict,
+    //   c.addressProvince, c.addressCity
+    // ].filter(Boolean).join(', '),
     Gender: c.gender
   }));
 
@@ -84,16 +84,16 @@ const importCustomers = async (event: any) => {
           phoneNumber: item.PhoneNumber?.trim(),
           gender: ['MALE', 'FEMALE', 'OTHER'].includes(gender) ? gender : 'OTHER',
           role: 'CUSTOMER',
-          address: {
-            street: item.AddressStreet?.trim() || '',
-            ward: item.Ward?.trim() || '',
-            district: item.District?.trim() || '',
-            province: item.Province?.trim() || '',
-            city: item.City?.trim() || '',
-            state: item.State?.trim() || '',         // thêm vào
-            country: item.Country?.trim() || 'Vietnam',  // thêm vào
-            zipcode: item.Zipcode?.trim() || '',     // thêm vào
-          },
+          // address: {
+          //   street: item.AddressStreet?.trim() || '',
+          //   ward: item.Ward?.trim() || '',
+          //   district: item.District?.trim() || '',
+          //   province: item.Province?.trim() || '',
+          //   city: item.City?.trim() || '',
+          //   state: item.State?.trim() || '',         // thêm vào
+          //   country: item.Country?.trim() || 'Vietnam',  // thêm vào
+          //   zipcode: item.Zipcode?.trim() || '',     // thêm vào
+          // },
         };
 
 
@@ -253,6 +253,11 @@ const formatGender = (gender: string | null | undefined) => {
             </div>
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
+          <Column header="STT" style="width: 4rem">
+                    <template #body="slotProps">
+                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                    </template>
+          </Column>
           <Column field="username" header="Tên khách hàng" sortable />
           <Column field="email" header="Email" sortable />
           <Column field="phoneNumber" header="Số điện thoại" sortable />

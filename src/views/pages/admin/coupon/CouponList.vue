@@ -422,6 +422,11 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         </div>
                     </template>
                     <Column selectionMode="multiple" headerStyle="width: 3em" />
+                    <Column header="STT" style="width: 4rem">
+                    <template #body="slotProps">
+                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                    </template>
+                    </Column>
                     <Column field="codeCoupon" header="Mã phiếu" />
                     <Column field="couponName" header="Tên phiếu" sortable />
                     <Column header="Đã tặng" sortable>

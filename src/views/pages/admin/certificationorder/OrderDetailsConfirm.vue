@@ -56,20 +56,31 @@
 
     <div class="card mb-4">
       <h3>👤 Thông tin khách hàng</h3>
-      <p><strong>Người nhận:</strong> {{ order?.address?.username }}</p>
-      <p><strong>SĐT:</strong> {{ order?.address?.phoneNumber }}</p>
+      <p><strong>Người đặt:</strong>
+        <span v-if="order?.address?.username">{{ order.address.username }}</span>
+        <span v-else>Vãng lai</span>
+      </p>
+      <p><strong>Người nhận:</strong> {{ order?.address?.receiverName }}</p>
+      <p><strong>SĐT:</strong> {{ order?.address?.receiverPhone }}</p>
       <p><strong>Email:</strong> {{ order?.address?.email }}</p>
       <p><strong>Địa chỉ:</strong>
-        {{ order?.address?.addressStreet }}, {{ order?.address?.addressDistrict }},
-        {{ order?.address?.addressCity }}, {{ order?.address?.addressProvince }}
+        {{ [
+          order?.address?.addressStreet,
+          order?.address?.addressWard,
+          order?.address?.addressDistrict,
+          order?.address?.addressCity,
+          order?.address?.addressProvince
+        ].filter(Boolean).join(', ') || 'Chưa có thông tin' }}
       </p>
+      <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil" class="p-button-info" 
+        @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
     </div>
 
     <div class="card mb-4">
       <h3>💳 Thông tin thanh toán</h3>
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
-      <Button label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
+      <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
         style="margin-top: 10px;" />
     </div>
 
@@ -81,47 +92,92 @@
       <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
       <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
     </div>
-  </div>
 
-  <div class="card mb-4">
-    <DataTable :value="orderItems" class="p-datatable-gridlines" responsiveLayout="scroll">
-      <Column field="productName" header="Tên sản phẩm" />
-      <Column header="Hình ảnh">
-        <template #body="slotProps">
-          <img :src="slotProps.data.productImage" alt="Hình ảnh sản phẩm" class="w-10 h-10 rounded-full"
-            style="width: 100px; height: 100px;" />
-        </template>
-      </Column>
-      <Column header="Số lượng">
-        <template #body="slotProps">
-          <div class="flex align-items-center gap-2">
-            <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)" />
-            <span>{{ slotProps.data.quantity }}</span>
-            <Button icon="pi pi-plus" rounded text @click="increaseQuantity(slotProps.index)" />
-          </div>
-        </template>
-      </Column>
-      <Column header="Giá sản phẩm">
-        <template #body="slotProps">
-          {{ slotProps.data.unitPrice.toLocaleString('vi-VN') }} đ
-        </template>
-      </Column>
-      <Column header="Thành tiền">
-        <template #body="slotProps">
-          {{ (slotProps.data.quantity * slotProps.data.unitPrice).toLocaleString('vi-VN') }} đ
-        </template>
-      </Column>
-      <Column header="Hành động">
-        <template #body="slotProps">
-          <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" />
-        </template>
-      </Column>
-    </DataTable>
+    <div class="card mb-4">
+      <DataTable :value="orderItems" class="p-datatable-gridlines" responsiveLayout="scroll">
+        <Column field="productName" header="Tên sản phẩm" />
+        <Column header="Hình ảnh">
+          <template #body="slotProps">
+            <img :src="slotProps.data.productImage" alt="Hình ảnh sản phẩm" class="w-10 h-10 rounded-full"
+              style="width: 100px; height: 100px;" />
+          </template>
+        </Column>
+        <Column header="Số lượng">
+          <template #body="slotProps">
+            <div class="flex align-items-center gap-2">
+              <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)" />
+              <span>{{ slotProps.data.quantity }}</span>
+              <Button icon="pi pi-plus" rounded text @click="increaseQuantity(slotProps.index)" />
+            </div>
+          </template>
+        </Column>
+        <Column header="Giá sản phẩm">
+          <template #body="slotProps">
+            {{ slotProps.data.unitPrice.toLocaleString('vi-VN') }} đ
+          </template>
+        </Column>
+        <Column header="Thành tiền">
+          <template #body="slotProps">
+            {{ (slotProps.data.quantity * slotProps.data.unitPrice).toLocaleString('vi-VN') }} đ
+          </template>
+        </Column>
+        <Column header="Hành động">
+          <template #body="slotProps">
+            <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" />
+          </template>
+        </Column>
+      </DataTable>
 
-    <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
-      <Button label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
-        style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" />
+      <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
+        <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
+          style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" />
+      </div>
     </div>
+
+    <Dialog v-model:visible="showAddressDialog" modal header="Cập nhật địa chỉ" :style="{ width: '50vw' }">
+      <div class="p-field">
+        <label for="receiverName">Tên người nhận</label>
+        <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" />
+      </div>
+      <div class="p-field">
+        <label for="receiverPhone">Số điện thoại</label>
+        <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full" />
+      </div>
+      <div class="p-field">
+        <label for="email">Email</label>
+        <InputText id="email" v-model="tempAddress.email" class="w-full" />
+      </div>
+      <div class="p-field">
+        <label for="province">Tỉnh/Thành phố</label>
+        <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" 
+          option-label="name" option-value="name" @change="updateDistricts" 
+          class="w-full" placeholder="Chọn Tỉnh/Thành phố" />
+      </div>
+      <div class="p-field">
+        <label for="district">Quận/Huyện</label>
+        <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" 
+          option-label="name" option-value="name" @change="updateWards" 
+          class="w-full" placeholder="Chọn Quận/Huyện" :disabled="!selectedProvince" />
+      </div>
+      <div class="p-field">
+        <label for="ward">Phường/Xã</label>
+        <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" 
+          option-label="name" option-value="name" 
+          class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" />
+      </div>
+      <div class="p-field">
+        <label for="street">Đường</label>
+        <InputText id="street" v-model="tempAddress.addressStreet" class="w-full" />
+      </div>
+      <div class="p-field">
+        <label for="zipcode">Mã bưu điện</label>
+        <InputText id="zipcode" v-model="tempAddress.addressZipcode" class="w-full" />
+      </div>
+      <div class="flex justify-content-end gap-2">
+        <Button label="Hủy" class="p-button-text" @click="showAddressDialog = false" />
+        <Button label="Lưu" class="p-button-primary" @click="saveAddress" :loading="loading" />
+      </div>
+    </Dialog>
 
     <Dialog v-model:visible="showProductDialog" modal header="Chọn sản phẩm" :style="{ width: '80vw' }">
       <ListProduct @select="handleAddProduct" />
@@ -168,7 +224,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, getCurrentInstance } from 'vue';
-import type { OrderResponse, OrderItemResponse } from '../../../../model/admin/order';
+import type { OrderResponse, OrderItemResponse,AddressResponse } from '../../../../model/admin/order';
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { OrderService } from '../../../../service/admin/OrderService';
@@ -188,7 +244,8 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-
+import { AddressService } from '../../../../service/admin/AddressService';
+import provincesData from '../../../../assets/data/vietnam_provinces.json';
 // Thêm renderKey để kiểm soát render
 const renderKey = ref(0);
 
@@ -241,6 +298,200 @@ interface ShipmentRequest {
   estimatedDeliveryDate: string;
 }
 
+export interface AddressRequest {
+  street: string;
+  ward: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode: string;
+  district: string;
+  province: string;
+  receiverName: string;
+  receiverPhone: string;
+  isDefault: boolean;
+}
+
+
+// Biến reactive
+const showAddressDialog = ref(false);
+const tempAddress = ref<AddressResponse>({
+  id: 0,
+  email: '',
+  userId: 0,
+  username: '',
+  phoneNumber: '',
+  role: '',
+  addressStreet: '',
+  addressWard: '',
+  addressCity: '',
+  addressState: '',
+  addressCountry: 'Vietnam',
+  addressZipcode: '',
+  addressDistrict: '',
+  addressProvince: '',
+  receiverName: '',
+  receiverPhone: '',
+  isDefault: false,
+  isActive: true
+});
+
+const selectedProvince = ref<string>('');
+const selectedDistrict = ref<string>('');
+const provinceOptions = ref(provincesData.data); // Dữ liệu Tỉnh/Thành phố
+const districtOptions = ref<any[]>([]);
+const wardOptions = ref<any[]>([]);
+
+
+const openAddressDialog = () => {
+  if (!order.value?.address) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không có thông tin địa chỉ để chỉnh sửa',
+      life: 3000
+    });
+    return;
+  }
+
+  // Sao chép dữ liệu địa chỉ hiện tại vào tempAddress
+  tempAddress.value = { ...order.value.address };
+  console.log('Order Address:', tempAddress.value); // Debug: Log address data
+
+  // Normalize and set selectedProvince
+  const normalizeName = (name: string) => name.replace(/^(Tỉnh|Thành phố|Quận|Huyện|Xã|Phường)\s+/i, '').trim();
+  const provinceName = normalizeName(tempAddress.value.addressProvince || '');
+  const province = provinceOptions.value.find(p => normalizeName(p.name) === provinceName);
+  selectedProvince.value = province ? province.name : tempAddress.value.addressProvince || '';
+  console.log('Normalized Province:', provinceName, 'Found Province:', province); // Debug
+
+  // Populate districtOptions
+  updateDistricts();
+
+  // Set selectedDistrict, use a fallback if addressDistrict is empty
+  const districtName = normalizeName(tempAddress.value.addressDistrict || '');
+  const district = districtOptions.value.find(d => normalizeName(d.name) === districtName);
+  selectedDistrict.value = district ? district.name : '';
+  if (!selectedDistrict.value && districtOptions.value.length > 0) {
+    selectedDistrict.value = districtOptions.value[0].name; // Default to first district if none found
+  }
+  console.log('Normalized District:', districtName, 'Found District:', district, 'Selected District:', selectedDistrict.value); // Debug
+
+  // Populate wardOptions
+  updateWards();
+
+  // Set ward, with fallback if not found
+  const wardName = normalizeName(tempAddress.value.addressWard || '');
+  const ward = wardOptions.value.find(w => normalizeName(w.name) === wardName);
+  tempAddress.value.addressWard = ward ? ward.name : tempAddress.value.addressWard || '';
+  if (!tempAddress.value.addressWard && wardOptions.value.length > 0) {
+    tempAddress.value.addressWard = wardOptions.value[0].name; // Default to first ward if none found
+  }
+  console.log('Normalized Ward:', wardName, 'Found Ward:', ward, 'Selected Ward:', tempAddress.value.addressWard); // Debug
+
+  showAddressDialog.value = true;
+};
+
+const updateDistricts = () => {
+  const province = provinceOptions.value.find(p => p.name === selectedProvince.value);
+  if (province && province.level2s) {
+    districtOptions.value = province.level2s;
+    selectedDistrict.value = ''; // Reset Quận/Huyện
+    wardOptions.value = []; // Reset Phường/Xã
+    tempAddress.value.addressDistrict = '';
+    tempAddress.value.addressWard = '';
+    console.log('District Options for Province', selectedProvince.value, ':', districtOptions.value); // Debug
+  } else {
+    districtOptions.value = [];
+    wardOptions.value = [];
+    console.warn('No districts found for province:', selectedProvince.value);
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: `Không tìm thấy Quận/Huyện cho ${selectedProvince.value}`,
+      life: 3000
+    });
+  }
+};
+
+const updateWards = () => {
+  const district = districtOptions.value.find(d => d.name === selectedDistrict.value);
+  if (district && district.level3s) {
+    wardOptions.value = district.level3s;
+    tempAddress.value.addressWard = ''; // Reset Phường/Xã
+    console.log('Ward Options for District', selectedDistrict.value, ':', wardOptions.value); // Debug
+  } else {
+    wardOptions.value = [];
+    console.warn('No wards found for district:', selectedDistrict.value);
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: `Không tìm thấy Phường/Xã cho ${selectedDistrict.value}`,
+      life: 3000
+    });
+  }
+};
+
+// Lưu địa chỉ đã chỉnh sửa
+const saveAddress = async () => {
+  if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
+      life: 3000
+    });
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const addressRequest: AddressRequest = {
+      street: tempAddress.value.addressStreet,
+      ward: tempAddress.value.addressWard,
+      city: tempAddress.value.addressCity,
+      state: tempAddress.value.addressState,
+      country: tempAddress.value.addressCountry,
+      zipcode: tempAddress.value.addressZipcode,
+      district: tempAddress.value.addressDistrict,
+      province: tempAddress.value.addressProvince,
+      receiverName: tempAddress.value.receiverName,
+      receiverPhone: tempAddress.value.receiverPhone,
+      isDefault: tempAddress.value.isDefault
+    };
+
+    const response = await AddressService.updateAddressForCustomer(
+      tempAddress.value.userId,
+      tempAddress.value.id,
+      addressRequest
+    );
+
+    if (response.data) {
+      // Cập nhật lại order.address với dữ liệu mới
+      order.value.address = { ...tempAddress.value };
+      showAddressDialog.value = false;
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Cập nhật địa chỉ thành công',
+        life: 3000
+      });
+      renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
+    }
+  } catch (error: any) {
+    console.error('Lỗi khi cập nhật địa chỉ:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
+      life: 3000
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+
 const steps = [
   { label: 'Chờ xác nhận', value: OrderStatus.PENDING, icon: 'pi pi-clock' },
   { label: 'Đang giao', value: OrderStatus.SHIPPED, icon: 'pi pi-truck' },
@@ -248,6 +499,8 @@ const steps = [
   { label: 'Đã huỷ', value: OrderStatus.CANCELLED, icon: 'pi pi-times-circle' },
   { label: 'Trả hàng', value: OrderStatus.RETURNED, icon: 'pi pi-refresh' }
 ];
+
+
 
 // Lọc steps dựa trên isPos
 const filteredSteps = computed(() => {
