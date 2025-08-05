@@ -1,17 +1,30 @@
 <template>
   <div>
-    <h3 class="mb-3 text-xl font-semibold text-primary">📋 Danh sách yêu cầu hoàn hàng</h3>
+    <h3 class="mb-3 text-xl font-semibold text-primary">📋 Danh sách hàng trả về </h3>
+    <div class="mb-4 flex justify-end">
+  <span class="p-input-icon-left">
+    <i class="pi pi-search" />
+   <InputText 
+  v-model="searchTerm" 
+  placeholder="Tìm theo mã hoàn hàng..." 
+  class="w-72"
+  @input="searchByCode"
+/>
 
-    <DataTable
-      :value="returnRequestListResponse"
-      :loading="loading"
-      dataKey="orderCode"
-      :rows="5"
-      :paginator="true"
-      :rowsPerPageOptions="[5, 10, 20]"
-      responsiveLayout="scroll"
-      currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} đơn"
-    >
+  </span>
+</div>
+
+   <DataTable
+  :value="returnRequestListResponse"
+  :loading="loading"
+  dataKey="orderCode"
+  :rows="5"
+  :paginator="true"
+  :rowsPerPageOptions="[5, 10, 20]"
+  responsiveLayout="scroll"
+  currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} đơn"
+>
+
       <Column header="Ảnh">
     <template #body="slotProps">
       <img
@@ -29,7 +42,7 @@
       <Column header="Thao tác">
   <template #body="slotProps">
     <router-link
-      :to="`/admin/return-request/detail/${slotProps.data.code}`"
+      :to="`/admin/return-request/check-order-return-Detail/${slotProps.data.code}`"
       class="p-button p-button-sm p-button-outlined"
     >
       Xem chi tiết
@@ -41,18 +54,46 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { ref, onMounted } from 'vue';
 import { ReturnOderService } from '../../../../service/admin/ReturnOderService';
 import type { ReturnRequestListResponse } from '../../../../model/admin/returnOrder';
-
+import InputText from 'primevue/inputtext'; // đừng quên import
+const allReturnRequests = ref<ReturnRequestListResponse[]>([]);
 const returnRequestListResponse = ref<ReturnRequestListResponse[]>([]);
+
 const loading = ref(false);
+const searchTerm = ref('');
+
+
+
+
+
+
+const searchByCode = async () => {
+  loading.value = true;
+  try {
+    if (!searchTerm.value.trim()) {
+      returnRequestListResponse.value = allReturnRequests.value;
+    } else {
+      const result = await ReturnOderService.findByCode(searchTerm.value.trim());
+      returnRequestListResponse.value = result;
+    }
+  } catch (error) {
+    console.error('Lỗi khi tìm theo mã hoàn hàng:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+
 
 onMounted(async () => {
   loading.value = true;
   try {
-    const res = await ReturnOderService.getAllReturnRequests();
-    returnRequestListResponse.value = res;
+    const res = await ReturnOderService.returnOrderApproved();
+   allReturnRequests.value = res;
+returnRequestListResponse.value = res;
   } catch (error) {
     console.error('Lỗi khi gọi API:', error);
   } finally {

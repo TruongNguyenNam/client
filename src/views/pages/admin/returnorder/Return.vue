@@ -8,7 +8,7 @@
 
       <!-- Màn 2: Kiểm tra hàng -->
       <TabPanel header="📦 Kiểm tra hàng trả về">
-        <ReturnInspection />
+        <CheckReturnOrdor></CheckReturnOrdor>
       </TabPanel>
 
       <!-- Màn 3: Phản hồi & hoàn tiền -->
@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { ref,watch } from 'vue'
 import ReturnRequestList from './ReturnRequestList.vue';
+import CheckReturnOrdor from './CheckReturnOrdor.vue';
 
 const activeTab = ref(0)
 watch(activeTab, (newIndex) => {

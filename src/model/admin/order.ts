@@ -17,6 +17,7 @@ export interface OrderRequest {
   export interface PaymentRequest {
     paymentMethodId: number;
     amount: number;
+    returnUrl?: string; 
   }
   
   export interface ShipmentRequest {
@@ -46,6 +47,7 @@ export interface OrderRequest {
     createdDate: string; 
     lastModifiedBy: number;
     lastModifiedDate: string; 
+    paymentUrl?: string;
   }
   
   export interface OrderItemResponse {
@@ -61,8 +63,8 @@ export interface OrderRequest {
     paymentMethodName: string;
     paymentMethodId:number;
     amount: number;
-    status: string;
-    paidDate?: string; 
+    paymentStatus: string;
+    paymentDate?: string; 
   }
   
   export interface AddressResponse {
@@ -86,6 +88,7 @@ export interface OrderRequest {
   export interface ShipmentResponse {
     id: number;
     shipmentDate: string; 
+    shippingCost: number;
     shipmentStatus: string;
     trackingNumber: string;
     carrierName: string;
@@ -109,6 +112,8 @@ export interface OrderRequest {
     isPos: boolean;
   }
 
+
+  
 
 
 

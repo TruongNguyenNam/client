@@ -6,6 +6,7 @@ import type { UserResponse } from '../service/auth/AuthService';
 import { useAuthStore } from '../stores/auth';
 
 const router = createRouter({
+
   history: createWebHashHistory(),
   routes: [
     {
@@ -44,9 +45,11 @@ const router = createRouter({
         {path: '/findByShip',name: 'certificationorder',component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue')},
          {path: '/certificationorder/:id',name: 'certificationorder-detail',component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue')},
           {path: '/adReturnOder',name: 'adReturnOder',component: () => import('../views/pages/admin/returnorder/Return.vue')},
-          {path: '/admin/return-request/detail/:orderCode',name: 'adReturnOderDetail',component: () => import('../views/pages/admin/returnorder/ReturnRequestDetail.vue')}
+          {path: '/admin/return-request/detail/:orderCode',name: 'adReturnOderDetail',component: () => import('../views/pages/admin/returnorder/ReturnRequestDetail.vue')},
+            {path: '/admin/return-request/check-order-return-Detail/:orderCode',name: 'adCheckReturnOderDetail',component: () => import('../views/pages/admin/returnorder/CheckReturnOrderDetail.vue')}
       ],
     },
+
 
     {
       path: '/client',

@@ -1,3 +1,4 @@
+<!-- chưa merge vietha -->
 <template>
   <Sidebar v-model:visible="isVisible" position="right" class="payment-toolbar"
     :style="{ width: '550px', maxWidth: '100%' }" :dismissable="false" @hide="$emit('close')">

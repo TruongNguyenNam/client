@@ -4,8 +4,9 @@
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-bold text-primary">
         🧾 Chi tiết đơn hoàn hàng: {{ orderCode }}
+       
       </h2>
-    
+       
       <Button
         icon="pi pi-arrow-left"
         class="p-button-text p-button-sm"
@@ -13,7 +14,9 @@
         v-tooltip="'Quay lại'"
       />
     </div>
+     <h2 class="text-xl font-bold text-primary"> Đối chiếu với sản phẩm nhận được</h2>
 
+     
     <DataTable
       :value="returnRequestListResponse"
       :loading="loading"
@@ -106,19 +109,18 @@
       <Column header="Thao tác" style="width: 150px">
         <template #body="slotProps">
           <div class="flex justify-center gap-2">
-            <Button
-              icon="pi pi-check"
-              class="p-button-sm p-button-success"
-              @click="approveRequest(slotProps.data.id)"
-              v-tooltip="'Duyệt yêu cầu'"
-              :disabled="slotProps.data.status !== 'Chờ phản hồi'"
-            />
+           <Button
+  icon="pi pi-check"
+  class="p-button-sm p-button-success"
+  @click="showApproveDialog(slotProps.data.id)"
+  v-tooltip="'Duyệt yêu cầu'"
+/>
             <Button
               icon="pi pi-times"
               class="p-button-sm p-button-danger"
               @click="showRejectDialog(slotProps.data.id)"
               v-tooltip="'Từ chối yêu cầu'"
-              :disabled="slotProps.data.status !== 'Chờ phản hồi'"
+             
             />
           </div>
         </template>
@@ -205,6 +207,56 @@
         </div>
       </template>
     </Dialog>
+    <!-- Dialog chọn kiểu duyệt -->
+<Dialog
+  v-model:visible="approveDialogVisible"
+  header="Xác nhận duyệt yêu cầu"
+  :modal="true"
+  :style="{ width: '450px' }"
+>
+  <div class="mb-4">
+    <label class="font-semibold block mb-3">Chọn cách xử lý hàng hoàn:</label>
+    
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center">
+        <RadioButton 
+          v-model="selectedApproveStatus" 
+          inputId="returnToStock" 
+          name="approveOption" 
+          value="RETURNED_TO_STOCK" 
+        />
+        <label for="returnToStock" class="ml-2 cursor-pointer">
+          <span class="font-medium">✅ Cộng lại kho</span>
+          <p class="text-sm text-gray-600 mt-1">Hàng còn tốt, có thể bán lại</p>
+        </label>
+      </div>
+      
+      <div class="flex items-center">
+        <RadioButton 
+          v-model="selectedApproveStatus" 
+          inputId="discarded" 
+          name="approveOption" 
+          value="DISCARDED" 
+        />
+        <label for="discarded" class="ml-2 cursor-pointer">
+          <span class="font-medium">🗑️ Không cộng kho</span>
+          <p class="text-sm text-gray-600 mt-1">Hàng hỏng, không thể bán lại</p>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <template #footer>
+    <Button label="Hủy" class="p-button-text" @click="cancelApprove" />
+    <Button
+      label="Xác nhận duyệt"
+      icon="pi pi-check"
+      class="p-button-success"
+      :disabled="!selectedApproveStatus"
+      @click="confirmApprove"
+    />
+  </template>
+</Dialog>
   </div>
 </template>
 
@@ -235,6 +287,74 @@ const rejectDialogVisible = ref(false);
 const rejectReason = ref('');
 const currentRejectId = ref<number | null>(null);
 
+// Thay đổi các biến liên quan
+const approveDialogVisible = ref(false);
+const selectedApproveStatus = ref<string | null>(null);
+const currentApproveId = ref<number | null>(null);
+
+const showApproveDialog = (id: number) => {
+  currentApproveId.value = id;
+  selectedApproveStatus.value = null; // Reset lựa chọn khi mở dialog
+  approveDialogVisible.value = true;
+};
+
+const cancelApprove = () => {
+  approveDialogVisible.value = false;
+  currentApproveId.value = null;
+  selectedApproveStatus.value = null;
+};
+
+const confirmApprove = async () => {
+  if (!currentApproveId.value || !selectedApproveStatus.value) return;
+
+  try {
+    loading.value = true;
+    
+    // Tạo thông báo tùy theo lựa chọn
+    let adminNote = '';
+    if (selectedApproveStatus.value === 'RETURNED_TO_STOCK') {
+      adminNote = 'Yêu cầu đã được duyệt. Hàng sẽ được cộng lại kho.';
+    } else {
+      adminNote = 'Yêu cầu đã được duyệt. Hàng không được cộng lại kho do tình trạng không đảm bảo.';
+    }
+
+    const requestData: ReturnRequestListRequest = {
+      adminNote: adminNote
+    };
+
+    await ReturnOderService.responseReturnRequestItem(
+      currentApproveId.value,
+      selectedApproveStatus.value,
+      requestData
+    );
+
+    toast.add({
+      severity: 'success',
+      summary: 'Đã duyệt',
+      detail: selectedApproveStatus.value === 'RETURNED_TO_STOCK' 
+        ? 'Hàng sẽ được cộng lại kho' 
+        : 'Hàng không được cộng kho',
+      life: 3000
+    });
+
+    // Làm mới dữ liệu
+    const res = await ReturnOderService.getReturnItemsByOrderCodeApproved(orderCode);
+    returnRequestListResponse.value = res;
+
+    // Đóng dialog
+    cancelApprove();
+  } catch (error) {
+    console.error('Lỗi khi duyệt yêu cầu:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể duyệt yêu cầu',
+      life: 3000
+    });
+  } finally {
+    loading.value = false;
+  }
+};
 const goBack = () => {
   router.back();
 };
@@ -303,7 +423,7 @@ const confirmReject = async () => {
     });
 
     // Làm mới dữ liệu
-    const res = await ReturnOderService.getReturnItemsByOrderCode(orderCode);
+    const res = await ReturnOderService.getReturnItemsByOrderCodeApproved(orderCode);
     returnRequestListResponse.value = res;
     
     // Đóng dialog và reset
@@ -342,7 +462,7 @@ const approveRequest = async (id: number) => {
     });
 
     // Làm mới dữ liệu
-    const res = await ReturnOderService.getReturnItemsByOrderCode(orderCode);
+    const res = await ReturnOderService.getReturnItemsByOrderCodeApproved(orderCode);
     returnRequestListResponse.value = res;
   } catch (error) {
     toast.add({
@@ -359,7 +479,7 @@ const approveRequest = async (id: number) => {
 onMounted(async () => {
   loading.value = true;
   try {
-    const res = await ReturnOderService.getReturnItemsByOrderCode(orderCode);
+    const res = await ReturnOderService.getReturnItemsByOrderCodeApproved(orderCode);
     returnRequestListResponse.value = res;
   } catch (error) {
     console.error('Lỗi khi tải chi tiết đơn hoàn hàng:', error);
@@ -389,6 +509,20 @@ function getStatusSeverity(status: string) {
 </script>
 
 <style scoped>
+/* Thêm vào phần style scoped */
+:deep(.p-radiobutton .p-radiobutton-box) {
+  border-color: #6366f1;
+}
+
+:deep(.p-radiobutton .p-radiobutton-box.p-highlight) {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+:deep(.p-radiobutton .p-radiobutton-box.p-highlight:hover) {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
 .p-5 {
   background-color: #fff;
   border-radius: 8px;

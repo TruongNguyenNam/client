@@ -130,10 +130,10 @@ const saveCategory = async () => {
             return;
         }
 
-        if (!trimmedDescription) {
-            toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Mô tả danh mục không được để trống', life: 3000 });
-            return;
-        }
+        // if (!trimmedDescription) {
+        //     toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Mô tả danh mục không được để trống', life: 3000 });
+        //     return;
+        // }
 
         const isDuplicate = isDuplicateCategoryName(trimmedName, category.value.id);
 

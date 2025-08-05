@@ -24,3 +24,6 @@ export interface ReturnMediaAdminResponse{
   url:string
   type:string
 }
+export interface ReturnRequestListRequest{
+adminNote:string
+}

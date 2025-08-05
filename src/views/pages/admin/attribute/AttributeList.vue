@@ -40,6 +40,7 @@
     loading.value = true;
     try {
       const data = await ProductAttributeService.searchProductAttribute(searchTerm.value);
+      console.log(data)
       listProduct.value = data ?? []; // Cập nhật danh sách sản phẩm từ API
     } catch (error: unknown) {
       if (error instanceof Error) {

@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type {
   ReturnRequestListResponse,
-  ReturnRequestItemResponse
+  ReturnRequestItemResponse,
+  ReturnRequestListRequest
 } from '../../model/admin/returnOrder';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
@@ -37,6 +38,11 @@ export const ReturnOderService = {
     const response = await axiosInstance.get(`${API_URL}`);
     return response.data;
   },
+   returnOrderApproved: async (): Promise<ReturnRequestListResponse[]> => {
+    const response = await axiosInstance.get(`${API_URL}/return-order-approved`);
+    return response.data;
+  },
+  
 
   // Lấy danh sách item của 1 đơn hoàn theo mã đơn hàng
   getReturnItemsByOrderCode: async (
@@ -45,24 +51,40 @@ export const ReturnOderService = {
     const response = await axiosInstance.get(`/${orderCode}`);
     return response.data;
   },
+  getReturnItemsByOrderCodeApproved: async (
+    code: string
+  ): Promise<ReturnRequestItemResponse[]> => {
+    const response = await axiosInstance.get(`/fin-Code-Return-Approved/${code}`);
+    return response.data;
+  },
+  findByCode: async (
+  code: string
+): Promise<ReturnRequestListResponse[]> => {
+  const response = await axiosInstance.get(`/fin-code-approved/${code}`);
+  return response.data;
+},
+
 
   // ✅ Phản hồi từng item (duyệt / từ chối)
-  responseReturnRequestItem: async (
-    id: number,
-    status: string
-  ): Promise<ReturnRequestItemResponse> => {
-    try {
-      const response = await axiosInstance.post<ReturnRequestItemResponse>(
-        `/returnresponse/${id}`, // Đúng path
-        null, // Không có body
-        {
-          params: { status }, // Gửi status trong query param
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("❌ Lỗi phản hồi đơn hoàn:", error);
-      throw error;
-    }
-  },
-};
+  // Trong ReturnOderService.ts
+responseReturnRequestItem: async (
+  id: number,
+  status: string,
+  data?: ReturnRequestListRequest // Thêm dấu ? để biến này thành optional
+): Promise<ReturnRequestItemResponse> => {
+  try {
+    const response = await axiosInstance.post<ReturnRequestItemResponse>(
+      `/returnresponse/${id}`,
+      data, // Truyền data vào body
+      {
+        params: { status }, // Truyền status qua query param
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("❌ Lỗi phản hồi đơn hoàn:", error);
+    throw error;
+  }
+  
+}}
+
