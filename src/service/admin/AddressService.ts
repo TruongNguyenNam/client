@@ -33,7 +33,7 @@ export const AddressService = {
             throw new Error('Failed to fetch Address. Please try again later.');
         }
     },
- // sua dia chi
+    // sua dia chi
     updateAddressForCustomer: async (
         customerId: number,
         addressId: number,
@@ -51,16 +51,41 @@ export const AddressService = {
         }
     },
 
-    deleteAddress: async ( customerId: number, addressId: number): Promise<ApiResponse<any>> => {
+    deleteAddress: async (customerId: number, addressId: number): Promise<ApiResponse<any>> => {
         try {
             const response = await axiosInstance.delete<ApiResponse<any>>(
                 `${API_URL}/customers/${customerId}/addresses/${addressId}`);
             return response.data;
         } catch (error) {
             console.error("Lỗi khi xoá địa chỉ:", error);
-             throw new Error('Failed to delete Address. Please try again later.');
+            throw new Error('Failed to delete Address. Please try again later.');
         }
-    }
+    },
+
+    getAddressesByCustomerId: async (customerId: number): Promise<ApiResponse<AddressResponse[]>> => {
+        try {
+            const response = await axiosInstance.get<ApiResponse<AddressResponse[]>>(`${API_URL}/customers/${customerId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Lỗi khi lấy địa chỉ theo khách hàng:', error);
+            throw new Error('Không thể lấy địa chỉ. Vui lòng thử lại.');
+        }
+    },
+
+    
+    setDefaultAddress: async (customerId: number, addressId: number): Promise<ApiResponse<any>> => {
+        try {
+            const response = await axiosInstance.put<ApiResponse<any>>(
+                `${API_URL}/customers/${customerId}/addresses/${addressId}/default`
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi khi đặt địa chỉ mặc định:", error);
+            throw new Error("Không thể cập nhật địa chỉ mặc định. Vui lòng thử lại.");
+        }
+    },
+
+
 
 };
 

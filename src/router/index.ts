@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
 import ClientLayout from '@/layout/client/ClientLayout.vue';
 import { AuthService } from '../service/auth/AuthService';
+import ProfileLayout from '@/layout/client/ProfileLayout.vue';
 import type { UserResponse } from '../service/auth/AuthService';
 import { useAuthStore } from '../stores/auth';
 
@@ -39,11 +40,11 @@ const router = createRouter({
                 { path: '/order', name: 'order', component: () => import('@/views/pages/admin/order/Invoice.vue') },
                 { path: '/callback', name: 'vnpay-callback', component: () => import('@/views/pages/admin/order/VNPayCallback.vue') },
                 { path: '/home', name: 'home', component: () => import('@/views/pages/admin/statistical/Statistical.vue') },
-                {path: '/management',name: 'management',component: () => import('@/views/pages/admin/management/ManagementList.vue')},
-                {path: '/management/order/:id',name: 'order-detail',component: () => import('@/views/pages/admin/management/Management.vue')},
+                { path: '/management', name: 'management', component: () => import('@/views/pages/admin/management/ManagementList.vue') },
+                { path: '/management/order/:id', name: 'order-detail', component: () => import('@/views/pages/admin/management/Management.vue') },
                 // {path: '/findByShip',name: 'order-ship',component: () => import('@/views/pages/admin/management/ManagementShip.vue')},
-                {path: '/findByShip',name: 'certificationorder',component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue')},
-                {path: '/certificationorder/:id',name: 'certificationorder-detail',component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue')}
+                { path: '/findByShip', name: 'certificationorder', component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue') },
+                { path: '/certificationorder/:id', name: 'certificationorder-detail', component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue') }
             ],
         },
 
@@ -61,31 +62,78 @@ const router = createRouter({
                     path: 'cart/:userId', name: 'cart-view', component: () => import('@/views/pages/client/cart/CartView.vue'),
                     meta: { requiresAuth: true, role: 'CUSTOMER' },
                 },
-                { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue')}
+                { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue') }
             ],
         },
+        // {
+        //     path: '/auth',
+        //     component: ClientLayout,
+        //     children: [
+        //         { path: 'login', name: 'login', component: () => import('@/views/pages/auth/Login.vue') },
+        //         { path: 'register', name: 'register', component: () => import('@/views/pages/auth/Register.vue') },
+        //         {
+        //             path: 'userdetails/:id',
+        //             name: 'userdetails',
+        //             component: () => import('@/views/pages/auth/Info.vue'),
+        //             meta: { requiresAuth: true, role: 'CUSTOMER' },
+        //         },
+        //         {
+        //             path: 'change-password',
+        //             name: 'change-password',
+        //             component: () => import('@/views/pages/auth/ChangePassword.vue'),
+        //             meta: { requiresAuth: true, role: 'CUSTOMER' },
+        //         },
+        //         { path: 'access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
+        //         { path: 'error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
+        //     ],
+        // },
 
         {
             path: '/auth',
-            component: ClientLayout,
+            component: ClientLayout, // layout này cho login, register!
             children: [
                 { path: 'login', name: 'login', component: () => import('@/views/pages/auth/Login.vue') },
                 { path: 'register', name: 'register', component: () => import('@/views/pages/auth/Register.vue') },
+                { path: 'reset-password', name: 'reset-password', component: () => import('@/views/pages/auth/ResetPassword.vue') },
+            ]
+        },
+        {
+            path: '/auth/profile',
+            component: ProfileLayout,
+            meta: { requiresAuth: true, role: 'CUSTOMER' },
+            children: [
                 {
                     path: 'userdetails/:id',
-                    name: 'userdetails',
-                    component: () => import('@/views/pages/auth/UserDetails.vue'),
+                    name: 'profile-userdetails',
+                    component: () => import('@/views/pages/auth/Info.vue'),
                     meta: { requiresAuth: true, role: 'CUSTOMER' },
+                },
+                {
+                    path: 'address',
+                    name: 'profile-address',
+                    component: () => import('@/views/pages/auth/AddressList.vue'),
                 },
                 {
                     path: 'change-password',
-                    name: 'change-password',
+                    name: 'profile-change-password',
                     component: () => import('@/views/pages/auth/ChangePassword.vue'),
-                    meta: { requiresAuth: true, role: 'CUSTOMER' },
                 },
-                { path: 'access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
-                { path: 'error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
-            ],
+                 {
+                    path: 'change-email',
+                    name: 'profile-change-email',
+                    component: () => import('@/views/pages/auth/ChangeEmail.vue'),
+                },
+                    {
+                    path: 'change-sdt',
+                    name: 'profile-change-sdt',
+                    component: () => import('@/views/pages/auth/ChangeSDT.vue'),
+                },
+                   {
+                    path: 'vouchers',
+                    name: 'profile-vouchers',
+                    component: () => import('@/views/pages/auth/VoucherList.vue'),
+                },
+            ]
         },
         { path: '/landing', name: 'landing', component: () => import('@/views/pages/Landing.vue') },
         { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('@/views/pages/NotFound.vue') },

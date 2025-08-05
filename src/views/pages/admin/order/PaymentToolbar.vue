@@ -66,7 +66,7 @@
                 <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"
                   @click="showAddressDialog = true" />
               </div>
-              <div v-else class="mt-3">
+              <div v-else-if="!invoice.isPos"  class="mt-3">
                 <Button label="Thêm địa chỉ giao hàng" icon="pi pi-plus" class="w-full"
                   @click="showAddressDialog = true" />
               </div>
@@ -159,7 +159,6 @@
     </div>
     <InvoicePrint v-if="showPrintPreview" :invoice="invoice" :changeAmount="changeAmount" />
   </Sidebar>
-  <ConfirmDialog />
 </template>
 
 <script setup lang="ts">

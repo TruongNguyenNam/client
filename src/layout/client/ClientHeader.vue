@@ -43,17 +43,17 @@
               <div class="user-info p-2 text-center">
                 <span class="font-medium">{{ userInfo?.username || 'User' }}</span>
               </div>
-              <Button
-                label="Thông tin cá nhân"
-                icon="pi pi-user"
-                text
-                @click="navigate(`/auth/userdetails/${userInfo?.userId}`)"
+             <Button
+              label="Thông tin cá nhân"
+              icon="pi pi-user"
+             text
+             @click="navigate(`/auth/profile/userdetails/${userInfo?.userId}`)"
               />
               <Button
                 label="Đổi mật khẩu"
                 icon="pi pi-key"
                 text
-                @click="navigate('/auth/change-password')"
+                @click="navigate('/auth/profile/change-password')"
               />
               <Button
                 label="Đăng xuất"
