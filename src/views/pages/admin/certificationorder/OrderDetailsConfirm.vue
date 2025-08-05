@@ -1,3 +1,4 @@
+```vue
 <template>
   <div class="p-4">
     <div class="card mb-4">
@@ -42,7 +43,7 @@
       </div>
 
       <!-- Card Vận chuyển -->
-      <div class="card h-full" style="width: 52%;">
+      <!-- <div class="card h-full" style="width: 52%;">
         <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
         <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
           <p><strong>Trạng thái:</strong> {{ order?.shipments[0].shipmentStatus }}</p>
@@ -51,7 +52,19 @@
           <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
         </div>
         <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
-      </div>
+      </div> -->
+
+       <div class="card h-full" style="width: 52%;">
+  <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
+  <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
+    <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
+    <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
+    <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
+    <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
+    <!-- <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p> -->
+  </div>
+  <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
+</div> 
     </div>
 
     <div class="card mb-4">
@@ -88,27 +101,28 @@
           order?.address?.addressProvince
         ].filter(Boolean).join(', ') || 'Chưa có thông tin' }}
       </p>
-      <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil" class="p-button-info" 
+      <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil" class="p-button-info" 
         @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
-
     </div>
 
     <div class="card mb-4">
       <h3>💳 Thông tin thanh toán</h3>
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
-      <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
-        style="margin-top: 10px;" />
+      <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
+        style="margin-top: 10px;" :disabled="loading" />
     </div>
 
-    <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
+    <!-- <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
       <h3>🚚 Vận chuyển</h3>
-      <p><strong>Trạng thái:</strong> {{ order?.shipments[0].shipmentStatus }}</p>
+      <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
       <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p>
       <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
       <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
       <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
-    </div>
+    </div> -->
+
+  
 
     <div class="card mb-4">
       <DataTable :value="orderItems" class="p-datatable-gridlines" responsiveLayout="scroll">
@@ -122,9 +136,9 @@
         <Column header="Số lượng">
           <template #body="slotProps">
             <div class="flex align-items-center gap-2">
-              <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)" />
+              <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
               <span>{{ slotProps.data.quantity }}</span>
-              <Button icon="pi pi-plus" rounded text @click="increaseQuantity(slotProps.index)" />
+              <Button icon="pi pi-plus" rounded text @click="increaseQuantity(slotProps.index)" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
             </div>
           </template>
         </Column>
@@ -140,14 +154,14 @@
         </Column>
         <Column header="Hành động">
           <template #body="slotProps">
-            <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" />
+            <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
           </template>
         </Column>
       </DataTable>
 
       <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
-        <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
-          style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" />
+        <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
+          style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" :disabled="loading" />
       </div>
     </div>
 
@@ -241,7 +255,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, getCurrentInstance } from 'vue';
-import type { OrderResponse, OrderItemResponse,AddressResponse } from '../../../../model/admin/order';
+import type { OrderResponse, OrderItemResponse, AddressResponse } from '../../../../model/admin/order';
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { OrderService } from '../../../../service/admin/OrderService';
@@ -263,6 +277,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { AddressService } from '../../../../service/admin/AddressService';
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
+
 // Thêm renderKey để kiểm soát render
 const renderKey = ref(0);
 
@@ -287,6 +302,18 @@ const tempPayment = ref({
   paymentMethodId: 0,
   additionalAmount: 0
 });
+
+const shipmentStatusLabels = {
+  PENDING: 'Chờ xác nhận',
+  SHIPPED: 'Đang giao',
+  DELIVERED: 'Đã giao hàng',
+  RETURNED: 'Trả hàng',
+  CANCELED: 'Hủy'
+};
+
+const getShipmentStatusLabel = (status: string): string => {
+  return shipmentStatusLabels[status as keyof typeof shipmentStatusLabels] || 'Không xác định';
+};
 
 interface UpdateOrderRequest {
   id?: number;
@@ -329,7 +356,6 @@ export interface AddressRequest {
   isDefault: boolean;
 }
 
-
 // Biến reactive
 const showAddressDialog = ref(false);
 const tempAddress = ref<AddressResponse>({
@@ -355,10 +381,9 @@ const tempAddress = ref<AddressResponse>({
 
 const selectedProvince = ref<string>('');
 const selectedDistrict = ref<string>('');
-const provinceOptions = ref(provincesData.data); // Dữ liệu Tỉnh/Thành phố
+const provinceOptions = ref(provincesData.data);
 const districtOptions = ref<any[]>([]);
 const wardOptions = ref<any[]>([]);
-
 
 const openAddressDialog = () => {
   if (!order.value?.address) {
@@ -508,7 +533,6 @@ const saveAddress = async () => {
   }
 };
 
-
 const steps = [
   { label: 'Chờ xác nhận', value: OrderStatus.PENDING, icon: 'pi pi-clock' },
   { label: 'Đang giao', value: OrderStatus.SHIPPED, icon: 'pi pi-truck' },
@@ -516,8 +540,6 @@ const steps = [
   { label: 'Đã huỷ', value: OrderStatus.CANCELLED, icon: 'pi pi-times-circle' },
   { label: 'Trả hàng', value: OrderStatus.RETURNED, icon: 'pi pi-refresh' }
 ];
-
-
 
 // Lọc steps dựa trên isPos
 const filteredSteps = computed(() => {
@@ -977,3 +999,4 @@ watch(order, (newOrder) => {
   margin-top: 4px;
 }
 </style>
+```

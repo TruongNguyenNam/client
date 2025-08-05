@@ -133,7 +133,7 @@
   
             <Column header="Trạng thái vận chuyển" style="min-width: 12rem">
               <template #body="slotProps">
-                {{ slotProps.data.shipments?.[0]?.shipmentStatus || '---' }}
+                {{ formatShipmentStatus(slotProps.data.shipments?.[0]?.shipmentStatus || '---') }}
               </template>
             </Column>
   
@@ -177,6 +177,7 @@
   const statusCounts = ref<Record<string, number>>({});
 
 
+
   // Define filters with proper typing for PrimeVue DataTable
   const filters = ref({
     global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
@@ -205,6 +206,17 @@
         return status;
     }
   };
+
+  const formatShipmentStatus = (status: string): string => {
+  const shipmentStatusLabels = {
+    PENDING: 'Chờ xác nhận',
+    SHIPPED: 'Đang giao',
+    DELIVERED: 'Đã giao hàng',
+    RETURNED: 'Trả hàng',
+    CANCELED: 'Hủy'
+  };
+  return shipmentStatusLabels[status as keyof typeof shipmentStatusLabels] || '---';
+};
   
   const fetchOrderStatusCounts = async () => {
   try {

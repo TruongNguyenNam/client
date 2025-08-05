@@ -14,7 +14,12 @@
         <router-link class="profile-menu-item" to="#">Cài Đặt Thông Báo</router-link>
         <router-link class="profile-menu-item" to="#">Thiết Lập Riêng Tư</router-link>
         <div class="profile-menu-section mt-3"></div>
-        <router-link class="profile-menu-item" to="#">Đơn Mua</router-link>
+        <router-link
+            class="profile-menu-item"
+            :to="`/order/${authStore?.userId}`"
+          >
+            Đơn Mua
+          </router-link>
         <router-link class="profile-menu-item" to="#">Kho Voucher</router-link>
 
         <div class="profile-menu-sale">
@@ -36,8 +41,10 @@
 import { ref, onMounted } from 'vue'
 import { AuthService } from '../../../service/auth/AuthService'
 import type { UserResponse } from '../../../service/auth/AuthService';
-
+import {useAuthStore} from '../../../stores/auth';
 const user = ref<UserResponse | null>(null)
+
+const authStore = useAuthStore(); 
 
 const fetchUserInfo = async () => {
   try {

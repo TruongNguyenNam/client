@@ -271,7 +271,7 @@ onMounted(fetchProducts);
 
 
     <div class="menuat">
-      <Button label="New" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" @click="openAddDialog" />
+      <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" @click="openAddDialog" />
       <div class="imandex">
         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary" @click="downloadAttributeTemplate" />
 

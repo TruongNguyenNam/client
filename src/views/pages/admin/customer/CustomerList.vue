@@ -233,7 +233,7 @@ const formatGender = (gender: string | null | undefined) => {
 
         </Toolbar>
         <div class="flex align-items-center justify-content-between mb-4">
-          <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />
+          <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2" @click="clearSearch" />
           <div class="search-bar-vertical">
             <span class="p-input-icon-left">
               <i class="pi pi-search"></i>

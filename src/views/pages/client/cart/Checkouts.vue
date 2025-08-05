@@ -8,8 +8,7 @@
             <div class="user-info">
               <div class="avatar"></div>
               <div>
-                <div class="user-name">{{ authStore.userInfo?.username || authStore.userInfo?.email || 'Khách hàng' }}
-                </div>
+                <div class="user-name">{{ authStore.userInfo?.username || authStore.userInfo?.email || 'Khách hàng' }}</div>
                 <a href="#" class="logout-link" @click.prevent="logout">Đăng xuất</a>
               </div>
             </div>
@@ -23,9 +22,14 @@
               <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
               <div class="bg-white p-3 rounded border mb-3">
                 <div v-if="addresses.length > 0" class="mt-3">
+                  
+            
+                  <!-- <div class="mb-2">
+                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
+                  </div> -->
+
                   <div class="mb-2">
-                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{
-                      selectedAddress?.receiverPhone }}
+                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
                   </div>
                   <div class="text-sm text-gray-700 leading-relaxed">
                     <i class="pi pi-map-marker mr-2"></i> {{ fullAddress }}
@@ -47,12 +51,10 @@
         <div class="shipping-method-card card">
           <h2 class="card-title">Phương thức vận chuyển</h2>
           <div class="card-content">
-            <div v-if="!form.addressWard" class="shipping-note">Vui lòng chọn phường/xã để có danh sách phương thức vận
-              chuyển.</div>
+            <div v-if="!form.addressWard" class="shipping-note">Vui lòng chọn phường/xã để có danh sách phương thức vận chuyển.</div>
             <div v-else v-for="carrier in carriers" :key="carrier.id" class="shipping-option">
               <input type="radio" :id="carrier.name" v-model="form.shippingMethod" :value="carrier" />
-              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost)
-                : 'Miễn Phí' }})</label>
+              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn Phí' }})</label>
             </div>
           </div>
         </div>
@@ -68,8 +70,6 @@
         </div>
       </div>
 
-
-
       <div class="right-section">
         <div class="order-summary-card card">
           <div class="card-content">
@@ -77,8 +77,7 @@
               <img :src="getFirstImage(item.product?.imageUrl)" alt="product" class="product-image" />
               <div class="product-details">
                 <div class="product-name">{{ item.product?.name || 'Không có tên' }}</div>
-                <div class="product-size">Thuộc tính: {{ getAttributesText(item.product?.productAttributeValueResponses)
-                }}</div>
+                <div class="product-size">Thuộc tính: {{ getAttributesText(item.product?.productAttributeValueResponses) }}</div>
               </div>
               <div class="product-price">{{ formatPrice(item.product?.price * item.quantity) }}</div>
             </div>
@@ -88,8 +87,7 @@
               <MultiSelect v-model="selectedCoupons" :options="couponUsage" optionLabel="couponCode"
                 placeholder="Chọn mã giảm giá (nếu có)" class="w-full" @change="applyCoupons">
                 <template #option="slotProps">
-                  <div>{{ slotProps.option.couponCode }} (-{{ formatPrice(slotProps.option.couponDiscountAmount) }})
-                  </div>
+                  <div>{{ slotProps.option.couponCode }} (-{{ formatPrice(slotProps.option.couponDiscountAmount) }})</div>
                 </template>
               </MultiSelect>
               <p v-if="couponDiscount > 0" class="text-green-600 text-sm mt-2">
@@ -100,18 +98,14 @@
 
             <div class="total-section">
               <div class="total-item">Tạm tính <span class="total-amount">{{ formatPrice(subtotal) }}</span></div>
-              <div class="total-item">Giảm giá <span class="total-amount">{{ couponDiscount > 0 ? '-' +
-                formatPrice(couponDiscount)
-                : '—' }}</span></div>
-              <div class="total-item">Phí vận chuyển <span class="total-amount">{{ shippingCost > 0 ?
-                formatPrice(shippingCost) :
-                'Miễn phí' }}</span></div>
-              <div class="total-item total-final">Tổng cộng <span class="total-amount">{{ formatPrice(total) }}</span>
-              </div>
+              <div class="total-item">Giảm giá <span class="total-amount">{{ couponDiscount > 0 ? '-' + formatPrice(couponDiscount) : '—' }}</span></div>
+              <div class="total-item">Phí vận chuyển <span class="total-amount">{{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn phí' }}</span></div>
+              <div class="total-item total-final">Tổng cộng <span class="total-amount">{{ formatPrice(total) }}</span></div>
             </div>
 
-            <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt
-              hàng</button>
+            <!-- <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt hàng</button> -->
+            <button class="place-order-button" @click="showConfirmDialog = true">Đặt hàng</button>
+
           </div>
         </div>
       </div>
@@ -150,6 +144,7 @@ import AddressSelectDialog from '../../../../views/pages/admin/order/AddressSele
 import type { AddressResponse } from '../../../../model/admin/address';
 import { AddressService } from '../../../../service/admin/AddressService';
 import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
+import { VnPayService } from '../../../../service/admin/VnPayService';
 
 const formatPrice = (price: number | undefined | null): string => {
   if (price == null || isNaN(price)) {
@@ -187,8 +182,6 @@ const form = ref<CheckoutForm>({
 });
 
 const provinces = ref<Location[]>([]);
-const districts = ref<Location[]>([]);
-const wards = ref<Location[]>([]);
 
 interface Location {
   id: string;
@@ -211,17 +204,7 @@ interface CheckoutForm {
   paymentMethod: PaymentMethodClientResponse | null;
 }
 
-interface UserResponse {
-  userId: number;
-  username: string;
-  email: string;
-  message?: string;
-  role: string;
-  phoneNumber: string | null;
-  gender: string | null;
-  isActive: boolean;
-  address: UserAddress[] | null;
-}
+
 
 interface UserAddress {
   id: number;
@@ -238,34 +221,8 @@ interface UserAddress {
   isDefault?: boolean;
 }
 
-interface UpdateUserForm {
-  email: string;
-  phoneNumber: string;
-  gender: string;
-  address: AddressForm;
-}
-
-interface AddressForm {
-  id: number;
-  addressStreet: string;
-  addressWard: string;
-  addressCity: string;
-  addressState: string;
-  addressCountry: string;
-  addressZipcode: string;
-  addressDistrict: string;
-  addressProvince: string;
-  receiverName?: string;
-  receiverPhone?: string;
-  isDefault?: boolean;
-}
-console.log('Selected userInfo:', authStore.userInfo);
-console.log('Selected address:', authStore.userInfo?.addresses);
 
 
-// dia chi
-
-// Map UserAddress[] -> AddressResponse[]
 const addresses = computed(() => {
   const addressesRaw = authStore.userInfo?.addresses ?? [];
   return addressesRaw.map(addr => ({
@@ -284,19 +241,17 @@ const addresses = computed(() => {
   }));
 });
 
-
 const handleAddressDelete = async () => {
-  await authStore.fetchUserInfo(); //đồng bộ lại dữ liệu user và địa chỉ
-  addressDialogKey.value++;        //reset dialog
- 
+  await authStore.fetchUserInfo();
+  addressDialogKey.value++;
 };
 
 const showAddressDialog = ref(false);
 const selectedAddress = ref<UserAddress | null>(null);
 const addressDialogKey = ref(0);
 
-// Xử lý khi chọn địa chỉ từ dialog
 function handleAddressSelect(address: AddressResponse) {
+  console.log('Selected Address:', address);
   const addr = mapToUserAddress(address);
   selectedAddress.value = addr;
   showAddressDialog.value = false;
@@ -305,10 +260,11 @@ function handleAddressSelect(address: AddressResponse) {
   form.value.addressWard = addr.addressWard;
   form.value.receiverName = addr.receiverName || '';
   form.value.receiverPhone = addr.receiverPhone || '';
-  form.value.shippingMethod = null; //reset nếu muốn chọn lại
+  form.value.shippingMethod = null;
+  selectedAddressId.value = addr.id;
+  console.log('Updated selectedAddressId:', selectedAddressId.value);
 }
 
-// Chuyển đổi AddressResponse sang UserAddress
 function mapToUserAddress(address: AddressResponse): UserAddress {
   return {
     id: address.id,
@@ -336,22 +292,24 @@ const fullAddress = computed(() => {
     addr.addressProvince,
     addr.addressCity,
     addr.addressZipcode,
-
   ].filter(Boolean).join(', ');
 });
-console.log('Selected address:', selectedAddress.value);
 
 const provinceOptions = provincesData.data;
-// id của địa chỉ được chọn
 const selectedAddressId = ref<number | null>(null);
 
-// Lấy địa chỉ mặc định hoặc đầu tiên nếu không có địa chỉ mặc định
 watch(addresses, (newAddresses) => {
-  if (newAddresses.length > 0) {
+  console.log('Addresses changed:', newAddresses);
+  if (newAddresses.length > 0 && selectedAddressId.value === null) { // Chỉ khởi tạo nếu chưa chọn địa chỉ
     const defaultAddress = newAddresses.find(addr => addr.isDefault) || newAddresses[0];
     selectedAddress.value = mapToUserAddress(defaultAddress);
-  } else {
+    selectedAddressId.value = defaultAddress.id;
+    console.log('Default selectedAddressId:', selectedAddressId.value);
+  } else if (newAddresses.length === 0) {
     selectedAddress.value = null;
+    selectedAddressId.value = null;
+  } else {
+    console.log('Address selection preserved, selectedAddressId:', selectedAddressId.value);
   }
 }, { immediate: true });
 
@@ -370,7 +328,6 @@ const handleAddressSubmit = async (submittedData: any) => {
   };
   try {
     if (submittedData.id) {
-      // Cập nhật địa chỉ
       const resAdd = await AddressService.updateAddressForCustomer(authStore.userInfo?.userId, submittedData.id, finalAddress);
       toast.add({
         severity: 'success',
@@ -380,13 +337,11 @@ const handleAddressSubmit = async (submittedData: any) => {
       });
       if (resAdd.data?.id) {
         await authStore.fetchUserInfo();
-        // RESET lại dialog
         addressDialogKey.value++;
         showAddressDialog.value = false;
       }
-      selectedAddressId.value = submittedData.id; // Cập nhật lại địa chỉ đang chọn
+      selectedAddressId.value = submittedData.id;
     } else {
-      // Thêm mới địa chỉ
       const resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
       toast.add({
         severity: 'success',
@@ -394,10 +349,8 @@ const handleAddressSubmit = async (submittedData: any) => {
         detail: 'Đã thêm địa chỉ mới cho khách hàng.',
         life: 3000
       });
-
     }
     await authStore.fetchUserInfo();
-    // RESET lại dialog
     addressDialogKey.value++;
     showAddressDialog.value = false;
   } catch (error) {
@@ -406,10 +359,6 @@ const handleAddressSubmit = async (submittedData: any) => {
   }
 };
 
-// hết
-
-
-// Computed properties
 const subtotal: ComputedRef<number> = computed(() =>
   authStore.cart.reduce((sum, item) => {
     const price = item.product?.price ?? 0;
@@ -419,7 +368,7 @@ const subtotal: ComputedRef<number> = computed(() =>
 );
 
 const shippingCost: ComputedRef<number> = computed(() => {
-  return subtotal.value > 500000 ? 0 : 30000; // Miễn phí nếu đơn hàng > 500k, ngược lại 30k
+  return subtotal.value > 500000 ? 0 : 30000;
 });
 
 const total: ComputedRef<number> = computed(() => {
@@ -436,32 +385,13 @@ const isFormValid: ComputedRef<boolean> = computed(() =>
   !!form.value.addressDistrict &&
   !!form.value.addressWard &&
   !!form.value.shippingMethod &&
-  !!form.value.paymentMethod
+  !!form.value.paymentMethod &&
+  !!selectedAddressId.value
 );
 
-const normalizeLocationName = (name: string): string => {
-  return name
-    .replace(/^Thành phố\s+|^Tỉnh\s+|^Quận\s+|^Phường\s+/i, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-};
 
-const onProvinceChange = () => {
-  const province = provinces.value.find(p => p.name === form.value.addressProvince);
-  districts.value = province?.level2s || [];
-  form.value.addressDistrict = '';
-  form.value.addressWard = '';
-  wards.value = [];
-  form.value.shippingMethod = null; // Reset shipping method
-};
 
-const onDistrictChange = () => {
-  const district = districts.value.find(d => d.name === form.value.addressDistrict);
-  wards.value = district?.level3s || [];
-  form.value.addressWard = '';
-  form.value.shippingMethod = null; // Reset shipping method
-};
+
 
 const applyCoupons = async () => {
   couponDiscount.value = 0;
@@ -562,10 +492,14 @@ onMounted(async () => {
       form.value.addressWard = defaultAddress.addressWard;
       form.value.receiverName = defaultAddress.receiverName || '';
       form.value.receiverPhone = defaultAddress.receiverPhone || '';
+      selectedAddressId.value = defaultAddress.id;
     }
     note.value = route.query.note?.toString() || localStorage.getItem('cartNote') || '';
 
-    // Thông báo miễn phí vận chuyển nếu subtotal > 500k
+          if (route.path === '/payment-return') {
+                handleVnpayCallback();
+              }
+
     if (subtotal.value > 500000) {
       toast.add({
         severity: 'info',
@@ -717,15 +651,15 @@ const submitOrder = async () => {
     return;
   }
 
-  if (!isFormValid.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại và email hợp lệ.',
-      life: 3000,
-    });
-    return;
-  }
+  // if (!isFormValid.value) {
+  //   toast.add({
+  //     severity: 'warn',
+  //     summary: 'Cảnh báo',
+  //     detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
+  //     life: 3000,
+  //   });
+  //   return;
+  // }
 
   if (authStore.cart.length === 0) {
     toast.add({
@@ -749,28 +683,11 @@ const submitOrder = async () => {
 
   loading.value = true;
   try {
-    const updateForm: UpdateUserForm = {
-      email: form.value.email,
-      phoneNumber: form.value.phone,
-      gender: authStore.userInfo?.gender || '',
-      address: {
-        id: authStore.userInfo?.addresses?.id || 0,
-        addressStreet: '',
-        addressWard: form.value.addressWard,
-        addressDistrict: form.value.addressDistrict,
-        addressProvince: form.value.addressProvince,
-        addressCity: authStore.userInfo?.addresses?.addressCity || '',
-        addressState: authStore.userInfo?.addresses?.addressState || '',
-        addressCountry: authStore.userInfo?.addresses?.addressCountry || 'Việt Nam',
-        addressZipcode: authStore.userInfo?.addresses?.addressZipcode || '',
-      },
-    };
-    
-    await AuthService.updateUserAddress(authStore.userId!, updateForm);
-    await authStore.fetchUserInfo();
+   
 
     const orderRequest: OrderRequestClient = {
       userId: authStore.userId,
+      addressId: selectedAddressId.value || undefined,
       nodes: note.value,
       items: authStore.cart.map(item => ({
         productId: item.product.id,
@@ -796,7 +713,8 @@ const submitOrder = async () => {
 
     const response = await CartClientService.checkout(orderRequest);
     console.log('Response from checkout API:', response);
-
+    await authStore.fetchUserInfo();
+    console.log('Checkout Response:', response.data);
     if (response.status === 200 && response.data) {
       const orderResponse: OrderResponseClient = response.data;
       toast.add({
@@ -806,15 +724,13 @@ const submitOrder = async () => {
         life: 5000,
       });
 
-      // Xử lý thanh toán VNPay
       if (orderResponse.paymentUrl) {
-        window.location.href = orderResponse.paymentUrl; // Chuyển hướng đến VNPay
+        window.location.href = orderResponse.paymentUrl;
       } else {
         authStore.cart = [];
         localStorage.removeItem('cartNote');
         authStore.cartCount = 0;
         router.push(`/client/cart/${authStore.userId}`);
-        // router.push('/cart/${}')
       }
     }
   } catch (error: any) {
@@ -837,6 +753,86 @@ const submitOrder = async () => {
     showConfirmDialog.value = false;
   }
 };
+
+const handleVnpayCallback = async () => {
+  try {
+    loading.value = true;
+    const queryParams = route.query;
+
+    if (Object.keys(queryParams).length === 0) {
+      throw new Error('Không nhận được tham số từ VNPay');
+    }
+
+    console.log('VNPay Query Params:', queryParams);
+    const response = await VnPayService.verifyVnpayCallback(queryParams);
+    console.log('VNPay Callback Response:', response.data);
+
+    if (response.status && response.data.success) {
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: `Thanh toán thành công cho đơn hàng ${response.data.orderCode || queryParams.vnp_TxnRef}!`,
+        life: 5000,
+      });
+
+      authStore.cart = [];
+      localStorage.removeItem('cartNote');
+      authStore.cartCount = 0;
+      await authStore.fetchUserInfo();
+
+      // Chuyển hướng ngay lập tức với URL sạch
+      const cleanUrl = `${window.location.origin}/#/client`;
+      console.log('Redirecting to clean URL:', cleanUrl);
+      window.location.replace(cleanUrl);
+    } else {
+      const errorMessage = response.data.message || getVnpayErrorMessage(queryParams.vnp_ResponseCode as string) || 'Thanh toán VNPay thất bại';
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: errorMessage,
+        life: 5000,
+      });
+      // Chuyển hướng ngay lập tức với URL sạch khi thất bại
+      const cleanUrl = `${window.location.origin}/#/client`;
+      console.log('Redirecting to clean URL (failure):', cleanUrl);
+      window.location.replace(cleanUrl);
+    }
+  } catch (error: any) {
+    console.error('Lỗi khi xử lý phản hồi VNPay:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.message || 'Lỗi hệ thống khi xử lý thanh toán VNPay',
+      life: 3000,
+    });
+    // Chuyển hướng ngay lập tức với URL sạch khi lỗi
+    const cleanUrl = `${window.location.origin}/#/client`;
+    console.log('Redirecting to clean URL (error):', cleanUrl);
+    window.location.replace(cleanUrl);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const getVnpayErrorMessage = (responseCode: string): string => {
+  const errorMap: { [key: string]: string } = {
+    '01': 'Giao dịch chưa hoàn tất hoặc bị hủy.',
+    '07': 'Giao dịch bị nghi ngờ gian lận.',
+    '09': 'Thẻ/Tài khoản chưa đăng ký dịch vụ.',
+    '10': 'Không xác minh được thông tin thẻ/tài khoản.',
+    '11': 'Chưa qua thời gian xác minh thanh toán.',
+    '12': 'Thẻ/Tài khoản bị khóa.',
+    '13': 'Mã OTP không đúng.',
+    '24': 'Giao dịch bị hủy bởi người dùng.',
+    '51': 'Tài khoản không đủ số dư.',
+    '65': 'Giao dịch vượt quá hạn mức.',
+    '75': 'Ngân hàng từ chối giao dịch.',
+    '79': 'Sai thông tin mật khẩu thanh toán.',
+    '99': 'Lỗi không xác định.',
+  };
+  return errorMap[responseCode] || `Lỗi không xác định: ${responseCode}`;
+};
+
 </script>
 
 <style scoped>

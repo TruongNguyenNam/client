@@ -38,7 +38,7 @@
             <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sportType">Loại sản phẩm</label>
+            <label for="sportType">Loại thể thao</label>
             <InputText 
               id="sportType" 
               v-model="product.sportType" 
@@ -131,7 +131,7 @@
           >
             <Column field="sku" header="Mã sản phẩm" sortable></Column>
             <Column field="name" header="Tên sản phẩm" sortable></Column>
-            <Column field="sportType" header="Loại sản phẩm" sortable></Column>
+            <Column field="sportType" header="Loại thể thao" sortable></Column>
             <Column header="Hình ảnh">
               <template #body="slotProps">
                 <div class="image-preview">

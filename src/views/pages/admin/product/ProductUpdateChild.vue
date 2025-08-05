@@ -2,7 +2,7 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Cập nhật sản phẩm con</h5>
+        <h5>Cập nhật sản phẩm chi tiết</h5>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>

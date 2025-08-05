@@ -302,7 +302,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                 </Toolbar>
                 <!-- Phần tìm kiếm -->
                 <div class="flex align-items-center justify-content-between mb-4">
-                    <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2"
+                    <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2"
                         @click="clearSearch" />
                     <div class="search-bar-vertical">
                         <div class="search-bar-row">

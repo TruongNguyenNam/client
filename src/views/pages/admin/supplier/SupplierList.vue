@@ -245,9 +245,9 @@ const debouncedSearch = (event) => {
                 <h5>Danh sách nhà cung cấp</h5>
                 <Toolbar class="mb-4">
                     <template v-slot:start>
-                        <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openAddDialog" />
-                        <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
-                            @click="deleteSelectedSuppliers" :disabled="!selectedSuppliers.length" />
+                        <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2" @click="openAddDialog" />
+                        <!-- <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
+                            @click="deleteSelectedSuppliers" :disabled="!selectedSuppliers.length" /> -->
                     </template>
                     <template v-slot:end>
                         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"

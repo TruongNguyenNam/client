@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHashHistory,createWebHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
 import ClientLayout from '@/layout/client/ClientLayout.vue';
 import { AuthService } from '../service/auth/AuthService';
@@ -6,7 +6,7 @@ import type { UserResponse } from '../service/auth/AuthService';
 import { useAuthStore } from '../stores/auth';
 
 const router = createRouter({
-    history: createWebHashHistory(),
+    history: createWebHistory(),
     routes: [
         {
             path: '/',
@@ -62,6 +62,16 @@ const router = createRouter({
                     meta: { requiresAuth: true, role: 'CUSTOMER' },
                 },
                 { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue')}
+                ,
+                {
+                    path: 'order/:userId',
+                    name: 'client-order-view',
+                    component: () => import('@/views/pages/client/cart/OrdersView.vue'),
+                    meta: { requiresAuth: true, role: 'CUSTOMER' },
+                  },
+                  { path: '/clientvnpay', name: 'vnpay-callback-client', component: () => import('@/views/pages/client/cart/VnpayClient.vue') },
+                  { path: '/payment-return', name: 'payment-return', component: () => import('@/views/pages/client/cart/VnpayClient.vue') },
+                  { path: 'product/:id/reviews', name: 'client-product-review', component: () => import('@/views/pages/client/product/ProductReview.vue'), props: true },
             ],
         },
 
@@ -85,6 +95,7 @@ const router = createRouter({
                 },
                 { path: 'access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
                 { path: 'error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
+                
             ],
         },
         { path: '/landing', name: 'landing', component: () => import('@/views/pages/Landing.vue') },
