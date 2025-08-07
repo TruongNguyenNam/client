@@ -202,28 +202,31 @@ const hideDialog = () => {
     categoryDialog.value = false;
 };
 
+const submitted = ref(false);
+
 const saveCategory = async () => {
+    submitted.value = true;
+
+    const trimmedName = category.value.name.trim();
+    const trimmedDescription = category.value.description.trim();
+
+    if (!trimmedName) {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được để trống', life: 3000 });
+        return;
+    }
+
+    if (trimmedName.length > 30) {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được vượt quá 3 ký tự', life: 3000 });
+        return;
+    }
+
+    const isDuplicate = isDuplicateCategoryName(trimmedName, category.value.id);
+    if (isDuplicate) {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục đã tồn tại. Vui lòng chọn tên khác.', life: 3000 });
+        return;
+    }
+
     try {
-        const trimmedName = category.value.name.trim();
-        const trimmedDescription = category.value.description.trim();
-
-        if (!trimmedName) {
-            toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được để trống', life: 3000 });
-            return;
-        }
-
-        // if (!trimmedDescription) {
-        //     toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Mô tả danh mục không được để trống', life: 3000 });
-        //     return;
-        // }
-
-        const isDuplicate = isDuplicateCategoryName(trimmedName, category.value.id);
-
-        if (isDuplicate) {
-            toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục đã tồn tại. Vui lòng chọn tên khác.', life: 3000 });
-            return;
-        }
-
         if (category.value.id) {
             await CategoryService.updateCategory(category.value.id, {
                 name: trimmedName,
@@ -240,12 +243,13 @@ const saveCategory = async () => {
 
         hideDialog();
         loadCategories();
-
+        submitted.value = false;
     } catch (error) {
         console.error("Lỗi khi lưu danh mục:", error);
         toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lưu danh mục thất bại', life: 3000 });
     }
 };
+
 
 const openEdit = async (categoryId) => {
     try {
@@ -336,19 +340,28 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
 
                 <Dialog v-model:visible="categoryDialog" :style="{ width: '450px' }" header="Chi tiết danh mục"
                     :modal="true" class="p-fluid">
+
                     <div class="field">
                         <label for="name">Tên danh mục</label>
-                        <InputText id="name" v-model="category.name" required="true" autofocus />
+                        <InputText id="name" v-model="category.name" required autofocus
+                            :class="{'p-invalid': submitted && !category.name.trim()}"
+                            :maxlength="30" />
+                        <small class="p-error" v-if="submitted && !category.name.trim()">Tên danh mục không được để trống</small>
                     </div>
+
                     <div class="field">
                         <label for="description">Mô tả</label>
-                        <Textarea id="description" v-model="category.description" rows="3" />
+                        <Textarea id="description" v-model="category.description" rows="3" :maxlength="255"
+                            :class="{'p-invalid': submitted && !category.description.trim()}" />
+                        <small class="p-error" v-if="submitted && !category.description.trim()">Mô tả không được để trống</small>
                     </div>
+
                     <template #footer>
                         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
-                        <Button label="Lưu" icon="pi pi-check" class="p-button-text" @click="saveCategory" />
+                        <Button label="Lưu" icon="pi pi-check" class="p-button-primary" @click="saveCategory" />
                     </template>
                 </Dialog>
+
 
                 <DataTable :value="categories" v-model:selection="selectedCategories" :paginator="true"
                     :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
@@ -384,8 +397,8 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
                                 @click="editCategory(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
-                                @click="confirmDeleteCategory(slotProps.data)" />
+                            <!-- <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                                @click="confirmDeleteCategory(slotProps.data)" /> -->
                         </template>
                     </Column>
 

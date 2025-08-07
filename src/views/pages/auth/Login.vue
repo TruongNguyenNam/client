@@ -2,49 +2,37 @@
   <div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
     <div class="flex flex-column align-items-center justify-content-center">
       <img :src="logoUrl" alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0" />
-      <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
+      <div
+        style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
         <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius: 53px">
           <div class="text-center mb-5">
-            <img src="/demo/images/login/avatar.png" alt="Image" height="50" class="mb-3" />
+            <img src="../../../assets/data/Anh/Logo-removebg-preview.png" alt="Image" width="70" height="70" />
             <div class="text-900 text-3xl font-medium mb-3">Chào mừng bạn!</div>
             <span class="text-600 font-medium">Đăng nhập để tiếp tục</span>
           </div>
 
           <div>
             <label for="username1" class="block text-900 text-xl font-medium mb-2">Tên đăng nhập</label>
-            <InputText
-              id="username1"
-              type="text"
-              placeholder="Tên đăng nhập"
-              class="w-full md:w-30rem mb-5"
-              style="padding: 1rem"
-              v-model="username"
-            />
+            <InputText id="username1" type="text" placeholder="Tên đăng nhập" class="w-full md:w-30rem mb-5"
+              style="padding: 1rem" v-model="username" />
 
             <label for="password1" class="block text-900 font-medium text-xl mb-2">Mật khẩu</label>
-            <Password
-              id="password1"
-              v-model="password"
-              placeholder="Mật khẩu"
-              :toggleMask="true"
-              class="w-full mb-3"
-              inputClass="w-full"
-              :inputStyle="{ padding: '1rem' }"
-            ></Password>
+            <Password id="password1" v-model="password" placeholder="Mật khẩu" :toggleMask="true" class="w-full mb-3"
+              inputClass="w-full" :inputStyle="{ padding: '1rem' }"></Password>
 
             <div class="flex align-items-center justify-content-between mb-5 gap-5">
               <div class="flex align-items-center">
-                <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
+                <Checkbox v-model="checked" id="rememberme1" binary class="mr-2" />
                 <label for="rememberme1">Ghi nhớ tôi</label>
               </div>
-              <a class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)">Quên mật khẩu?</a>
+
+              <router-link to="/auth/reset-password" class="font-medium no-underline text-right cursor-pointer"
+                style="color: var(--primary-color)">
+                Quên mật khẩu?
+              </router-link>
             </div>
-            <Button
-              label="Đăng nhập"
-              class="w-full p-3 text-xl"
-              :loading="isLoading"
-              @click="handleLogin"
-            ></Button>
+
+            <Button label="Đăng nhập" class="w-full p-3 text-xl" :loading="isLoading" @click="handleLogin"></Button>
           </div>
         </div>
       </div>
@@ -65,6 +53,7 @@ import { useLayout } from '@/layout/composables/layout';
 import AppConfig from '@/layout/AppConfig.vue';
 import { AuthService } from '../../../service/auth/AuthService';
 import { useAuthStore } from '../../../stores/auth';
+import { useRoute } from 'vue-router'
 
 const { layoutConfig } = useLayout();
 const router = useRouter();
@@ -124,7 +113,7 @@ const handleLogin = async () => {
         detail: 'Đăng nhập thành công!',
         life: 3000
       });
-
+      console.log('Đăng nhập thành công:', response.data);
       // Chuyển hướng dựa trên vai trò
       if (response.data.role === 'ADMIN') {
         router.push('/home');

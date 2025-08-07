@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import InputText from 'primevue/inputtext';
 import ProductCard from './ProductCard.vue';
 import type { ProductResponse } from '../../../../model/admin/product';
-import { onBeforeUnmount } from 'vue';
+import {onBeforeUnmount} from 'vue';
 import { Html5Qrcode } from 'html5-qrcode';
 import { nextTick } from 'vue';
 import { useToast } from 'primevue/usetoast';
-
 
 const toast = useToast();
 
@@ -24,19 +23,19 @@ const props = defineProps({
 
 const emit = defineEmits(['add-product']);
 
-// Sử dụng ref để theo dõi products cục bộ
-const localProducts = ref([...props.products]);
-
-watch(() => props.products, (newProducts) => {
-  localProducts.value = [...newProducts]; // Cập nhật khi props thay đổi
-}, { deep: true });
-
 const searchQuery = ref('');
 
+// const filteredProducts = computed(() => {
+//   if (!searchQuery.value) return props.products;
+//   const query = searchQuery.value.toLowerCase();
+//   return props.products.filter(product => 
+//     product.name.toLowerCase().includes(query)
+//   );
+// });
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) return localProducts.value;
+  if (!searchQuery.value) return props.products;
   const query = searchQuery.value.toLowerCase();
-  return localProducts.value.filter(product => {
+  return props.products.filter(product => {
     const name = product.name.toLowerCase();
     const sku = product.sku?.toLowerCase() || '';
     return name.includes(query) || sku.includes(query);
@@ -44,36 +43,45 @@ const filteredProducts = computed(() => {
 });
 
 const handleAddProduct = (product: ProductResponse) => {
-  // console.log('Emitting add-product for:', product.id, 'at', new Date().toISOString());
+  console.log('Emitting add-product for:', product.id, 'at', new Date().toISOString());
   emit('add-product', product);
 };
-
 const showQrScanner = ref(false);
 let qrScanner: Html5Qrcode | null = null;
 
 const startQrScan = async () => {
   showQrScanner.value = true;
+
   nextTick(() => {
     if (!qrScanner) {
       qrScanner = new Html5Qrcode('qr-reader');
     }
+
     qrScanner
       .start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: 250 },
+        {
+          fps: 10,
+          qrbox: 250
+        },
         (decodedText) => {
           searchQuery.value = decodedText;
           stopQrScan();
           const lowerText = decodedText.toLowerCase();
-          let matchedProduct = localProducts.value.find((p) => p.sku?.toLowerCase() === lowerText);
+          let matchedProduct = props.products.find(
+            (p) => p.sku?.toLowerCase() === lowerText
+          );
           if (!matchedProduct) {
-            matchedProduct = localProducts.value.find((p) => p.name.toLowerCase().includes(lowerText));
+            matchedProduct = props.products.find((p) =>
+              p.name.toLowerCase().includes(lowerText)
+            );
           }
+
           if (matchedProduct) {
-            console.log('Found and adding to cart:', matchedProduct.name);
+            console.log('Tìm thấy và thêm vào giỏ:', matchedProduct.name);
             handleAddProduct(matchedProduct);
           } else {
-            console.warn('No product found with code:', decodedText);
+            console.warn('Không tìm thấy sản phẩm với mã:', decodedText);
             toast.add({
               severity: 'warn',
               summary: 'Không tìm thấy sản phẩm',
@@ -81,13 +89,14 @@ const startQrScan = async () => {
               life: 3000
             });
           }
+
         },
         (errorMessage) => {
-          console.warn('Scan error:', errorMessage);
+          console.warn('Lỗi quét:', errorMessage);
         }
       )
       .catch((error) => {
-        console.error('QR Scanner startup error:', error);
+        console.error('Lỗi khởi động QR Scanner:', error);
       });
   });
 };
@@ -97,13 +106,14 @@ const stopQrScan = () => {
     qrScanner.stop().then(() => {
       showQrScanner.value = false;
     }).catch(err => {
-      console.error('QR stop error:', err);
+      console.error("Lỗi dừng QR:", err);
       showQrScanner.value = false;
     });
   } else {
     showQrScanner.value = false;
   }
 };
+
 
 onBeforeUnmount(() => {
   if (qrScanner?.isScanning) {
@@ -122,13 +132,19 @@ onBeforeUnmount(() => {
         </button>
       </div>
     </div>
+
+    <!-- Camera QR -->
     <div v-if="showQrScanner" class="mt-4">
       <div id="qr-reader" style="width: 100%"></div>
       <button @click="stopQrScan" class="mt-2 text-sm text-red-600 underline">Đóng camera</button>
     </div>
+
+    <!-- Danh sách sản phẩm -->
     <div class="products-grid" :class="{ 'products-grid-hidden': selectedInvoice }">
-      <ProductCard v-for="product in filteredProducts" :key="product.id" :product="product" @add-product="handleAddProduct" />
+      <ProductCard v-for="product in filteredProducts" :key="product.id" :product="product"
+        @click="handleAddProduct(product)" />
     </div>
+
     <slot></slot>
   </div>
 </template>

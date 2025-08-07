@@ -6,12 +6,14 @@
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
-            <InputText id="productName" v-model="product.name" placeholder="nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" />
+            <InputText id="productName" v-model="product.name" 
+            placeholder="Nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" 
+            maxlength="50"/>
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="sku">Mã Sản Phẩm</label>
-            <InputText id="sku" v-model="product.sku" placeholder="tự động sinh" disabled />
+            <InputText id="sku" v-model="product.sku" placeholder="Tự động sinh" disabled />
           </div>
           <div class="field col-12 md:col-6">
             <label for="productCategory">Danh mục</label>
@@ -21,14 +23,19 @@
               :options="categories"
               optionLabel="name"
               optionValue="id"
-              placeholder="chọn danh mục"
+              placeholder="Chọn danh mục"
               :class="{'p-invalid': submitted && !product.categoryId}"
             />
             <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="sportType">Loại thể thao</label>
-            <InputText id="sportType" v-model="product.sportType" placeholder="Enter sport type" />
+            <InputText id="sportType" v-model="product.sportType" 
+            placeholder="Nhập loại thể thao" 
+            maxlength="50"
+            :class="{'p-invalid': submitted && !product.sportType}"
+            />
+            <small class="p-error" v-if="submitted && !product.sportType">Loại thể thao là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="productTag">Nhãn</label>
@@ -38,7 +45,7 @@
               :options="productTags"
               optionLabel="name"
               optionValue="id"
-              placeholder="chọn nhãn"
+              placeholder="Chọn nhãn"
               :multiple="true"
             />
           </div>
@@ -50,7 +57,7 @@
               :options="suppliers"
               optionLabel="name"
               optionValue="id"
-              placeholder="chọn nhà cung cấp"
+              placeholder="Chọn nhà cung cấp"
               :class="{'p-invalid': submitted && !product.supplierId}"
             />
             <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
@@ -61,8 +68,9 @@
               id="productDescription" 
               v-model="product.description" 
               rows="4" 
-              placeholder="nhập mô tả"
+              placeholder="Nhập mô tả"
               :class="{'p-invalid': submitted && !product.description}"
+              maxlength="100"
             />
             <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
@@ -180,25 +188,46 @@
               </template>
             </Column>
             <Column header="Giá">
-              <template #body="slotProps">
-                <InputNumber 
-                  v-model="slotProps.data.price"
-                  mode="currency"
-                  currency="VND"
-                  :minFractionDigits="0"
-                  :class="{'p-invalid': submitted && slotProps.data.price === undefined}"
-                />
-              </template>
+                <template #body="slotProps">
+                  <InputNumber 
+                    v-model="slotProps.data.price"
+                    mode="currency"
+                    currency="VND"
+                
+                    :max="100000000"
+                    :step="1000"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="0"
+                    :class="{
+                      'p-invalid': submitted &&
+                        (slotProps.data.price === undefined || 
+                        slotProps.data.price < 20000 || 
+                        slotProps.data.price > 100000000)
+                    }"
+                  />
+                </template>
             </Column>
-            <Column header="Số Lượng">
+
+            <Column header="Số lượng">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.stockQuantity"
-                  :min="0"
-                  :class="{'p-invalid': submitted && slotProps.data.stockQuantity === undefined}"
+                  :min="1"
+                  
+                  :step="1"
+                  :maxFractionDigits="0"
+                  :class="{
+                    'p-invalid': submitted &&
+                      (slotProps.data.stockQuantity === undefined || 
+                      slotProps.data.stockQuantity < 1 || 
+                      slotProps.data.stockQuantity > 1000)
+                  }"
                 />
               </template>
             </Column>
+
+
+
             <Column>
               <template #body="slotProps">
                 <Button 
@@ -293,11 +322,48 @@ const getAttributeName = (attributeId: number) => {
   return attribute ? attribute.name : '';
 };
 
+// const onParentImageUpload = (event: any) => {
+//   const selectedFiles: File[] = event.files;
+//   parentImages.value = selectedFiles;
+//   toast.add({ severity: 'success', summary: 'Hình ảnh sản phẩm cha đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho sản phẩm cha`, life: 3000 });
+// };
+
 const onParentImageUpload = (event: any) => {
   const selectedFiles: File[] = event.files;
+
+  // Các định dạng ảnh cho phép
+  const validImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+
+  // Tìm file không hợp lệ (bao gồm cả Excel)
+  const invalidFiles = selectedFiles.filter(file => !validImageTypes.includes(file.type));
+
+  if (invalidFiles.length > 0) {
+    // Thông báo lỗi
+    toast.add({
+      severity: 'error',
+      summary: 'File không hợp lệ',
+      detail: 'Chỉ cho phép hình ảnh (JPG, PNG, WEBP, GIF). Không được tải lên file Excel hoặc định dạng khác.',
+      life: 4000
+    });
+
+    // Xóa hết file đã chọn (PrimeVue FileUpload)
+    event.options.clear();
+
+    // Reset lại biến lưu
+    parentImages.value = [];
+    return;
+  }
+
+  // Nếu hợp lệ thì gán vào biến
   parentImages.value = selectedFiles;
-  toast.add({ severity: 'success', summary: 'Hình ảnh sản phẩm cha đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho sản phẩm cha`, life: 3000 });
+  toast.add({
+    severity: 'success',
+    summary: 'Hình ảnh hợp lệ',
+    detail: `Đã chọn ${selectedFiles.length} hình ảnh`,
+    life: 3000
+  });
 };
+
 
 const onError = (error: any) => {
   toast.add({ severity: 'error', summary: 'Lỗi tải lên', detail: error.message, life: 3000 });
@@ -420,7 +486,7 @@ const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  if (!product.name || !product.categoryId || !product.supplierId || !product.description) {
+  if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
@@ -434,22 +500,25 @@ const submitProduct = async () => {
 
   if (
     variantCombinations.value.length > 0 &&
-    variantCombinations.value.some(
-      v =>
-        v.price === undefined ||
+    variantCombinations.value.some(v => {
+      const price = Number(v.price);
+      const stock = Number(v.stockQuantity);
+      return (
         v.price === null ||
-        isNaN(Number(v.price)) ||
-        Number(v.price) <= 20000 ||
-        v.stockQuantity === undefined ||
+        isNaN(price) ||
+        price < 20000 ||
+        price > 100000000 ||
         v.stockQuantity === null ||
-        isNaN(Number(v.stockQuantity)) ||
-        Number(v.stockQuantity) < 0
-    )
+        isNaN(stock) ||
+        stock < 1 ||
+        stock > 1000
+      );
+    })
   ) {
     toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Vui lòng nhập giá > 20000đ và số lượng >= 0 cho tất cả biến thể.',
+      severity: 'warn',
+      summary: 'Lỗi',
+      detail: 'Vui lòng nhập giá từ 20.000đ đến 100.000.000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
       life: 3000
     });
     isSubmitting.value = false;

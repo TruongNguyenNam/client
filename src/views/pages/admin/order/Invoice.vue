@@ -8,7 +8,7 @@
     />
   
     <ProductList
-      :products="filteredProducts"
+      :products="listProduct"
       :selectedInvoice="selectedInvoice"
       @add-product="addProductToActiveInvoice"
     />
@@ -143,7 +143,11 @@ const getAllChildProduct = async () => {
   try {
     const response = await ProductService.getAllChildProducts();
     if (response && response.data) {
-      listProduct.value = response.data;
+      listProduct.value = response.data.map((product: any) => ({
+        ...product,
+        stockQuantity: product.stockQuantity ?? 0 // Lấy giá trị ban đầu
+      }));
+      loadStockQuantitiesFromStorage(); // Áp dụng trạng thái đã lưu
       totalRecords.value = response.data.length;
     } else {
       listProduct.value = [];
@@ -274,14 +278,6 @@ onUnmounted(() => {
   });
 });
 
-const filteredProducts = computed(() => {
-  if (!searchQuery.value) return listProduct.value;
-  return listProduct.value.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    (product.sku && product.sku.toLowerCase().includes(searchQuery.value.toLowerCase()))
-  );
-});
-
 const setInvoiceType = (isPos: boolean) => {
   currentIsPos.value = isPos;
 };
@@ -352,13 +348,53 @@ const addInvoiceTab = async () => {
   }
 };
 
+const saveStockQuantitiesToStorage = () => {
+  const stockQuantities = listProduct.value.reduce((acc: { [key: string]: number }, product: any) => {
+    acc[product.id] = product.stockQuantity ?? 0;
+    return acc;
+  }, {});
+  localStorage.setItem('stockQuantities', JSON.stringify(stockQuantities));
+};
+
+// Hàm tải trạng thái stockQuantity từ localStorage
+const loadStockQuantitiesFromStorage = () => {
+  const storedStockQuantities = localStorage.getItem('stockQuantities');
+  if (storedStockQuantities) {
+    const stockQuantities = JSON.parse(storedStockQuantities);
+    listProduct.value.forEach((product: any) => {
+      if (stockQuantities[product.id] !== undefined) {
+        product.stockQuantity = stockQuantities[product.id];
+        console.log('stockQuantities', stockQuantities[product.id]);
+      }
+    });
+  }
+};
+
 const removeTab = (index: number) => {
   const orderCode = invoiceTabs.value[index].orderCode;
+  const removedInvoice = invoiceTabs.value[index]; // Lưu hóa đơn bị xóa để xử lý
+
+  // Tăng lại stockQuantity cho các sản phẩm trong hóa đơn bị xóa
+  if (removedInvoice && removedInvoice.items && removedInvoice.items.length > 0) {
+    removedInvoice.items.forEach((item: any) => {
+      const productInList = listProduct.value.find((p: any) => p.id === item.id);
+      if (productInList) {
+        productInList.stockQuantity = (productInList.stockQuantity ?? 0) + item.quantity;
+      }
+    });
+    saveStockQuantitiesToStorage(); // Lưu sau khi xóa tab
+  }
+
+  // Xóa hóa đơn khỏi invoiceTabs
   invoiceTabs.value.splice(index, 1);
   saveInvoicesToStorage();
+
+  // Cập nhật activeTabIndex
   if (activeTabIndex.value >= invoiceTabs.value.length) {
     activeTabIndex.value = Math.max(0, invoiceTabs.value.length - 1);
   }
+
+  // Dọn dẹp timer
   clearTimeout(invoiceTimeouts.value[orderCode]);
   delete invoiceTimeouts.value[orderCode];
 };
@@ -370,16 +406,16 @@ const addProductToActiveInvoice = (product: any) => {
   }
   const stockQuantity = product?.stockQuantity ?? 0;
   if (stockQuantity <= 0) {
-    toast.add({ severity: 'error', summary: 'Hết hàng', detail: `${product.name} hiện đã hết hàng`, life: 3000 });
+    toast.add({ severity: 'warn', summary: 'Hết hàng', detail: `${product.name} hiện đã hết hàng`, life: 3000 });
     return;
   }
   const activeInvoice = invoiceTabs.value[activeTabIndex.value];
   const existingItem = activeInvoice.items.find((item: any) => item.id === product.id);
 
-  if (existingItem && existingItem.quantity >= stockQuantity) {
-    toast.add({ severity: 'warn', summary: 'Quá số lượng', detail: `${product.name} đã vượt quá số lượng tồn kho`, life: 3000 });
-    return;
-  }
+  // if (existingItem && existingItem.quantity >= stockQuantity) {
+  //   toast.add({ severity: 'warn', summary: 'Quá số lượng', detail: `${product.name} đã vượt quá số lượng tồn kho`, life: 3000 });
+  //   return;
+  // }
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
@@ -389,6 +425,12 @@ const addProductToActiveInvoice = (product: any) => {
       price: product.price || 0
     });
   }
+  // Cập nhật stockQuantity trong listProduct
+  const productInList = listProduct.value.find((p: any) => p.id === product.id);
+  if (productInList) {
+    productInList.stockQuantity = Math.max(0, (productInList.stockQuantity ?? 0) - 1);
+    saveStockQuantitiesToStorage(); // Lưu sau khi thay đổi
+  }
   recalculateTotal(activeInvoice);
   saveInvoicesToStorage();
   resetTimerOnInteraction(activeInvoice);
@@ -396,12 +438,33 @@ const addProductToActiveInvoice = (product: any) => {
 
 const incrementQuantity = (invoice: any, index: number) => {
   const product = listProduct.value.find((p: any) => p.id === invoice.items[index].id);
-  const stockQuantity = product?.stockQuantity ?? 0;
-  if (product && invoice.items[index].quantity >= stockQuantity) {
+  if (!product) {
+    console.error('Product not found in listProduct:', invoice.items[index].id);
+    return;
+  }
+
+  const currentStockQuantity = product.stockQuantity ?? 0;
+  const currentQuantity = invoice.items[index].quantity;
+  console.log('Before increment - Quantity:', currentQuantity, 'StockQuantity:', currentStockQuantity);
+
+  // Kiểm tra nếu số lượng mới vượt quá stockQuantity hiện tại
+  const newQuantity = currentQuantity + 1;
+  if (newQuantity > currentStockQuantity + currentQuantity) {
+    // Điều chỉnh để cho phép tăng đến stockQuantity ban đầu, nhưng chỉ báo lỗi khi vượt
     toast.add({ severity: 'warn', summary: 'Hết hàng', detail: 'Không thể thêm số lượng, đã đạt giới hạn tồn kho', life: 3000 });
     return;
   }
+
+  // Tăng số lượng trong giỏ
   invoice.items[index].quantity += 1;
+
+  // Giảm stockQuantity
+  if (product) {
+    product.stockQuantity = Math.max(0, (product.stockQuantity ?? 0) - 1);
+    saveStockQuantitiesToStorage(); // Lưu sau khi tăng
+  }
+
+  console.log('After increment - New Quantity:', invoice.items[index].quantity, 'New StockQuantity:', product.stockQuantity);
   recalculateTotal(invoice);
   saveInvoicesToStorage();
   resetTimerOnInteraction(invoice);
@@ -410,15 +473,24 @@ const incrementQuantity = (invoice: any, index: number) => {
 const decrementQuantity = (invoice: any, index: number) => {
   if (invoice.items[index].quantity > 1) {
     invoice.items[index].quantity -= 1;
-    recalculateTotal(invoice);
+    const product = listProduct.value.find((p: any) => p.id === invoice.items[index].id);
+    if (product) {
+      product.stockQuantity = (product.stockQuantity ?? 0) + 1; // Chỉ cần tăng 1 đơn vị
+    }
   } else {
     removeItem(invoice, index);
   }
+  recalculateTotal(invoice);
   saveInvoicesToStorage();
   resetTimerOnInteraction(invoice);
 };
 
 const removeItem = (invoice: any, index: number) => {
+  const product = listProduct.value.find((p: any) => p.id === invoice.items[index].id);
+  if (product) {
+      product.stockQuantity = (product.stockQuantity ?? 0) + 1;
+      saveStockQuantitiesToStorage(); // Lưu sau khi giảm
+    }
   invoice.items.splice(index, 1);
   recalculateTotal(invoice);
   saveInvoicesToStorage();
@@ -619,6 +691,8 @@ const completePayment = async () => {
         closePaymentToolbar();
       }, 300);
       removeTabByOrderCode(orderCode);
+      localStorage.removeItem('stockQuantities');
+      getAllChildProduct();
     }
   } catch (error) {
     console.error("Lỗi khi thanh toán đơn hàng:", error);
@@ -645,4 +719,4 @@ const formatCurrency = (value: number) => {
     flex-direction: column;
   }
 }
-</style>
+</style> 

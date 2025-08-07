@@ -39,6 +39,8 @@
           <p><strong>Trạng thái:</strong> {{ order?.orderStatus }}</p>
           <p><strong>Loại đơn:</strong> {{ order?.isPos ? "Tại quầy" : "Ship" }}</p>
           <p><strong>Tổng tiền:</strong> {{ order?.orderTotal?.toLocaleString("vi-VN") }} đ</p>
+          <p><strong>Ngày tạo:</strong> {{ formatDate(order?.orderDate) }}</p>
+          <p><strong>Người tạo:</strong> {{ authStore.userInfo?.username }}</p>
         </div>
       </div>
 
@@ -55,29 +57,31 @@
       </div> -->
 
        <div class="card h-full" style="width: 52%;">
-  <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
-  <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
-    <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
-    <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
-    <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
-    <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
-    <!-- <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p> -->
-  </div>
-  <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
-</div> 
-    </div>
+        <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
+        <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
+          <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
+          <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
+          <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
+          <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
+          <!-- <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p> -->
+        </div>
+        <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
+            </div> 
+        </div>
 
     <div class="card mb-4">
       <h3>👤 Thông tin khách hàng</h3>
       <p><strong>Người đặt:</strong>
         <span v-if="order?.address?.username">{{ order.address.username }}</span>
         <span v-else>Vãng lai</span>
-      </p>
-      <p><strong>Người nhận:</strong> {{ order?.address?.receiverName }}</p>
-      <p><strong>SĐT:</strong> {{ order?.address?.receiverPhone }}</p>
-      <p><strong>Email:</strong> {{ order?.address?.email }}</p>
 
-      <strong>Địa chỉ:</strong>
+      </p>
+      <p><strong>Email:</strong> {{ order?.address?.email }}</p>
+      <p><strong>Người nhận:</strong> {{ order?.address?.receiverName }}</p>
+      <p><strong>SĐT Người nhận:</strong> {{ order?.address?.receiverPhone }}</p>
+      <p><strong>Ngày đặt:</strong> {{ formatDate(order?.orderDate) }}</p>
+
+      <!-- <strong>Địa chỉ:</strong>
       <div class="address-list">
         <div class="address-card">
           <div class="address-info">
@@ -90,7 +94,7 @@
             </p>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <p><strong>Địa chỉ:</strong>
         {{ [
@@ -101,16 +105,26 @@
           order?.address?.addressProvince
         ].filter(Boolean).join(', ') || 'Chưa có thông tin' }}
       </p>
+
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil" class="p-button-info" 
         @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
+
+      <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
+        class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" /> -->
+
     </div>
 
     <div class="card mb-4">
       <h3>💳 Thông tin thanh toán</h3>
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
+      <p><strong>Ngày thanh toán:</strong> {{ formatDate(order?.payment?.paymentDate) }}</p>
+
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
         style="margin-top: 10px;" :disabled="loading" />
+
+        <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill"
+          class="p-button-info" @click="openPaymentDialog" style="margin-top: 10px;" /> -->
     </div>
 
     <!-- <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
@@ -160,8 +174,13 @@
       </DataTable>
 
       <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
+
         <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
           style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" :disabled="loading" />
+
+        <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus"
+          class="p-button-primary" style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;"
+          @click="showProductDialog = true" /> -->
       </div>
     </div>
 
@@ -176,25 +195,23 @@
       </div>
       <div class="p-field">
         <label for="email">Email</label>
-        <InputText id="email" v-model="tempAddress.email" class="w-full" />
+        <InputText id="email" v-model="tempAddress.email" disabled class="w-full" />
       </div>
       <div class="p-field">
         <label for="province">Tỉnh/Thành phố</label>
-        <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" 
-          option-label="name" option-value="name" @change="updateDistricts" 
-          class="w-full" placeholder="Chọn Tỉnh/Thành phố" />
+        <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name"
+          option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố" />
       </div>
       <div class="p-field">
         <label for="district">Quận/Huyện</label>
-        <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" 
-          option-label="name" option-value="name" @change="updateWards" 
-          class="w-full" placeholder="Chọn Quận/Huyện" :disabled="!selectedProvince" />
+        <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name"
+          option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện"
+          :disabled="!selectedProvince" />
       </div>
       <div class="p-field">
         <label for="ward">Phường/Xã</label>
-        <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" 
-          option-label="name" option-value="name" 
-          class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" />
+        <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name"
+          option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" />
       </div>
       <div class="p-field">
         <label for="street">Đường</label>
@@ -277,10 +294,11 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { AddressService } from '../../../../service/admin/AddressService';
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
+import { useAuthStore } from '../../../../stores/auth';
 
 // Thêm renderKey để kiểm soát render
 const renderKey = ref(0);
-
+const authStore =  useAuthStore();
 const route = useRoute();
 const order = ref<OrderResponse | undefined>(undefined);
 const toast = useToast();
@@ -302,6 +320,19 @@ const tempPayment = ref({
   paymentMethodId: 0,
   additionalAmount: 0
 });
+
+const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 
 const shipmentStatusLabels = {
   PENDING: 'Chờ xác nhận',
@@ -476,6 +507,8 @@ const updateWards = () => {
 
 // Lưu địa chỉ đã chỉnh sửa
 const saveAddress = async () => {
+  tempAddress.value.addressProvince = selectedProvince.value;
+  tempAddress.value.addressDistrict = selectedDistrict.value;
   if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
     toast.add({
       severity: 'error',

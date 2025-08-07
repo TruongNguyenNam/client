@@ -16,7 +16,7 @@
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sku">SKU</label>
+            <label for="sku">Mã Sản Phẩm</label>
             <InputText 
               id="sku" 
               v-model="product.sku" 
@@ -89,37 +89,42 @@
               v-model="product.description" 
               rows="4" 
               placeholder="nhập mô tả"
+              maxlength="100"
               :class="{'p-invalid': submitted && !product.description}"
             />
             <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
 
           <!-- Price -->
-          <div class="field col-12 md:col-6">
-            <label for="price">Giá</label>    
-            <InputNumber 
-              id="price" 
-              v-model="product.price" 
-              mode="currency" 
-              currency="VND" 
-              locale="vi-VN"
-              :min="0"
-              :class="{'p-invalid': submitted && product.price === null}"
-            />
-            <small class="p-error" v-if="submitted && product.price === null">Price is required.</small>
-          </div>
+          <!-- Giá -->
+        <div class="field col-12 md:col-6">
+          <label for="price">Giá</label>
+          <InputNumber 
+            id="price" 
+            v-model="product.price" 
+            mode="currency" 
+            currency="VND" 
+            locale="vi-VN"
+            :class="{'p-invalid': submitted && !isPriceValid }"
+          />
+          <small class="p-error" v-if="submitted && !isPriceValid">
+            Giá phải từ 20.000đ đến 100.000.000đ.
+          </small>
+        </div>
 
-          <!-- Stock Quantity -->
-          <div class="field col-12 md:col-6">
-            <label for="stockQuantity">Số Lượng</label>
-            <InputNumber 
-              id="stockQuantity" 
-              v-model="product.stockQuantity" 
-              :min="0"
-              :class="{'p-invalid': submitted && product.stockQuantity === null}"
-            />
-            <small class="p-error" v-if="submitted && product.stockQuantity === null">Kho là bắt buộc.</small>   
-          </div>
+        <!-- Số lượng -->
+        <div class="field col-12 md:col-6">
+          <label for="stockQuantity">Số Lượng</label>
+          <InputNumber 
+            id="stockQuantity" 
+            v-model="product.stockQuantity"
+            :class="{'p-invalid': submitted && !isStockValid }"
+          />
+          <small class="p-error" v-if="submitted && !isStockValid">
+            Số lượng phải từ 1 đến 1000.
+          </small>
+        </div>
+
 
           <!-- Images -->
           <div class="field col-12">
@@ -218,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
 import { CategoryService } from '../../../../service/admin/CategoryService';
@@ -371,66 +376,157 @@ const removeAttribute = (index: number) => {
   product.productAttributeValues.splice(index, 1);
 };
 
+// const submitChildProduct = async () => {
+//   submitted.value = true;
+
+//   // Tách logic validate rõ ràng để dễ bảo trì
+//   const isDescriptionValid = !!product.description;
+//   const isPriceValid = product.price != null && product.price >= 20000;
+//   const isStockValid = product.stockQuantity != null && product.stockQuantity > 0;
+//   const isAttributeValid = product.productAttributeValues.every(
+//     (attr) => attr.attributeId && attr.value
+//   );
+//   const hasImages = existingImages.value.length > 0 || newImages.value.length > 0;
+
+//   if (!isDescriptionValid || !isPriceValid || !isStockValid || !isAttributeValid || !hasImages) {
+//     let errorDetail = 'Vui lòng điền đầy đủ các trường bắt buộc.';
+    
+//     if (!isPriceValid) {
+//       errorDetail += ' Giá sản phẩm phải lớn hơn hoặc bằng 20,000.';
+//     }
+//     if (!isStockValid) {
+//       errorDetail += ' Số lượng tồn phải lớn hơn 0.';
+//     }
+
+//     toast.add({ 
+//       severity: 'warn', 
+//       summary: 'Lỗi kiểm tra', 
+//       detail: errorDetail, 
+//       life: 3000 
+//     });
+//     return;
+//   }
+
+//   isSubmitting.value = true;
+//   try {
+//     const productId = Number(route.params.id);
+
+//     console.log('Submitting child product:', {
+//       description: product.description,
+//       price: product.price,
+//       stockQuantity: product.stockQuantity,
+//       productAttributeValues: product.productAttributeValues,
+//       images: newImages.value
+//     });
+
+//     const response = await ProductService.updateChildProduct(productId, product, newImages.value);
+
+//     toast.add({ 
+//       severity: 'success', 
+//       summary: 'Thành công', 
+//       detail: 'Cập nhật sản phẩm con thành công.', 
+//       life: 3000 
+//     });
+
+//     router.push('/documentation');
+//   } catch (error: any) {
+//     console.error("Submit Child Product Error:", error);
+//     toast.add({ 
+//       severity: 'error', 
+//       summary: 'Lỗi', 
+//       detail: error.message || 'Đã có lỗi xảy ra khi cập nhật sản phẩm con.', 
+//       life: 3000 
+//     });
+//   } finally {
+//     isSubmitting.value = false;
+//   }
+// };
+const isPriceValid = computed(() => {
+  const price = product.price ?? 0; 
+  return typeof price === 'number' && price >= 20000 && price <= 100000000;
+});
+
+const isStockValid = computed(() => {
+  const stock = product.stockQuantity ?? 0; 
+  return typeof stock === 'number' && stock >= 1 && stock <= 1000;
+});
+
 const submitChildProduct = async () => {
   submitted.value = true;
 
-  // Tách logic validate rõ ràng để dễ bảo trì
-  const isDescriptionValid = !!product.description;
-  const isPriceValid = product.price != null && product.price >= 20000;
-  const isStockValid = product.stockQuantity != null && product.stockQuantity > 0;
+  // Lấy fallback giá trị tránh undefined
+  const price = product.price ?? 0;
+  const stock = product.stockQuantity ?? 0;
+  const description = product.description?.trim() ?? '';
+
+  const isDescriptionValid = description.length > 0;
+  const isPriceValid = typeof price === 'number' && price >= 20000 && price <= 100000000;
+  const isStockValid = typeof stock === 'number' && stock >= 1 && stock <= 1000;
   const isAttributeValid = product.productAttributeValues.every(
-    (attr) => attr.attributeId && attr.value
+    (attr) => attr.attributeId && attr.value?.toString().trim().length > 0
   );
   const hasImages = existingImages.value.length > 0 || newImages.value.length > 0;
 
   if (!isDescriptionValid || !isPriceValid || !isStockValid || !isAttributeValid || !hasImages) {
     let errorDetail = 'Vui lòng điền đầy đủ các trường bắt buộc.';
-    
+
+    if (!isDescriptionValid) {
+      errorDetail += ' Mô tả không được để trống.';
+    }
     if (!isPriceValid) {
-      errorDetail += ' Giá sản phẩm phải lớn hơn hoặc bằng 20,000.';
+      errorDetail += ' Giá phải từ 20.000đ đến 100.000.000đ.';
     }
     if (!isStockValid) {
-      errorDetail += ' Số lượng tồn phải lớn hơn 0.';
+      errorDetail += ' Số lượng phải từ 1 đến 1000.';
+    }
+    if (!isAttributeValid) {
+      errorDetail += ' Vui lòng chọn đầy đủ thuộc tính và giá trị.';
+    }
+    if (!hasImages) {
+      errorDetail += ' Cần ít nhất một hình ảnh sản phẩm.';
     }
 
-    toast.add({ 
-      severity: 'warn', 
-      summary: 'Lỗi kiểm tra', 
-      detail: errorDetail, 
-      life: 3000 
+    toast.add({
+      severity: 'warn',
+      summary: 'Lỗi kiểm tra',
+      detail: errorDetail,
+      life: 4000
     });
     return;
   }
 
   isSubmitting.value = true;
+
   try {
     const productId = Number(route.params.id);
 
-    console.log('Submitting child product:', {
-      description: product.description,
-      price: product.price,
-      stockQuantity: product.stockQuantity,
-      productAttributeValues: product.productAttributeValues,
-      images: newImages.value
-    });
+    const payload = {
+      ...product,
+      description,
+      price,
+      stockQuantity: stock,
+      productAttributeValues: product.productAttributeValues
+    };
 
-    const response = await ProductService.updateChildProduct(productId, product, newImages.value);
+    console.log('Submitting child product:', payload);
 
-    toast.add({ 
-      severity: 'success', 
-      summary: 'Thành công', 
-      detail: 'Cập nhật sản phẩm con thành công.', 
-      life: 3000 
+    await ProductService.updateChildProduct(productId, payload, newImages.value);
+
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Cập nhật sản phẩm con thành công.',
+      life: 3000
     });
 
     router.push('/documentation');
   } catch (error: any) {
     console.error("Submit Child Product Error:", error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: error.message || 'Đã có lỗi xảy ra khi cập nhật sản phẩm con.', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.message || 'Đã có lỗi xảy ra khi cập nhật sản phẩm con.',
+      life: 3000
     });
   } finally {
     isSubmitting.value = false;

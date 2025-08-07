@@ -185,6 +185,7 @@ const saveNewAddress = async (submittedData: any) => {
         });
     }
 };
+
 // api cập nhật địa chỉ
 const updateAddress = async (submittedData: any) => {
     if (!customer.value || !addressBeingEdited.value) return;
@@ -394,7 +395,6 @@ const handleDeleteAddress = (addressData: any) => {
     });
 };
 
-
 const handleCancel = () => {
     router.back();
 };
@@ -482,7 +482,6 @@ const handleCancel = () => {
             </div>
         </form>
     </div>
-    <ConfirmDialog />
 </template>
 
 <style scoped lang="scss">

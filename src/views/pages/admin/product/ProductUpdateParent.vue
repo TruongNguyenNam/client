@@ -10,6 +10,7 @@
               id="productName" 
               v-model="product.name" 
               placeholder="nhập tên sản phẩm" 
+              maxlength="50"
               :class="{'p-invalid': submitted && !product.name}" 
             />
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
@@ -169,14 +170,14 @@
 
         <div class="flex justify-content-end mt-4">
           <Button 
-            label="Cancel" 
+            label="Hủy" 
             icon="pi pi-times" 
             severity="secondary" 
             class="mr-2" 
             @click="router.push('/documentation')" 
           />
           <Button 
-            label="Submit Product" 
+            label="Cập Nhật Sản Phẩm" 
             icon="pi pi-check" 
             @click="submitProduct" 
             :loading="isSubmitting" 

@@ -7,11 +7,11 @@
         <!-- Thông tin sản phẩm cha -->
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label>Tên Sản Phẩm Cha</label>
+            <label>Tên Sản Phẩm </label>
             <InputText v-model="parentProduct.name" disabled />
           </div>
           <div class="field col-12 md:col-6">
-            <label>SKU Sản Phẩm Cha</label>
+            <label>Mã Sản Phẩm </label>
             <InputText v-model="parentProduct.sku" disabled />
           </div>
         </div>
@@ -79,7 +79,7 @@
               <InputNumber
                 id="variant-stock"
                 v-model="variant.stockQuantity"
-                :min="0"
+           
                 :class="{ 'p-invalid': hasStockError }"
                 class="w-full"
               />
@@ -87,7 +87,7 @@
             </div>
 
             <div class="field col-12">
-              <label for="variant-sku">SKU tự động</label>
+              <label for="variant-sku">Mã Sản Phẩm</label>
               <InputText 
                 id="variant-sku"
                 v-model="variant.sku" 
@@ -401,18 +401,30 @@ const validateForm = () => {
   }
 
   // Kiểm tra giá (>= 20000)
-  if (variant.price === undefined || variant.price < 20000) {
-    hasPriceError.value = true;
-    priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 trở lên.';
-    errors.push(priceErrorMessage.value);
-  }
+  // Kiểm tra giá từ 20,000 đến 100,000,000
+if (
+  variant.price === undefined ||
+  typeof variant.price !== 'number' ||
+  variant.price < 20000 ||
+  variant.price > 100000000
+) {
+  hasPriceError.value = true;
+  priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 đến 100,000,000.';
+  errors.push(priceErrorMessage.value);
+}
 
-  // Kiểm tra số lượng (> 0)
-  if (variant.stockQuantity === undefined || variant.stockQuantity <= 0) {
-    hasStockError.value = true;
-    stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số lớn hơn 0.';
-    errors.push(stockErrorMessage.value);
-  }
+// Kiểm tra số lượng từ 1 đến 1000
+if (
+  variant.stockQuantity === undefined ||
+  typeof variant.stockQuantity !== 'number' ||
+  variant.stockQuantity <= 0 ||
+  variant.stockQuantity > 1000
+) {
+  hasStockError.value = true;
+  stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số từ 1 đến 1000.';
+  errors.push(stockErrorMessage.value);
+}
+
 
   // Kiểm tra thuộc tính
   if (attributes.value.length === 0) {
@@ -442,7 +454,7 @@ const validateForm = () => {
   if (errors.length > 0) {
     const errorMessage = errors.join(' | ');
     toast.add({
-      severity: 'error',
+      severity: 'warn',
       summary: 'Lỗi dữ liệu',
       detail: errorMessage,
       life: 5000

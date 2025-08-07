@@ -52,7 +52,7 @@
                 <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"
                   @click="showAddressDialog = true" />
               </div>
-              <div v-else class="mt-3">
+              <div v-else-if="!invoice.isPos"  class="mt-3">
                 <Button label="Thêm địa chỉ giao hàng" icon="pi pi-plus" class="w-full"
                   @click="showAddressDialog = true" />
               </div>
@@ -115,11 +115,23 @@
             placeholder="Chọn phương thức" class="w-full" @change="updatePaymentMethod" />
         </div>
 
-        <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
+        <!-- <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
           <span class="label">Khách thanh toán:</span>
           <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
             :min="0" :useGrouping="true" placeholder="Nhập số tiền" />
-        </div>
+        </div> -->
+
+
+        <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
+            <span class="label">Khách thanh toán:</span>
+            <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
+              :min="0" :max="100000000" :useGrouping="true" placeholder="Nhập số tiền" />
+          </div>
+          <div v-if="invoice.paymentMethodId === 1 && invoice.paidAmount !== null && invoice.paidAmount > 100000000" class="text-red-600 text-sm mt-1">
+            Số tiền khách thanh toán không được vượt quá 100,000,000đ.
+          </div>
+
+        
         <div v-if="invoice.paymentMethodId === 1 && changeAmount !== null && changeAmount >= 0"
           class="flex justify-between mb-2 items-center text-green-600">
           <span class="label">Tiền thừa:</span>
@@ -151,7 +163,6 @@
     </div>
     <InvoicePrint v-if="showPrintPreview" :invoice="invoice" :changeAmount="changeAmount" />
   </Sidebar>
-  <ConfirmDialog />
 </template>
 
 <script setup lang="ts">
