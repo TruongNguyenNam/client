@@ -273,6 +273,8 @@ const getCouponStatus = (coupon: Coupon) => {
     if (endDate < now) return { text: 'Đã hết hạn', severity: 'danger' };
     return { text: 'Đang hoạt động', severity: 'success' };
 };
+
+
 //chuyển hướng đến trang tặng coupon
 const goToGiftCoupon = (coupon: Coupon) => {
     if (!coupon.id) return;
@@ -300,7 +302,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                 </Toolbar>
                 <!-- Phần tìm kiếm -->
                 <div class="flex align-items-center justify-content-between mb-4">
-                    <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2"
+                    <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2"
                         @click="clearSearch" />
                     <div class="search-bar-vertical">
                         <div class="search-bar-row">
@@ -420,6 +422,11 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         </div>
                     </template>
                     <Column selectionMode="multiple" headerStyle="width: 3em" />
+                    <Column header="STT" style="width: 4rem">
+                    <template #body="slotProps">
+                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                    </template>
+                    </Column>
                     <Column field="codeCoupon" header="Mã phiếu" />
                     <Column field="couponName" header="Tên phiếu" sortable />
                     <Column header="Đã tặng" sortable>

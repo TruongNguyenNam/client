@@ -2,7 +2,7 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Cập nhật sản phẩm con</h5>
+        <h5>Cập nhật sản phẩm chi tiết</h5>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
@@ -111,7 +111,7 @@
 
           <!-- Stock Quantity -->
           <div class="field col-12 md:col-6">
-            <label for="stockQuantity">Kho</label>
+            <label for="stockQuantity">Số Lượng</label>
             <InputNumber 
               id="stockQuantity" 
               v-model="product.stockQuantity" 

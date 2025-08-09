@@ -3,7 +3,7 @@
     <Menubar :model="items" :key="headerKey">
       <template #start>
         <img
-          src="../../assets/img/logo.png"
+          src="../../assets/img/Logo-removebg-preview.png"
           alt="AN Logo"
           style="height: 50px; width: 100px; object-fit: contain"
         />
@@ -52,12 +52,26 @@
               <div class="user-info p-2 text-center">
                 <span class="font-medium">{{ userInfo?.username || 'User' }}</span>
               </div>
+             
               <Button
                 label="Thông tin cá nhân"
                 icon="pi pi-user"
                 text
                 @click="navigate(`/auth/userdetails/${userInfo?.userId}`)"
               />
+
+              <RouterLink
+                  v-if="authStore?.userId"
+                  :to="{ name: 'client-order-view', params: { userId: authStore.userId } }"
+                >
+                  <Button
+                    label="Đơn Hàng Của Bạn"
+                    icon="pi pi-box"
+                    text
+                  />
+                </RouterLink>
+              <Button v-else icon="pi pi-user" class="p-button-rounded p-button-text" @click="navigate('/auth/login')" />
+
               <Button
                 label="Đổi mật khẩu"
                 icon="pi pi-key"
@@ -194,12 +208,11 @@ const logout = () => {
 const items = computed(() => {
   const baseItems = [
     { label: 'TRANG CHỦ', icon: 'pi pi-home', command: () => router.push('/client') },
-    { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
     {
       label: 'Sản Phẩm',
       icon: 'pi pi-tags',
       items: [
-        { label: 'Áo Nam', command: () => router.push('/client/product') },
+        // { label: 'Áo Nam', command: () => router.push('/client/product') },
         { label: 'Giày', command: () => router.push({ path: '/client/product/collection', query: { category: 'Giày' } }) },
         { label: 'ÁO', command: () => router.push({ path: '/client/product/collection', query: { category: 'Áo' } }) },
         { label: 'Quần', command: () => router.push({ path: '/client/product/collection', query: { category: 'Quần' } }) },
@@ -208,6 +221,7 @@ const items = computed(() => {
         { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
       ],
     },
+    { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
     { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
   ];
 

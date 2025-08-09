@@ -503,6 +503,7 @@ function getStatusSeverity(status: string) {
     case 'Chờ phản hồi': return 'warning';
     case 'Đã duyệt': return 'success';
     case 'Bị từ chối': return 'danger';
+    case 'Đã hoàn tiền': return 'success'
     default: return 'info';
   }
 }

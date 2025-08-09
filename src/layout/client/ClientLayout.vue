@@ -3,6 +3,7 @@
     <ClientHeader />
     <main class="main-content">
       <RouterView />
+      <ChatBox></ChatBox>
     </main>
     <ClientFooter class="footer" />
   </div>
@@ -13,6 +14,8 @@ import { ref, watch, onMounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import ClientHeader from './ClientHeader.vue';
 import ClientFooter from './ClientFooter.vue';
+// import ChatBox from '../../views/pages/client/aichat/ChatBox.vue';
+import ChatBox from '../../views/pages/client/aichat/ChatBox.vue';
 
 const authStore = useAuthStore();
 const layoutKey = ref(0);

@@ -2,7 +2,9 @@ import axios from 'axios';
 import type {
   ReturnRequestListResponse,
   ReturnRequestItemResponse,
-  ReturnRequestListRequest
+  ReturnRequestListRequest,
+  ReturnMediaAdminResponse,
+  ReturnPriceResponse
 } from '../../model/admin/returnOrder';
 import type { ApiResponse } from "../../utils/ApiResponse";
 
@@ -43,6 +45,10 @@ export const ReturnOderService = {
     return response.data;
   },
   
+   returnPrice: async (): Promise<ReturnPriceResponse[]> => {
+    const response = await axiosInstance.get('/return-price');
+    return response.data;
+  },
 
   // Lấy danh sách item của 1 đơn hoàn theo mã đơn hàng
   getReturnItemsByOrderCode: async (
@@ -63,6 +69,10 @@ export const ReturnOderService = {
   const response = await axiosInstance.get(`/fin-code-approved/${code}`);
   return response.data;
 },
+updateStatus: async (id: number): Promise<void> => {
+  await axiosInstance.put(`/update-status/${id}`);
+},
+
 
 
   // ✅ Phản hồi từng item (duyệt / từ chối)

@@ -350,6 +350,11 @@ const router = createRouter({
             name: 'userdetails',
             component: () => import('@/views/pages/auth/UserDetails.vue')
         },
+         {
+            path: '/auth/userdetails/:id',
+            name: 'userdetails',
+            component: () => import('@/views/pages/auth/UserDetails.vue')
+        },
         {
             path: '/auth/change-password',
             name: 'change-password',
@@ -370,6 +375,7 @@ const router = createRouter({
             name: 'formpro',
             component: () => import('@/views/pages/admin/product/ProductForm.vue') // Đảm bảo file này tồn tại
         }
+        
     ]
 });
 

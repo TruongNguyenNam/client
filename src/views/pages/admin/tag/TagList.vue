@@ -4,6 +4,80 @@ import { ProductTagService } from "../../../../service/admin/ProductTagService";
 import { FilterMatchMode } from "primevue/api";
 import { useRouter } from "vue-router";
 import Toast from "primevue/toast";
+import { exportToExcel, importFromExcel, downloadExcelTemplate } from '@/utils/excel';
+
+const exportTagsToExcel = () => {
+    if (!tags.value.length) {
+        toast.value.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu để xuất', life: 3000 });
+        return;
+    }
+
+    const exportData = tags.value.map(tag => ({
+        ID: tag.id,
+        Name: tag.name,
+        Description: tag.description
+    }));
+
+    exportToExcel(exportData, "DanhSachTag");
+};
+const downloadTagTemplate = () => {
+    downloadExcelTemplate(['Name', 'Description'], 'Template_Tag');
+};
+const importTagsFromExcel = async (event) => {
+    const file = event.files?.[0];
+    if (!file) return;
+
+    try {
+        const importedData = await importFromExcel(file);
+        console.log("📥 Dữ liệu Excel:", importedData);
+
+        const imported = importedData
+            .map((item) => ({
+                name: item.Name?.trim() || '',
+                description: item.Description?.trim() || ''
+            }))
+            .filter(item => item.name); // bỏ những dòng không có tên
+
+        const existingNames = tags.value.map(tag => tag.name.trim().toLowerCase());
+
+        const validItems = imported.filter(item => !existingNames.includes(item.name.toLowerCase()));
+        const duplicatedItems = imported.length - validItems.length;
+
+        for (const item of validItems) {
+            try {
+                await ProductTagService.addProductTag(item);
+                console.log("✅ Thêm tag:", item);
+            } catch (err) {
+                console.error("❌ Lỗi khi thêm:", item, err);
+            }
+        }
+
+        // Thông báo kết quả
+        if (validItems.length > 0) {
+            toast.value.add({
+                severity: 'success',
+                summary: 'Thành công',
+                detail: `Đã thêm ${validItems.length} tag${duplicatedItems > 0 ? ` (bỏ qua ${duplicatedItems} tag trùng tên)` : ''}`,
+                life: 4000
+            });
+        } else {
+            toast.value.add({
+                severity: 'warn',
+                summary: 'Thông báo',
+                detail: 'Tất cả các tag trong file đã tồn tại!',
+                life: 4000
+            });
+        }
+
+        await loadTags();
+    } catch (error) {
+        toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể nhập file Excel', life: 3000 });
+        console.error("Lỗi khi nhập Excel:", error);
+    }
+};
+
+
+
 
 const tags = ref([]);
 const loading = ref(true);
@@ -96,7 +170,7 @@ const deleteSelectedTags = async () => {
 };
 
 const openNew = () => {
-    tag.value = { id: null, name: '', description: '' }; 
+    tag.value = { id: null, name: '', description: '' };
     tagDialog.value = true;
 };
 
@@ -172,19 +246,24 @@ const confirmDeleteTag = (selectedTag) => {
                 <Toolbar class="mb-4">
                     <template v-slot:start>
                         <div class="my-2">
-                            <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="deleteSelectedTags" :disabled="!selectedTags.length" />
+                            <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
                         </div>
                     </template>
-
                     <template v-slot:end>
-                        <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" />
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" />
+                        <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
+                            @click="downloadTagTemplate" />
+
+                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
+                            class="mr-2 inline-block" @select="importTagsFromExcel" :auto="true" />
+
+                        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportTagsToExcel" />
                     </template>
+
                 </Toolbar>
 
                 <!-- Modal thêm/sửa tag -->
-                <Dialog v-model:visible="tagDialog" :style="{width: '450px'}" header="Chi tiết Tag" :modal="true" class="p-fluid">
+                <Dialog v-model:visible="tagDialog" :style="{ width: '450px' }" header="Chi tiết Tag" :modal="true"
+                    class="p-fluid">
                     <div class="field">
                         <label for="name">Tên của tag</label>
                         <InputText id="name" v-model="tag.name" required autofocus />
@@ -199,46 +278,42 @@ const confirmDeleteTag = (selectedTag) => {
                     </template>
                 </Dialog>
 
-                <DataTable
-                    :value="tags"
-                    v-model:selection="selectedTags"
-                    :paginator="true"
-                    :first="lazyParams.page * lazyParams.size"
-                    :rows="lazyParams.size"
-                    :totalRecords="totalRecords"
-                    :rowHover="true"
-                    class="p-datatable-gridlines"
-                    filterDisplay="menu"
-                    v-model:filters="filters"
-                    :loading="loading"
-                    :lazy="false"
-                    @page="onPage"
-                    responsiveLayout="scroll"
-                    :globalFilterFields="['name']"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
+                <DataTable :value="tags" v-model:selection="selectedTags" :paginator="true"
+                    :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
+                    :rowHover="true" class="p-datatable-gridlines" filterDisplay="menu" v-model:filters="filters"
+                    :loading="loading" :lazy="false" @page="onPage" responsiveLayout="scroll"
+                    :globalFilterFields="['name']" :rowsPerPageOptions="[5, 10, 20, 50]"
                     currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} tag"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                    :pageLinkSize="3"
-                >
+                    :pageLinkSize="3">
                     <template #header>
                         <div class="flex justify-content-between flex-column sm:flex-row">
-                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2" @click="initFilters()" />
+                            <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2"
+                                @click="initFilters()" />
                             <span class="p-input-icon-left mb-2">
                                 <i class="pi pi-search" />
-                                <InputText v-model="filters.global.value" placeholder="Tìm kiếm..." style="width: 100%" />
+                                <InputText v-model="filters.global.value" placeholder="Tìm kiếm..."
+                                    style="width: 100%" />
                             </span>
                         </div>
                     </template>
 
                     <Column selectionMode="multiple" header="" style="min-width: 3rem" />
-                    <Column field="id" header="ID" sortable style="min-width: 5rem"></Column>
-                    <Column field="name" header="Tên Tag" sortable style="min-width: 12rem"></Column>
+                    <Column header="STT" style="width: 4rem">
+                        <template #body="slotProps">
+                        {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                        </template>
+                     </Column>
+                    <!-- <Column field="id" header="ID" sortable style="min-width: 5rem"></Column> -->
+                    <Column field="name" header="Tên nhãn" sortable style="min-width: 12rem"></Column>
                     <Column field="description" header="Mô tả" sortable style="min-width: 20rem"></Column>
 
                     <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
-                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editTag(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="confirmDeleteTag(slotProps.data)" />
+                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
+                                @click="editTag(slotProps.data)" />
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                                @click="confirmDeleteTag(slotProps.data)" />
                         </template>
                     </Column>
 
@@ -247,25 +322,27 @@ const confirmDeleteTag = (selectedTag) => {
                 </DataTable>
 
                 <!-- Dialog xác nhận xóa tag -->
-                <Dialog v-model:visible="deleteTagDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
+                <Dialog v-model:visible="deleteTagDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
                     <div class="confirmation-content">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span v-if="tag">Bạn có chắc chắn muốn xóa <b>{{tag.name}}</b>?</span>
+                        <span v-if="tag">Bạn có chắc chắn muốn xóa <b>{{ tag.name }}</b>?</span>
                     </div>
                     <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteTagDialog = false"/>
+                        <Button label="Không" icon="pi pi-times" class="p-button-text"
+                            @click="deleteTagDialog = false" />
                         <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteTag" />
                     </template>
                 </Dialog>
 
                 <!-- Dialog xác nhận xóa các tag đã chọn -->
-                <Dialog v-model:visible="deleteTagsDialog" :style="{width: '450px'}" header="Xác nhận" :modal="true">
+                <Dialog v-model:visible="deleteTagsDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
                     <div class="confirmation-content">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
                         <span>Bạn có chắc chắn muốn xóa các tag đã chọn?</span>
                     </div>
                     <template #footer>
-                        <Button label="Không" icon="pi pi-times" class="p-button-text" @click="deleteTagsDialog = false"/>
+                        <Button label="Không" icon="pi pi-times" class="p-button-text"
+                            @click="deleteTagsDialog = false" />
                         <Button label="Có" icon="pi pi-check" class="p-button-text" @click="deleteSelectedTags" />
                     </template>
                 </Dialog>

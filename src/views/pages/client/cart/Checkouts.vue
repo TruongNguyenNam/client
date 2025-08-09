@@ -12,24 +12,38 @@
                 <a href="#" class="logout-link" @click.prevent="logout">Đăng xuất</a>
               </div>
             </div>
-            <div class="form-group">
-              <input type="text" v-model="form.fullName" placeholder="Họ tên" class="form-input" />
-              <input type="text" v-model="form.phone" placeholder="Số điện thoại" class="form-input" />
-              <input type="text" v-model="form.email" placeholder="Email" class="form-input" />
-            </div>
-            <div class="form-group">
-              <select v-model="form.addressProvince" class="form-input" @change="onProvinceChange">
-                <option value="" disabled selected>Tỉnh / thành</option>
-                <option v-for="province in provinces" :key="province.id" :value="province.name">{{ province.name }}</option>
-              </select>
-              <select v-model="form.addressDistrict" class="form-input" :disabled="!form.addressProvince" @change="onDistrictChange">
-                <option value="" disabled selected>Quận / huyện</option>
-                <option v-for="district in districts" :key="district.id" :value="district.name">{{ district.name }}</option>
-              </select>
-              <select v-model="form.addressWard" class="form-input" :disabled="!form.addressDistrict">
-                <option value="" disabled selected>Phường / xã</option>
-                <option v-for="ward in wards" :key="ward.id" :value="ward.name">{{ ward.name }}</option>
-              </select>
+
+            <AddressSelectDialog v-model:visible="showAddressDialog" :addresses="addresses || []"
+              :customer-id="authStore.userInfo?.userId ?? 0" :key="addressDialogKey" @select="handleAddressSelect"
+              @cancel="showAddressDialog = false" @submitAddress="handleAddressSubmit"
+              @deleteAddress="handleAddressDelete" />
+            <!-- Địa chỉ giao hàng -->
+            <div class="shipping-address-block">
+              <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
+              <div class="bg-white p-3 rounded border mb-3">
+                <div v-if="addresses.length > 0" class="mt-3">
+                  
+            
+                  <!-- <div class="mb-2">
+                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
+                  </div> -->
+
+                  <div class="mb-2">
+                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
+                  </div>
+                  <div class="text-sm text-gray-700 leading-relaxed">
+                    <i class="pi pi-map-marker mr-2"></i> {{ fullAddress }}
+                  </div>
+                </div>
+                <div v-if="addresses.length > 1" class="mt-3">
+                  <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"
+                    @click="showAddressDialog = true" />
+                </div>
+                <div v-if="addresses.length <= 1" class="mt-3">
+                  <Button label="Thêm địa chỉ giao hàng" icon="pi pi-map-marker" outlined class="w-full"
+                    @click="showAddressDialog = true" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -40,7 +54,7 @@
             <div v-if="!form.addressWard" class="shipping-note">Vui lòng chọn phường/xã để có danh sách phương thức vận chuyển.</div>
             <div v-else v-for="carrier in carriers" :key="carrier.id" class="shipping-option">
               <input type="radio" :id="carrier.name" v-model="form.shippingMethod" :value="carrier" />
-              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn phí' }})</label>
+              <label :for="carrier.name">{{ carrier.name }} ({{ shippingCost > 0 ? formatPrice(shippingCost) : 'Miễn Phí' }})</label>
             </div>
           </div>
         </div>
@@ -70,14 +84,8 @@
 
             <div class="coupon-section">
               <h3 class="text-lg font-medium text-gray-900 mb-4">Mã giảm giá</h3>
-              <MultiSelect
-                v-model="selectedCoupons"
-                :options="couponUsage"
-                optionLabel="couponCode"
-                placeholder="Chọn mã giảm giá (nếu có)"
-                class="w-full"
-                @change="applyCoupons"
-              >
+              <MultiSelect v-model="selectedCoupons" :options="couponUsage" optionLabel="couponCode"
+                placeholder="Chọn mã giảm giá (nếu có)" class="w-full" @change="applyCoupons">
                 <template #option="slotProps">
                   <div>{{ slotProps.option.couponCode }} (-{{ formatPrice(slotProps.option.couponDiscountAmount) }})</div>
                 </template>
@@ -95,7 +103,9 @@
               <div class="total-item total-final">Tổng cộng <span class="total-amount">{{ formatPrice(total) }}</span></div>
             </div>
 
-            <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt hàng</button>
+            <!-- <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt hàng</button> -->
+            <button class="place-order-button" @click="showConfirmDialog = true">Đặt hàng</button>
+
           </div>
         </div>
       </div>
@@ -112,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import type { CouponUsageClientResponse } from '../../../../model/client/couponUsage';
 import type { CarrierClientResponse } from '../../../../model/client/carrier';
@@ -127,9 +137,14 @@ import { useRouter, useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../../../stores/auth';
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
-import Dialog from 'primevue/dialog';
+import Dialog from 'primevue/dialog'; 
 import Button from 'primevue/button';
 import MultiSelect from 'primevue/multiselect';
+import AddressSelectDialog from '../../../../views/pages/admin/order/AddressSelectDialog.vue';
+import type { AddressResponse } from '../../../../model/admin/address';
+import { AddressService } from '../../../../service/admin/AddressService';
+import { CustomerService } from '../../../../service/admin/CustomerServiceLegacy';
+import { VnPayService } from '../../../../service/admin/VnPayService';
 
 const formatPrice = (price: number | undefined | null): string => {
   if (price == null || isNaN(price)) {
@@ -160,13 +175,13 @@ const form = ref<CheckoutForm>({
   addressProvince: '',
   addressDistrict: '',
   addressWard: '',
+  receiverName: '',
+  receiverPhone: '',
   shippingMethod: null,
   paymentMethod: null,
 });
 
 const provinces = ref<Location[]>([]);
-const districts = ref<Location[]>([]);
-const wards = ref<Location[]>([]);
 
 interface Location {
   id: string;
@@ -183,21 +198,13 @@ interface CheckoutForm {
   addressProvince: string;
   addressDistrict: string;
   addressWard: string;
+  receiverName?: string;
+  receiverPhone?: string;
   shippingMethod: CarrierClientResponse | null;
   paymentMethod: PaymentMethodClientResponse | null;
 }
 
-interface UserResponse {
-  userId: number;
-  username: string;
-  email: string;
-  message?: string;
-  role: string;
-  phoneNumber: string | null;
-  gender: string | null;
-  isActive: boolean;
-  address: UserAddress | null;
-}
+
 
 interface UserAddress {
   id: number;
@@ -209,28 +216,149 @@ interface UserAddress {
   addressZipcode: string;
   addressDistrict: string;
   addressProvince: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  isDefault?: boolean;
 }
 
-interface UpdateUserForm {
-  email: string;
-  phoneNumber: string;
-  gender: string;
-  address: AddressForm;
+
+
+const addresses = computed(() => {
+  const addressesRaw = authStore.userInfo?.addresses ?? [];
+  return addressesRaw.map(addr => ({
+    id: addr.id,
+    street: addr.addressStreet,
+    ward: addr.addressWard,
+    city: addr.addressCity,
+    state: addr.addressState,
+    country: addr.addressCountry,
+    zipcode: addr.addressZipcode,
+    district: addr.addressDistrict,
+    province: addr.addressProvince,
+    receiverName: addr.receiverName ?? "",
+    receiverPhone: addr.receiverPhone ?? "",
+    isDefault: !!addr.isDefault,
+  }));
+});
+
+const handleAddressDelete = async () => {
+  await authStore.fetchUserInfo();
+  addressDialogKey.value++;
+};
+
+const showAddressDialog = ref(false);
+const selectedAddress = ref<UserAddress | null>(null);
+const addressDialogKey = ref(0);
+
+function handleAddressSelect(address: AddressResponse) {
+  console.log('Selected Address:', address);
+  const addr = mapToUserAddress(address);
+  selectedAddress.value = addr;
+  showAddressDialog.value = false;
+  form.value.addressProvince = addr.addressProvince;
+  form.value.addressDistrict = addr.addressDistrict;
+  form.value.addressWard = addr.addressWard;
+  form.value.receiverName = addr.receiverName || '';
+  form.value.receiverPhone = addr.receiverPhone || '';
+  form.value.shippingMethod = null;
+  selectedAddressId.value = addr.id;
+  console.log('Updated selectedAddressId:', selectedAddressId.value);
 }
 
-interface AddressForm {
-  id: number;
-  addressStreet: string;
-  addressWard: string;
-  addressCity: string;
-  addressState: string;
-  addressCountry: string;
-  addressZipcode: string;
-  addressDistrict: string;
-  addressProvince: string;
+function mapToUserAddress(address: AddressResponse): UserAddress {
+  return {
+    id: address.id,
+    addressStreet: address.street,
+    addressWard: address.ward,
+    addressCity: address.city,
+    addressState: address.state,
+    addressCountry: address.country,
+    addressZipcode: address.zipcode,
+    addressDistrict: address.district,
+    addressProvince: address.province,
+    receiverName: address.receiverName,
+    receiverPhone: address.receiverPhone,
+    isDefault: address.isDefault,
+  };
 }
 
-// Computed properties
+const fullAddress = computed(() => {
+  if (!selectedAddress.value) return '';
+  const addr = selectedAddress.value;
+  return [
+    addr.addressStreet,
+    addr.addressWard,
+    addr.addressDistrict,
+    addr.addressProvince,
+    addr.addressCity,
+    addr.addressZipcode,
+  ].filter(Boolean).join(', ');
+});
+
+const provinceOptions = provincesData.data;
+const selectedAddressId = ref<number | null>(null);
+
+watch(addresses, (newAddresses) => {
+  console.log('Addresses changed:', newAddresses);
+  if (newAddresses.length > 0 && selectedAddressId.value === null) { // Chỉ khởi tạo nếu chưa chọn địa chỉ
+    const defaultAddress = newAddresses.find(addr => addr.isDefault) || newAddresses[0];
+    selectedAddress.value = mapToUserAddress(defaultAddress);
+    selectedAddressId.value = defaultAddress.id;
+    console.log('Default selectedAddressId:', selectedAddressId.value);
+  } else if (newAddresses.length === 0) {
+    selectedAddress.value = null;
+    selectedAddressId.value = null;
+  } else {
+    console.log('Address selection preserved, selectedAddressId:', selectedAddressId.value);
+  }
+}, { immediate: true });
+
+const handleAddressSubmit = async (submittedData: any) => {
+  if (!authStore.userInfo?.userId) return;
+  const province = provinceOptions.find(p => p.level1_id === submittedData.province);
+  const district = province?.level2s.find(d => d.level2_id === submittedData.district);
+  const ward = district?.level3s.find(w => w.level3_id === submittedData.ward);
+
+  const finalAddress = {
+    ...submittedData,
+    province: province?.name || '',
+    district: district?.name || '',
+    ward: ward?.name || '',
+    country: 'Việt Nam'
+  };
+  try {
+    if (submittedData.id) {
+      const resAdd = await AddressService.updateAddressForCustomer(authStore.userInfo?.userId, submittedData.id, finalAddress);
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã cập nhật địa chỉ thành công.',
+        life: 3000
+      });
+      if (resAdd.data?.id) {
+        await authStore.fetchUserInfo();
+        addressDialogKey.value++;
+        showAddressDialog.value = false;
+      }
+      selectedAddressId.value = submittedData.id;
+    } else {
+      const resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã thêm địa chỉ mới cho khách hàng.',
+        life: 3000
+      });
+    }
+    await authStore.fetchUserInfo();
+    addressDialogKey.value++;
+    showAddressDialog.value = false;
+  } catch (error) {
+    console.error('Lỗi xử lý địa chỉ:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xử lý địa chỉ', life: 3000 });
+  }
+};
+
 const subtotal: ComputedRef<number> = computed(() =>
   authStore.cart.reduce((sum, item) => {
     const price = item.product?.price ?? 0;
@@ -240,7 +368,7 @@ const subtotal: ComputedRef<number> = computed(() =>
 );
 
 const shippingCost: ComputedRef<number> = computed(() => {
-  return subtotal.value > 500000 ? 0 : 30000; // Miễn phí nếu đơn hàng > 500k, ngược lại 30k
+  return subtotal.value > 500000 ? 0 : 30000;
 });
 
 const total: ComputedRef<number> = computed(() => {
@@ -257,32 +385,13 @@ const isFormValid: ComputedRef<boolean> = computed(() =>
   !!form.value.addressDistrict &&
   !!form.value.addressWard &&
   !!form.value.shippingMethod &&
-  !!form.value.paymentMethod
+  !!form.value.paymentMethod &&
+  !!selectedAddressId.value
 );
 
-const normalizeLocationName = (name: string): string => {
-  return name
-    .replace(/^Thành phố\s+|^Tỉnh\s+|^Quận\s+|^Phường\s+/i, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-};
 
-const onProvinceChange = () => {
-  const province = provinces.value.find(p => p.name === form.value.addressProvince);
-  districts.value = province?.level2s || [];
-  form.value.addressDistrict = '';
-  form.value.addressWard = '';
-  wards.value = [];
-  form.value.shippingMethod = null; // Reset shipping method
-};
 
-const onDistrictChange = () => {
-  const district = districts.value.find(d => d.name === form.value.addressDistrict);
-  wards.value = district?.level3s || [];
-  form.value.addressWard = '';
-  form.value.shippingMethod = null; // Reset shipping method
-};
+
 
 const applyCoupons = async () => {
   couponDiscount.value = 0;
@@ -376,33 +485,21 @@ onMounted(async () => {
       authStore.cart = [];
     }
 
-    if (authStore.userInfo) {
-      form.value.fullName = authStore.userInfo.username || authStore.userInfo.email || '';
-      form.value.phone = authStore.userInfo.phoneNumber || '';
-      form.value.email = authStore.userInfo.email || '';
-      if (authStore.userInfo.address) {
-        const provinceName = normalizeLocationName(authStore.userInfo.address.addressProvince || '');
-        const province = provinces.value.find(p => normalizeLocationName(p.name) === provinceName);
-        if (province) {
-          form.value.addressProvince = province.name;
-          districts.value = province.level2s || [];
-          const districtName = normalizeLocationName(authStore.userInfo.address.addressDistrict || '');
-          const district = districts.value.find(d => normalizeLocationName(d.name) === districtName);
-          if (district) {
-            form.value.addressDistrict = district.name;
-            wards.value = district.level3s || [];
-            const wardName = normalizeLocationName(authStore.userInfo.address.addressWard || '');
-            const ward = wards.value.find(w => normalizeLocationName(w.name) === wardName);
-            if (ward) {
-              form.value.addressWard = ward.name;
-            }
-          }
-        }
-      }
+    if (authStore.userInfo && authStore.userInfo.addresses && authStore.userInfo.addresses.length > 0) {
+      const defaultAddress = authStore.userInfo.addresses.find(addr => addr.isDefault) || authStore.userInfo.addresses[0];
+      form.value.addressProvince = defaultAddress.addressProvince;
+      form.value.addressDistrict = defaultAddress.addressDistrict;
+      form.value.addressWard = defaultAddress.addressWard;
+      form.value.receiverName = defaultAddress.receiverName || '';
+      form.value.receiverPhone = defaultAddress.receiverPhone || '';
+      selectedAddressId.value = defaultAddress.id;
     }
     note.value = route.query.note?.toString() || localStorage.getItem('cartNote') || '';
 
-    // Thông báo miễn phí vận chuyển nếu subtotal > 500k
+          if (route.path === '/payment-return') {
+                handleVnpayCallback();
+              }
+
     if (subtotal.value > 500000) {
       toast.add({
         severity: 'info',
@@ -554,15 +651,15 @@ const submitOrder = async () => {
     return;
   }
 
-  if (!isFormValid.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại và email hợp lệ.',
-      life: 3000,
-    });
-    return;
-  }
+  // if (!isFormValid.value) {
+  //   toast.add({
+  //     severity: 'warn',
+  //     summary: 'Cảnh báo',
+  //     detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
+  //     life: 3000,
+  //   });
+  //   return;
+  // }
 
   if (authStore.cart.length === 0) {
     toast.add({
@@ -586,27 +683,11 @@ const submitOrder = async () => {
 
   loading.value = true;
   try {
-    const updateForm: UpdateUserForm = {
-      email: form.value.email,
-      phoneNumber: form.value.phone,
-      gender: authStore.userInfo?.gender || '',
-      address: {
-        id: authStore.userInfo?.address?.id || 0,
-        addressStreet: '',
-        addressWard: form.value.addressWard,
-        addressDistrict: form.value.addressDistrict,
-        addressProvince: form.value.addressProvince,
-        addressCity: authStore.userInfo?.address?.addressCity || '',
-        addressState: authStore.userInfo?.address?.addressState || '',
-        addressCountry: authStore.userInfo?.address?.addressCountry || 'Việt Nam',
-        addressZipcode: authStore.userInfo?.address?.addressZipcode || '',
-      },
-    };
-    await AuthService.updateUserAddress(authStore.userId!, updateForm);
-    await authStore.fetchUserInfo();
+   
 
     const orderRequest: OrderRequestClient = {
       userId: authStore.userId,
+      addressId: selectedAddressId.value || undefined,
       nodes: note.value,
       items: authStore.cart.map(item => ({
         productId: item.product.id,
@@ -632,7 +713,8 @@ const submitOrder = async () => {
 
     const response = await CartClientService.checkout(orderRequest);
     console.log('Response from checkout API:', response);
-
+    await authStore.fetchUserInfo();
+    console.log('Checkout Response:', response.data);
     if (response.status === 200 && response.data) {
       const orderResponse: OrderResponseClient = response.data;
       toast.add({
@@ -642,15 +724,13 @@ const submitOrder = async () => {
         life: 5000,
       });
 
-      // Xử lý thanh toán VNPay
       if (orderResponse.paymentUrl) {
-        window.location.href = orderResponse.paymentUrl; // Chuyển hướng đến VNPay
+        window.location.href = orderResponse.paymentUrl;
       } else {
         authStore.cart = [];
         localStorage.removeItem('cartNote');
         authStore.cartCount = 0;
         router.push(`/client/cart/${authStore.userId}`);
-        // router.push('/cart/${}')
       }
     }
   } catch (error: any) {
@@ -673,6 +753,86 @@ const submitOrder = async () => {
     showConfirmDialog.value = false;
   }
 };
+
+const handleVnpayCallback = async () => {
+  try {
+    loading.value = true;
+    const queryParams = route.query;
+
+    if (Object.keys(queryParams).length === 0) {
+      throw new Error('Không nhận được tham số từ VNPay');
+    }
+
+    console.log('VNPay Query Params:', queryParams);
+    const response = await VnPayService.verifyVnpayCallback(queryParams);
+    console.log('VNPay Callback Response:', response.data);
+
+    if (response.status && response.data.success) {
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: `Thanh toán thành công cho đơn hàng ${response.data.orderCode || queryParams.vnp_TxnRef}!`,
+        life: 5000,
+      });
+
+      authStore.cart = [];
+      localStorage.removeItem('cartNote');
+      authStore.cartCount = 0;
+      await authStore.fetchUserInfo();
+
+      // Chuyển hướng ngay lập tức với URL sạch
+      const cleanUrl = `${window.location.origin}/#/client`;
+      console.log('Redirecting to clean URL:', cleanUrl);
+      window.location.replace(cleanUrl);
+    } else {
+      const errorMessage = response.data.message || getVnpayErrorMessage(queryParams.vnp_ResponseCode as string) || 'Thanh toán VNPay thất bại';
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: errorMessage,
+        life: 5000,
+      });
+      // Chuyển hướng ngay lập tức với URL sạch khi thất bại
+      const cleanUrl = `${window.location.origin}/#/client`;
+      console.log('Redirecting to clean URL (failure):', cleanUrl);
+      window.location.replace(cleanUrl);
+    }
+  } catch (error: any) {
+    console.error('Lỗi khi xử lý phản hồi VNPay:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.message || 'Lỗi hệ thống khi xử lý thanh toán VNPay',
+      life: 3000,
+    });
+    // Chuyển hướng ngay lập tức với URL sạch khi lỗi
+    const cleanUrl = `${window.location.origin}/#/client`;
+    console.log('Redirecting to clean URL (error):', cleanUrl);
+    window.location.replace(cleanUrl);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const getVnpayErrorMessage = (responseCode: string): string => {
+  const errorMap: { [key: string]: string } = {
+    '01': 'Giao dịch chưa hoàn tất hoặc bị hủy.',
+    '07': 'Giao dịch bị nghi ngờ gian lận.',
+    '09': 'Thẻ/Tài khoản chưa đăng ký dịch vụ.',
+    '10': 'Không xác minh được thông tin thẻ/tài khoản.',
+    '11': 'Chưa qua thời gian xác minh thanh toán.',
+    '12': 'Thẻ/Tài khoản bị khóa.',
+    '13': 'Mã OTP không đúng.',
+    '24': 'Giao dịch bị hủy bởi người dùng.',
+    '51': 'Tài khoản không đủ số dư.',
+    '65': 'Giao dịch vượt quá hạn mức.',
+    '75': 'Ngân hàng từ chối giao dịch.',
+    '79': 'Sai thông tin mật khẩu thanh toán.',
+    '99': 'Lỗi không xác định.',
+  };
+  return errorMap[responseCode] || `Lỗi không xác định: ${responseCode}`;
+};
+
 </script>
 
 <style scoped>

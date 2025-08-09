@@ -35,13 +35,12 @@ const handleRegister = async () => {
 
   isLoading.value = true;
   try {
-    const registerForm = { 
-      username: username.value, 
-      password: password.value, 
-      email: email.value 
+    const registerForm = {
+      username: username.value,
+      password: password.value,
+      email: email.value
     };
     const response = await AuthService.Register(registerForm);
-    
     if (response.data) {
       toast.add({
         severity: 'success',
@@ -59,23 +58,42 @@ const handleRegister = async () => {
       });
     }
   } catch (error) {
+    const resp = error?.response?.data;
+    const detailedMsg = resp?.data?.name;
+
+    if (
+      (detailedMsg && detailedMsg.toLowerCase().includes('email')) ||
+      (resp?.message && resp.message.toLowerCase().includes('email'))
+    ) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Email đã được sử dụng',
+        detail: detailedMsg || 'Vui lòng sử dụng email khác.',
+        life: 3000
+      });
+      return;
+    }
+
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: error.response?.data?.message || error.message || 'Đã xảy ra lỗi khi đăng ký',
+      detail: detailedMsg || resp?.message || error.message || 'Đã xảy ra lỗi khi đăng ký',
       life: 3000
     });
   } finally {
     isLoading.value = false;
   }
 };
+
+
 </script>
 
 <template>
   <div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
     <div class="flex flex-column align-items-center justify-content-center">
       <img :src="logoUrl" alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0" />
-      <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
+      <div
+        style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
         <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius: 53px">
           <div class="text-center mb-5">
             <img src="/demo/images/login/avatar.png" alt="Image" height="50" class="mb-3" />
@@ -83,46 +101,22 @@ const handleRegister = async () => {
             <span class="text-600 font-medium">Tạo tài khoản để bắt đầu</span>
           </div>
 
-          
+
 
           <div>
             <label for="email1" class="block text-900 text-xl font-medium mb-2">Email</label>
-            <InputText
-              id="email1"
-              type="email"
-              placeholder="Email"
-              class="w-full md:w-30rem mb-5"
-              style="padding: 1rem"
-              v-model="email"
-            />
+            <InputText id="email1" type="email" placeholder="Email" class="w-full md:w-30rem mb-5" style="padding: 1rem"
+              v-model="email" />
 
             <label for="username1" class="block text-900 text-xl font-medium mb-2">Tên đăng nhập</label>
-            <InputText
-              id="username1"
-              type="text"
-              placeholder="Tên đăng nhập"
-              class="w-full md:w-30rem mb-5"
-              style="padding: 1rem"
-              v-model="username"
-            />
+            <InputText id="username1" type="text" placeholder="Tên đăng nhập" class="w-full md:w-30rem mb-5"
+              style="padding: 1rem" v-model="username" />
 
             <label for="password1" class="block text-900 font-medium text-xl mb-2">Mật khẩu</label>
-            <Password
-              id="password1"
-              v-model="password"
-              placeholder="Mật khẩu"
-              :toggleMask="true"
-              class="w-full mb-5"
-              inputClass="w-full"
-              :inputStyle="{ padding: '1rem' }"
-            ></Password>
+            <Password id="password1" v-model="password" placeholder="Mật khẩu" :toggleMask="true" class="w-full mb-5"
+              inputClass="w-full" :inputStyle="{ padding: '1rem' }"></Password>
 
-            <Button
-              label="Đăng ký"
-              class="w-full p-3 text-xl"
-              :loading="isLoading"
-              @click="handleRegister"
-            ></Button>
+            <Button label="Đăng ký" class="w-full p-3 text-xl" :loading="isLoading" @click="handleRegister"></Button>
           </div>
         </div>
       </div>

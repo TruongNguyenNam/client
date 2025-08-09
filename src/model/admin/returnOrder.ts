@@ -27,3 +27,13 @@ export interface ReturnMediaAdminResponse{
 export interface ReturnRequestListRequest{
 adminNote:string
 }
+export interface ReturnPriceResponse{
+userName:string
+bankAccountNumber:string
+bankAccountName:string
+bankName:string
+totalPrice:string
+code:string
+idReturnRequestItem:number
+productName:string
+}

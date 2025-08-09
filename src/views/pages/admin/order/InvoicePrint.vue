@@ -114,19 +114,57 @@ onMounted(() => {
 });
 </script>
 
+
 <style scoped>
 #print-invoice {
   font-family: Arial, sans-serif;
   font-size: 14px;
   padding: 20px;
 }
+
 .text-center {
   text-align: center;
 }
+
 .text-right {
   text-align: right;
 }
+
 .font-bold {
   font-weight: bold;
+}
+
+.body {
+  font-family: Arial;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.th,
+td {
+  border: 1px solid #000;
+  padding: 6px;
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.h2,
+h3,
+h4 {
+  margin: 0 0 10px 0;
+  text-align: center;
 }
 </style>

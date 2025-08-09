@@ -191,6 +191,12 @@
       <!-- Bank info -->
        <div class="bank-info-section p-4 border-round border-1 surface-border">
         <h4 class="text-lg font-semibold mb-3">Thông tin hoàn tiền</h4>
+         <div class="bg-red-50 border-l-4 border-red-500 p-3 mb-4">
+    <div class="flex items-center">
+      <i class="pi pi-exclamation-circle text-red-500 mr-2"></i>
+      <span class="text-red-700 font-medium">Vui lòng nhập chính xác thông tin tài khoản ngân hàng để đảm bảo hoàn tiền thành công</span>
+    </div>
+  </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="field">
             <label for="bankAccountName" class="block text-sm font-medium mb-2">Tên chủ tài khoản</label>
@@ -479,11 +485,34 @@ function removeMediaFile(orderItemId: number, index: number) {
 
 async function submitReturnRequest() {
   formSubmitted.value = true;
-  const invalidItems = selectedItems.value.filter(item => !item.returnReason || item.returnQuantity <= 0 || item.returnQuantity > item.quantity);
+
+  // Kiểm tra các điều kiện bắt buộc
+  const invalidItems = selectedItems.value.filter(item => 
+    !item.returnReason || 
+    item.returnQuantity <= 0 || 
+    item.returnQuantity > item.quantity ||
+    item.mediaFiles.length === 0 // Thêm điều kiện kiểm tra ít nhất 1 file
+  );
 
   if (invalidItems.length > 0) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng kiểm tra lại thông tin hoàn trả cho các sản phẩm', life: 3000 });
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: 'Vui lòng kiểm tra lại: chọn lý do, số lượng hợp lệ và tải lên ít nhất 1 ảnh/video cho mỗi sản phẩm', 
+      life: 5000 
+    });
     return;
+  }
+ if ((orderDetail.value?.totalAmount || 0) > 0) {
+    if (!bankAccountName.value || !bankAccountNumber.value || !selectedBank.value) {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Vui lòng nhập đầy đủ thông tin ngân hàng để hoàn tiền',
+        life: 5000
+      });
+      return;
+    }
   }
 
   isSubmitting.value = true;

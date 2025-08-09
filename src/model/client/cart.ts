@@ -45,6 +45,7 @@ export interface ShoppingCartRequest {
 
 export interface OrderRequestClient {
   userId: number;
+  addressId?:number; 
   nodes?: string;
   items?: OrderItemRequest[]; 
   payment?: PaymentRequest;
@@ -68,9 +69,8 @@ export interface ShipmentRequest {
   estimatedDeliveryDate: string; // ISO 8601 format
   orderItemIds?: number[];
   shippingCost?: number;
+  
 }
-
-
 
 
 export interface OrderResponseClient {
@@ -109,6 +109,9 @@ export interface AddressResponse {
   addressZipcode: string;
   addressDistrict: string;
   addressProvince: string;
+  receiverName: string;
+  receiverPhone: string;
+  isDefault:boolean;
   isActive: boolean;
 }
 

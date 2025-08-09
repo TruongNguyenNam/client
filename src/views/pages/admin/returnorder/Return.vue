@@ -13,7 +13,7 @@
 
       <!-- Màn 3: Phản hồi & hoàn tiền -->
       <TabPanel header="📨 Phản hồi & hoàn tiền">
-        <ReturnFeedback />
+        <ReturnPrice/>
       </TabPanel>
     </TabView>
   </div>
@@ -23,6 +23,7 @@
 import { ref,watch } from 'vue'
 import ReturnRequestList from './ReturnRequestList.vue';
 import CheckReturnOrdor from './CheckReturnOrdor.vue';
+import ReturnPrice from './ReturnPrice.vue';
 
 const activeTab = ref(0)
 watch(activeTab, (newIndex) => {

@@ -25,10 +25,10 @@
               <p class="font-semibold text-sm">#{{ order.code }}</p>
               <p class="text-xs text-gray-500 mt-1">{{ formatDate(order.orderDate) }}</p>
             </div>
-            <span class="px-2 py-1 rounded-full text-xs font-medium" 
-                  :class="statusClasses(order.status)">
-              {{ order.status }}
-            </span>
+          <span class="status-badge" :class="statusClasses(order.status)">
+  {{ order.status }}
+</span>
+
           </div>
 
           <!-- Danh sách sản phẩm cuộn ngang -->
@@ -154,4 +154,18 @@ const statusClasses = (status: string) => {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+.status-badge {
+  margin-left: 10px;
+  display: inline-block;
+  padding: 0.15rem 0.5rem; /* Thu nhỏ padding ngang lại */
+  max-width: 6rem;  
+  height: 30px;        /* Giới hạn chiều rộng tối đa */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+     /* Bo tròn hết */
+  font-size: 0.75rem;       /* Font nhỏ hơn */
+  text-align: center;
+}
+
 </style>

@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, 
+  withCredentials: true,
 });
 
 export const getAuthToken = (): string | null => {
@@ -110,7 +110,7 @@ export interface LoginInfoDto {
   role: string;
   gender: string | null;
   isActive: boolean;
-  address: UserAddress | null;
+  addresses: UserAddress | null;
 }
 
 
@@ -129,10 +129,12 @@ export interface UserResponse {
   phoneNumber: string | null;
   gender: string | null;
   isActive: boolean;
-  address: UserAddress;
+  addresses: UserAddress[];
 }
+
 export interface UserAddress {
   id: number;
+  addressId: number;
   addressStreet: string;
   addressWard: string;
   addressCity: string;
@@ -141,11 +143,14 @@ export interface UserAddress {
   addressZipcode: string;
   addressDistrict: string;
   addressProvince: string;
+  receiverName: string;
+  receiverPhone: string;
+  isDefault: boolean;
 }
 
 export interface UpdateUserForm {
   email: string;
   phoneNumber: string;
   gender: string;
-  address: UserAddress;
+  addresses: UserAddress;
 }

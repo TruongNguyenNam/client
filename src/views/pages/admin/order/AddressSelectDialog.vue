@@ -1,0 +1,253 @@
+<template>
+  <Dialog :visible="props.visible" @update:visible="val => emit('update:visible', val)" modal
+    header="Chọn địa chỉ giao hàng" :style="{ width: '600px' }">
+
+    <!-- Nút thêm -->
+    <div class="dialog-toolbar">
+      <Button label="Thêm địa chỉ mới" icon="pi pi-plus" class="p-button-success" @click="openAddDialog" />
+    </div>
+
+    <!-- Danh sách địa chỉ -->
+    <div v-if="sortedAddresses.length > 0">
+      <div v-for="addr in sortedAddresses" :key="addr.id" class="address-card">
+        <div class="address-info">
+          <div class="font-medium text-base mb-1">
+            <i class="pi pi-user mr-2"></i>{{ addr.receiverName }} - {{ addr.receiverPhone }}
+          </div>
+          <div class="text-sm text-gray-700">
+            <i class="pi pi-map-marker mr-2"></i>
+            {{ [addr.street, addr.ward, addr.district, addr.province, addr.city, addr.zipcode]
+              .filter(Boolean).join(", ") }}
+          </div>
+          <div v-if="addr.isDefault" class="badge-default">
+            <i class="pi pi-star-fill mr-1"></i> Mặc định
+          </div>
+        </div>
+
+        <div class="address-actions">
+          <Button label="Chọn" size="small" @click="select(addr)" class="mr-2" />
+          <Button icon="pi pi-pencil" size="small" severity="info" @click="editAddress(addr)" />
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="text-gray-500 text-center py-4">
+      Khách hàng chưa có địa chỉ nào.
+    </div>
+    <template #footer>
+      <Button label="Huỷ" icon="pi pi-times" class="p-button-text" @click="$emit('cancel')" />
+
+    </template>
+  </Dialog>
+
+  <!-- Dialog thêm/sửa -->
+  <AddressDialog v-if="dialogReady" v-model:visible="showAddressDialog" :mode="dialogMode" :data="dialogAddressData"
+    :isOnlyDefault?="isOnlyDefaultAddress" @submit="handleAddressSubmit" @delete="handleAddressDelete" />
+
+  <!-- Nút huỷ / lưu / xoá -->
+</template>
+
+<script setup lang="ts">
+import { ref, computed, nextTick } from 'vue';
+import { useToast } from 'primevue/usetoast';
+
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import AddressDialog from '../../../../views/pages/admin/address/AddressDialog.vue';
+import type { AddressResponse } from '../../../../model/admin/address';
+import provincesData from '../../../../assets/data/vietnam_provinces.json';
+import { AddressService } from '../../../../service/admin/AddressService';
+import { useConfirm } from 'primevue/useconfirm';
+
+const confirm = useConfirm();
+
+const toast = useToast();
+const props = defineProps<{
+  visible: boolean;
+  addresses: AddressResponse[];
+  customerId: number;
+}>();
+
+
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void;
+  (e: 'select', address: AddressResponse): void;
+  (e: 'submitAddress', address: any): void;
+  (e: 'deleteAddress'): void;
+  (e: 'cancel'): void;
+}>();
+
+
+
+const sortedAddresses = computed(() =>
+  [...props.addresses].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+);
+
+const isOnlyDefaultAddress = computed(() => {
+  const defaultAddresses = props.addresses.filter(a => a.isDefault);
+  return (
+    addressBeingEdited.value &&
+    defaultAddresses.length === 1 &&
+    defaultAddresses[0].id === addressBeingEdited.value.id
+  );
+});
+
+const convertNamesToIds = (addr: AddressResponse) => {
+  const province = provincesData.data.find(p => p.name === addr.province);
+  const district = province?.level2s.find(d => d.name === addr.district);
+  const ward = district?.level3s.find(w => w.name === addr.ward);
+
+  return {
+    ...addr,
+    province: province?.level1_id || '',
+    district: district?.level2_id || '',
+    ward: ward?.level3_id || ''
+  };
+};
+
+const showAddressDialog = ref(false);
+const dialogReady = ref(false);
+const dialogMode = ref<'add' | 'edit'>('add');
+const dialogAddressData = ref<any>({});
+const addressBeingEdited = ref<AddressResponse | null>(null);
+
+const select = (address: AddressResponse) => {
+  emit('select', address);
+  emit('update:visible', false);
+};
+
+const openAddDialog = async () => {
+  dialogMode.value = 'add';
+  dialogAddressData.value = {
+    receiverName: '',
+    receiverPhone: '',
+    street: '',
+    ward: '',
+    district: '',
+    province: '',
+    city: '',
+    state: '',
+    country: '',
+    zipcode: '',
+    isDefault: false
+  };
+  dialogReady.value = false;
+  await nextTick();
+  dialogReady.value = true;
+  showAddressDialog.value = true;
+};
+
+const editAddress = async (addr: AddressResponse) => {
+  dialogMode.value = 'edit';
+  addressBeingEdited.value = addr;
+  dialogAddressData.value = convertNamesToIds(addr);
+  dialogReady.value = false;
+  await nextTick();
+  dialogReady.value = true;
+  showAddressDialog.value = true;
+};
+
+// Regex SĐT Việt Nam
+const validatePhone = (phone: string) => /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+
+const handleAddressSubmit = (submitted: any) => {
+  if (!validatePhone(submitted.receiverPhone)) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Số điện thoại không hợp lệ',
+      detail: 'Vui lòng nhập đúng định dạng số điện thoại Việt Nam.',
+      life: 3000
+    });
+    return;
+  }
+
+  emit('submitAddress', submitted);
+  showAddressDialog.value = false;
+};
+
+
+// Gọi khi click XÓA trong AddressDialog
+const handleAddressDelete = (address: any) => {
+  const addressId = Number(address.id);
+
+  if (!addressId || isNaN(addressId)) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể xác định ID địa chỉ để xoá',
+      life: 3000
+    });
+    return;
+  }
+
+  confirm.require({
+    message: 'Bạn có chắc muốn xoá địa chỉ này?',
+    header: 'Xác nhận xoá',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Xoá',
+    rejectLabel: 'Huỷ',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        if (!props.customerId) return;
+        console.log('Xoá địa chỉ với ID:', address.id, 'Loại:', typeof address.id);
+        await AddressService.deleteAddress(props.customerId, addressId);
+
+        toast.add({
+          severity: 'success',
+          summary: 'Đã xoá',
+          detail: 'Xoá địa chỉ thành công',
+          life: 3000
+        });
+
+        showAddressDialog.value = false;
+        emit('deleteAddress');
+      } catch (err) {
+        console.error('Lỗi xoá địa chỉ:', err);
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể xoá địa chỉ',
+          life: 3000
+        });
+      }
+    }
+  });
+};
+
+
+</script>
+
+<style scoped>
+.dialog-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.address-card {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #f9fafb;
+}
+
+.address-info {
+  flex: 1;
+}
+
+.address-actions {
+  margin-left: 12px;
+}
+
+.badge-default {
+  margin-top: 6px;
+  color: #f59e0b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+</style>

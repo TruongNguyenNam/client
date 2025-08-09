@@ -5,9 +5,22 @@
         <Banner></Banner>
     </div>
 
-    <div class="list">
-        <h1 style="text-align: center;">chào mừng đến với ShoeStore</h1>
-    </div>
+    <!-- <div class="list">
+      <div class="list bg-gradient-to-r from-blue-400 to-purple-500 py-8 text-white">
+        <h1 class="text-4xl md:text-5xl font-bold text-center animate-pulse">
+          <!-- <span class="pi pi-shopping-cart mr-2"></span> -->
+          <!-- Chào mừng đến với ShoeStore VN -->
+          <!-- <span class="pi pi-heart-fill ml-2 text-red-500" style="font-size: 2rem"></span> -->
+        <!-- </h1> -->
+      <!-- </div> -->
+    <!-- </div>  -->
+
+    <div style="border: 2px solid #ff4d4f; margin-top: 20px; background: linear-gradient(to right, #ffe6e6, #fff); padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
+  <marquee behavior="scroll" direction="left" scrollamount="6" style="font-size: 28px; font-weight: bold; color: #d32f2f; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);">
+    👟🎉 Chào mừng bạn đã đến với ShoeStore VN - Nơi hội tụ những đôi giày chất lượng & thời trang nhất! 🎉👟
+  </marquee>
+</div>
+
 
  <!-- Product List Section -->
     <div class="header">
@@ -92,16 +105,42 @@
         </div>
       </div>
     </div>
+      
+    <div style="border: 1px solid red; margin-top: 10px; margin-bottom: 2px;">
+      <h1 style="margin-left: 30px; margin-top: 10px;">adidas x Mercedes-AMG PETRONAS F1</h1>
+    </div>
 
     <div class="banner-v2">
-        <Banner></Banner>
+        <!-- <Banner></Banner> -->
+        <div class="ima">
+              <Image style="width: 900px; height: auto;"></Image>
+        </div>
+
     </div>
+
+    <!-- <div class="banner-v2">
+      <video
+        class="banner-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        poster="https://via.placeholder.com/1200x300"
+      >
+        <source
+          src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-sheep-herd-on-a-meadow-469-large.mp4"
+          type="video/mp4"
+        />
+        Your browser does not support the video tag.
+      </video>
+    </div> -->
    
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import Image from './Image.vue';
 import { useToast } from 'primevue/usetoast';
 import { ProductClientService } from '../../../service/client/ProductClientService';
 import type { ProductResponseClient } from '../../../model/client/product';
@@ -318,16 +357,34 @@ const toggleCart = async (parentProductId: number | null) => {
 
 <style scoped>
 
-.banner{
+.container{
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+
+.list{
+  border: 1px solid red;
+  /* height: auto; */
+  margin-top: 10px;
+  /* height: 100px; */
+}
+
+
+.banner-v2 {
   width: 100%;
+  /* border: 1px solid red; */
+  margin-top: 10px;
+  /* height: auto; */
   border: 1px solid red;
 }
 
-.banner-v2{
+.banner-video {
   width: 100%;
-  border: 1px solid red;
-  margin-top: 10px;
-  height: auto;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 
@@ -354,7 +411,8 @@ const toggleCart = async (parentProductId: number | null) => {
     width: 1450px;
     margin: 0 auto;
     border:  1px solid red;
-    height: 900px;
+    height: 1000px;
+    margin-top: 10px;
 }
 
 
@@ -367,15 +425,16 @@ const toggleCart = async (parentProductId: number | null) => {
   border: 1px solid red;
   background: #fff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.2s;
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
   height: 400px;
   display: flex;
   flex-direction: column;
-  
+  margin-top: 10px;
 }
 
 .product-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .product-image {

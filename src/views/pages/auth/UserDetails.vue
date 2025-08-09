@@ -9,7 +9,7 @@
         <div class="profile-menu-section">Tài Khoản Của Tôi</div>
         <a class="profile-menu-item active" href="#">Hồ Sơ</a>
         <a class="profile-menu-item" href="#">Ngân Hàng</a>
-        <a class="profile-menu-item" href="#">Địa Chỉ</a>
+        <router-link class="profile-menu-item" to="/auth/profile/address">Địa Chỉ</router-link>
         <a class="profile-menu-item" href="#">Đổi Mật Khẩu</a>
         <a class="profile-menu-item" href="#">Cài Đặt Thông Báo</a>
         <a class="profile-menu-item" href="#">Những Thiết Lập Riêng Tư</a>
@@ -24,58 +24,68 @@
       </nav>
     </aside>
 
-    <!-- Main Profile Content -->
-    <main class="profile-main">
-      <form @submit.prevent="updateUser" class="profile-form">
-        <h1 class="profile-form-title">Hồ Sơ Của Tôi</h1>
-        <p class="profile-form-desc">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
-        <div class="profile-form-row">
-          <label class="profile-label">Tên đăng nhập</label>
-          <div class="profile-value">{{ user?.username }}</div>
+  <main class="profile-main">
+  <form @submit.prevent="updateUser" class="profile-form-two-column">
+    <div class="form-left">
+      <h1 class="profile-form-title">Hồ Sơ Của Tôi</h1>
+      <p class="profile-form-desc">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+
+      <div class="profile-form-row">
+        <label class="profile-label">Tên đăng nhập</label>
+        <div class="profile-value">{{ user?.username || 'Chưa có' }}</div>
+      </div>
+
+      <div class="profile-form-row">
+        <label class="profile-label">Tên</label>
+        <input v-model="updateForm.name" class="profile-input" placeholder="Nhập họ tên" />
+      </div>
+
+      <div class="profile-form-row">
+        <label class="profile-label">Email</label>
+        <div class="profile-value">
+          {{ maskedEmail }}
+          <button type="button" class="profile-link">Thay Đổi</button>
         </div>
-        <div class="profile-form-row">
-          <label class="profile-label">Tên</label>
-          <input v-model="updateForm.name" class="profile-input" placeholder="Nhập tên" />
+      </div>
+
+      <div class="profile-form-row">
+        <label class="profile-label">Số điện thoại</label>
+        <div class="profile-value">
+          {{ maskedPhone }}
+          <button type="button" class="profile-link">Thay Đổi</button>
         </div>
-        <div class="profile-form-row">
-          <label class="profile-label">Email</label>
-          <div class="profile-value">
-            {{ maskedEmail }}
-            <button type="button" class="profile-link">Thay Đổi</button>
-          </div>
+      </div>
+
+      <div class="profile-form-row">
+        <label class="profile-label">Giới tính</label>
+        <div class="profile-radio-group">
+          <label v-for="opt in genderOptions" :key="opt.value" class="profile-radio-label">
+            <input type="radio" :value="opt.value" v-model="updateForm.gender" class="profile-radio" />
+            <span>{{ opt.label }}</span>
+          </label>
         </div>
-        <div class="profile-form-row">
-          <label class="profile-label">Số điện thoại</label>
-          <div class="profile-value">
-            {{ maskedPhone }}
-            <button type="button" class="profile-link">Thay Đổi</button>
-          </div>
-        </div>
-        <div class="profile-form-row">
-          <label class="profile-label">Giới tính</label>
-          <div class="profile-radio-group">
-            <label v-for="opt in genderOptions" :key="opt.value" class="profile-radio-label">
-              <input type="radio" :value="opt.value" v-model="updateForm.gender" class="profile-radio" />
-              <span>{{ opt.label }}</span>
-            </label>
-          </div>
-        </div>
-        <div class="profile-form-row">
-          <label class="profile-label">Ngày sinh</label>
-          <div class="profile-value">
-            <input v-model="updateForm.birthday" type="date" class="profile-input" style="max-width: 180px" />
-            <button type="button" class="profile-link">Thay Đổi</button>
-          </div>
-        </div>
-        <div class="profile-form-row">
-          <button type="submit" class="profile-save-btn" :disabled="loading">
-            {{ loading ? 'Đang lưu...' : 'Lưu' }}
-          </button>
-          <span v-if="successMessage" class="profile-success">{{ successMessage }}</span>
-          <span v-if="error" class="profile-error">{{ error }}</span>
-        </div>
-      </form>
-    </main>
+      </div>
+
+
+
+      <div class="profile-form-row">
+        <button type="submit" class="profile-save-btn" :disabled="loading">
+          {{ loading ? 'Đang lưu...' : 'Lưu' }}
+        </button>
+        <span v-if="successMessage" class="profile-success">{{ successMessage }}</span>
+        <span v-if="error" class="profile-error">{{ error }}</span>
+      </div>
+    </div>
+
+    <!-- Avatar bên phải -->
+    <div class="form-right">
+     <img src="../../../assets/data/Anh/Logo-removebg-preview.png" alt="Avatar"
+          class="avatar-image" />
+    </div>
+  </form>
+</main>
+
+
   </div>
 </template>
 
@@ -121,7 +131,6 @@ const fetchUserInfo = async () => {
     updateForm.value.email = user.value?.email ?? '';
     updateForm.value.phoneNumber = user.value?.phoneNumber ?? '';
     updateForm.value.gender = user.value?.gender ?? '';
-    updateForm.value.birthday = user.value?.birthday ?? '';
   } catch (err: any) {
     error.value = 'Không thể lấy thông tin người dùng.';
   }
@@ -230,6 +239,7 @@ onMounted(() => {
 
 /* Main content */
 .profile-main {
+  
   flex: 1;
   min-width: 0;
   display: flex;
@@ -352,4 +362,65 @@ onMounted(() => {
   .profile-main { padding: 30px 0; }
   .profile-sidebar { padding: 30px 10px 0 10px; }
 }
+.profile-form-two-column {
+  background: #fff;
+  max-width: 900px;
+  width: 100%;
+  display: flex;
+  padding: 36px 48px 32px 48px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,.04);
+  gap: 32px;
+}
+
+.form-left {
+  flex: 1.5;
+}
+
+.form-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 30px;
+}
+
+.avatar-image {
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+ 
+}
+
+.avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #eaeaea;
+  margin-bottom: 16px;
+}
+
+.avatar-input {
+  display: none;
+}
+
+.choose-avatar-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.avatar-note {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+}
+
 </style>

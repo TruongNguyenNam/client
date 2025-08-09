@@ -62,6 +62,18 @@ export const CartClientService = {
         return response.data;
     },
 
+    getOrdersByUserId: async (userId: number): Promise<ApiResponse<OrderResponseClient[]>> => {
+        const response = await axiosInstance.get<ApiResponse<OrderResponseClient[]>>(`${API_URL}/order/${userId}`);
+        return response.data;
+      }
+      ,
+      cancelOrderByCode: async (orderCode: string): Promise<ApiResponse<OrderResponseClient>> => {
+        const response = await axiosInstance.put<ApiResponse<OrderResponseClient>>(
+          `${API_URL}/cancel/${orderCode}`
+        );
+        return response.data;
+      }
+      
 
 
 }
