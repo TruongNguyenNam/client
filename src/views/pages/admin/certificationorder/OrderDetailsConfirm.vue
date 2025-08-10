@@ -158,10 +158,14 @@
       <div class="p-field">
         <label for="receiverName">Tên người nhận</label>
         <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" />
+        <small v-if="errors.receiverName" class="p-error">{{ errors.receiverName }}</small>
+
       </div>
       <div class="p-field">
         <label for="receiverPhone">Số điện thoại</label>
         <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full" />
+        <small v-if="errors.receiverPhone" class="p-error">{{ errors.receiverPhone }}</small>
+
       </div>
       <div class="p-field">
         <label for="email">Email</label>
@@ -171,21 +175,32 @@
         <label for="province">Tỉnh/Thành phố</label>
         <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name"
           option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố" />
+        <small v-if="errors.province" class="p-error">{{ errors.province }}</small>
+
       </div>
       <div class="p-field">
         <label for="district">Quận/Huyện</label>
         <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name"
           option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện"
           :disabled="!selectedProvince" />
+        <small v-if="errors.district" class="p-error">{{ errors.district }}</small>
+
       </div>
       <div class="p-field">
         <label for="ward">Phường/Xã</label>
         <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name"
           option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" />
+        <small v-if="errors.ward" class="p-error">{{ errors.ward }}</small>
+
       </div>
       <div class="p-field">
         <label for="street">Đường</label>
         <InputText id="street" v-model="tempAddress.addressStreet" class="w-full" />
+        <small v-if="errors.street" class="p-error">{{ errors.street }}</small>
+      </div>
+      <div class="p-field">
+        <label>Địa chỉ đầy đủ</label>
+       <InputText :value="fullAddress" readonly class="w-full" />
       </div>
       <div class="p-field">
         <label for="zipcode">Mã bưu điện</label>
@@ -360,7 +375,16 @@ const provinceOptions = ref(provincesData.data); // Dữ liệu Tỉnh/Thành ph
 const districtOptions = ref<any[]>([]);
 const wardOptions = ref<any[]>([]);
 
-
+  //địa chỉ đầy đủ
+  const fullAddress = computed(() =>
+    [
+      tempAddress.value.addressStreet,
+      tempAddress.value.addressWard,
+      tempAddress.value.addressDistrict,
+      tempAddress.value.addressProvince,
+      tempAddress.value.addressCity,
+    ].filter(Boolean).join(', ')
+  );
 const openAddressDialog = () => {
   if (!order.value?.address) {
     toast.add({
@@ -374,6 +398,8 @@ const openAddressDialog = () => {
 
   // Sao chép dữ liệu địa chỉ hiện tại vào tempAddress
   tempAddress.value = { ...order.value.address };
+
+
   console.log('Order Address:', tempAddress.value); // Debug: Log address data
 
   // Normalize and set selectedProvince
@@ -410,7 +436,57 @@ const openAddressDialog = () => {
   showAddressDialog.value = true;
 };
 
+// Biến lưu lỗi 
+const errors = ref<{ [key: string]: string }>({});
+
+function validateAddress(): boolean {
+  errors.value = {}; // Reset lỗi
+
+  const phoneRegex = /^0\d{9}$/;
+  let valid = true;
+
+  if (!tempAddress.value.receiverName?.trim()) {
+    errors.value.receiverName = 'Tên người nhận không được để trống';
+    valid = false;
+  }
+
+  if (!tempAddress.value.receiverPhone?.trim()) {
+    errors.value.receiverPhone = 'Số điện thoại không được để trống';
+    valid = false;
+  } else if (!phoneRegex.test(tempAddress.value.receiverPhone)) {
+    errors.value.receiverPhone = 'Số điện thoại không hợp lệ (VD: 0981234567)';
+    valid = false;
+  }
+
+  if (!selectedProvince.value) {
+    errors.value.province = 'Vui lòng chọn Tỉnh/Thành phố';
+    valid = false;
+  }
+
+  if (!selectedDistrict.value) {
+    errors.value.district = 'Vui lòng chọn Quận/Huyện';
+    valid = false;
+  }
+
+  if (!tempAddress.value.addressWard) {
+    errors.value.ward = 'Vui lòng chọn Phường/Xã';
+    valid = false;
+  }
+
+  if (!tempAddress.value.addressStreet?.trim()) {
+    errors.value.street = 'Vui lòng nhập địa chỉ chi tiết';
+    valid = false;
+  }
+
+  return valid;
+}
+watch(showAddressDialog, (visible) => {
+  if (!visible) {
+    errors.value = {}; // Xóa toàn bộ lỗi khi dialog đóng
+  }
+});
 const updateDistricts = () => {
+
   const province = provinceOptions.value.find(p => p.name === selectedProvince.value);
   if (province && province.level2s) {
     districtOptions.value = province.level2s;
@@ -452,6 +528,16 @@ const updateWards = () => {
 
 // Lưu địa chỉ đã chỉnh sửa
 const saveAddress = async () => {
+  if (!validateAddress()) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Vui lòng kiểm tra lại thông tin địa chỉ',
+      life: 3000
+    });
+    return;
+  }
+
   tempAddress.value.addressProvince = selectedProvince.value;
   tempAddress.value.addressDistrict = selectedDistrict.value;
   if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {

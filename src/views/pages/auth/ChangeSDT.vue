@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import { AuthService } from '../../../service/auth/AuthService';
@@ -76,19 +76,40 @@ const phoneError = ref('');
 const isValidPhoneNumber = (phone: string): boolean => {
     return /^0\d{9}$/.test(phone);
 };
+// Theo dõi sdt
+watch(() => form.value.phoneNumber, (sdt) => {
+    if (sdt.trim() === '') {
+        phoneError.value = '';
+        return;
+    }
+    if (!isValidPhoneNumber(sdt)) {
+        phoneError.value = "Số điện thoại không hợp lệ";
+    } else {
+        phoneError.value = "";
+    }
+});
+
+function validatePhone(): boolean {
+    const phone = form.value.phoneNumber.trim();
+    if (!phone) {
+        phoneError.value = 'Vui lòng nhập số điện thoại';
+        return false;
+    }
+    if (!isValidPhoneNumber(phone)) {
+        phoneError.value = 'Số điện thoại không hợp lệ. Phải có 10 chữ số và bắt đầu bằng số 0';
+        return false;
+    }
+    phoneError.value = '';
+    return true;
+}
+
 
 // Hàm xử lý lưu
 const handleSubmit = async () => {
-    const phone = form.value.phoneNumber.trim();
+
     phoneError.value = '';
 
-    if (!phone) {
-        phoneError.value = 'Vui lòng nhập số điện thoại';
-        return;
-    }
-
-    if (!isValidPhoneNumber(phone)) {
-        phoneError.value = 'Số điện thoại không hợp lệ. Phải có 10 chữ số và bắt đầu bằng số 0';
+    if (!validatePhone()) {
         return;
     }
 
@@ -103,6 +124,7 @@ const handleSubmit = async () => {
         await AuthService.updateUserInfo(userId.value, form.value); // Gọi API cập nhật SĐT
         toast.add({ severity: 'success', summary: 'Thành công', detail: 'Số điện thoại đã được cập nhật', life: 3000 });
         form.value.phoneNumber = '';
+        phoneError.value = "";
     } catch (err: any) {
         console.error("Lỗi khi đổi số điện thoại:", err);
 

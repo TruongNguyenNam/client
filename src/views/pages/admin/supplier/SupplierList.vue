@@ -24,7 +24,6 @@ const exportSupplierss = () => {
     toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xuất Excel thành công', life: 3000 });
 };
 
-
 // Tải file mẫu Excel
 const downloadSupplierTemplate = () => {
     downloadExcelTemplate(['Name', 'Description'], 'Template_Supplier');

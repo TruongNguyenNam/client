@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick,watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 
 import Dialog from 'primevue/dialog';
@@ -147,10 +147,60 @@ const editAddress = async (addr: AddressResponse) => {
   showAddressDialog.value = true;
 };
 
-// Regex SĐT Việt Nam
+// ======= VALIDATE =======
 const validatePhone = (phone: string) => /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+const errors = ref<{ [key: string]: string }>({});
+watch(() => dialogAddressData.value.receiverPhone, (newPhone) => {
+  if (!newPhone) {
+    errors.value.receiverPhone = "Vui lòng nhập SĐT người nhận";
+  } else if (!validatePhone(newPhone)) {
+    errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
+  } else {
+    delete errors.value.receiverPhone;
+  }
+});
 
+watch(() => dialogAddressData.value.receiverName, (name) => {
+  if (!name) {
+    errors.value.receiverName = "Vui lòng nhập tên người nhận";
+  } else if (name.length > 100) {
+    errors.value.receiverName = "Tên người nhận quá dài (tối đa 100 ký tự)";
+  } else {
+    delete errors.value.receiverName;
+  }
+});
+
+watch(() => dialogAddressData.value.street, (street) => {
+  if (!street) {
+    errors.value.street = "Vui lòng nhập địa chỉ chi tiết";
+  } else if (street.length > 100) {
+    errors.value.street = "Địa chỉ chi tiết quá dài (tối đa 100 ký tự)";
+  } else {
+    delete errors.value.street;
+  }
+});
 const handleAddressSubmit = (submitted: any) => {
+  // Check tên người nhận
+  if (!submitted.receiverName || submitted.receiverName.trim() === '') {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu thông tin',
+      detail: 'Vui lòng nhập tên người nhận.',
+      life: 3000
+    });
+    return;
+  }
+  if (submitted.receiverName.trim().length > 100) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Tên quá dài',
+      detail: 'Tên người nhận không được vượt quá 50 ký tự.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Check số điện thoại
   if (!validatePhone(submitted.receiverPhone)) {
     toast.add({
       severity: 'warn',
@@ -161,9 +211,64 @@ const handleAddressSubmit = (submitted: any) => {
     return;
   }
 
+  // Check tỉnh/thành
+  if (!submitted.province) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu thông tin',
+      detail: 'Vui lòng chọn Tỉnh/Thành phố.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Check quận/huyện
+  if (!submitted.district) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu thông tin',
+      detail: 'Vui lòng chọn Quận/Huyện.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Check phường/xã
+  if (!submitted.ward) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu thông tin',
+      detail: 'Vui lòng chọn Phường/Xã.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Check địa chỉ chi tiết
+  if (!submitted.street || submitted.street.trim() === '') {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu thông tin',
+      detail: 'Vui lòng nhập địa chỉ chi tiết.',
+      life: 3000
+    });
+    return;
+  }
+  if (submitted.street.trim().length > 255) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Địa chỉ quá dài',
+      detail: 'Địa chỉ chi tiết không được vượt quá 255 ký tự.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Nếu tất cả hợp lệ → emit dữ liệu
   emit('submitAddress', submitted);
   showAddressDialog.value = false;
 };
+
 
 
 // Gọi khi click XÓA trong AddressDialog
