@@ -56,7 +56,9 @@
         <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
       </div> -->
 
+
       <div class="card h-full" style="width: 52%;">
+
         <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
         <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
           <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
@@ -98,17 +100,20 @@
 
       <p><strong>Địa chỉ:</strong>
         {{ [
-        order?.address?.addressStreet,
-        order?.address?.addressWard,
-        order?.address?.addressDistrict,
-        order?.address?.addressCity,
-        order?.address?.addressProvince
+          order?.address?.addressStreet,
+          order?.address?.addressWard,
+          order?.address?.addressDistrict,
+          order?.address?.addressCity,
+          order?.address?.addressProvince
         ].filter(Boolean).join(', ') || 'Chưa có thông tin' }}
       </p>
+
 
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
         class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
 
+      <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
+        class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" /> -->
       <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
         class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" /> -->
 
@@ -124,19 +129,22 @@
         class="p-button-info" @click="openPaymentDialog" style="margin-top: 10px;" :disabled="loading" />
 
       <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill"
+
+      <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
+        style="margin-top: 10px;" :disabled="loading" />
+
+         <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill"
           class="p-button-info" @click="openPaymentDialog" style="margin-top: 10px;" /> -->
     </div>
 
-    <!-- <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
+    <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
       <h3>🚚 Vận chuyển</h3>
       <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
       <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p>
       <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
       <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
       <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
-    </div> -->
-
-
+    </div>
 
     <div class="card mb-4">
       <DataTable :value="orderItems" class="p-datatable-gridlines" responsiveLayout="scroll">
@@ -150,6 +158,7 @@
         <Column header="Số lượng">
           <template #body="slotProps">
             <div class="flex align-items-center gap-2">
+
               <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)"
                 :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
               <span>{{ slotProps.data.quantity }}</span>
@@ -170,26 +179,34 @@
         </Column>
         <Column header="Hành động">
           <template #body="slotProps">
+
             <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;"
               :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
+
           </template>
         </Column>
       </DataTable>
 
       <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
 
+
         <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Thêm sản phẩm" icon="pi pi-plus"
           class="p-button-primary" style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;"
           @click="showProductDialog = true" :disabled="loading" />
 
         <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus"
+
+        <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
+          style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" :disabled="loading" />
+
+        <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus"
           class="p-button-primary" style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;"
+
           @click="showProductDialog = true" /> -->
       </div>
     </div>
 
     <Dialog v-model:visible="showAddressDialog" modal header="Cập nhật địa chỉ" :style="{ width: '50vw' }">
-
       <div class="p-field">
         <label for="receiverName">Tên người nhận</label>
         <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" />
@@ -301,7 +318,6 @@
       <Button label="Lưu" class="p-button-primary" @click="saveAddress" :loading="loading" />
     </div>
     </Dialog> -->
-
     <Dialog v-model:visible="showProductDialog" modal header="Chọn sản phẩm" :style="{ width: '80vw' }">
       <ListProduct @select="handleAddProduct" />
     </Dialog>
@@ -491,7 +507,6 @@ const selectedDistrict = ref<string>('');
 const provinceOptions = ref(provincesData.data);
 const districtOptions = ref<any[]>([]);
 const wardOptions = ref<any[]>([]);
-
 
 //địa chỉ đầy đủ
 const fullAddress = computed(() =>
@@ -715,7 +730,6 @@ const updateWards = () => {
 // };
 
 const saveAddress = async () => {
-
   if (!validateAddress()) {
     toast.add({
       severity: 'error',
@@ -868,6 +882,89 @@ const saveAddress = async () => {
     submitted.value = false;
   }
 
+  submitted.value = true;
+  // Kiểm tra các trường bắt buộc
+  if (
+    !tempAddress.value.receiverName ||
+    !tempAddress.value.receiverPhone ||
+    !selectedProvince.value ||
+    !selectedDistrict.value ||
+    !tempAddress.value.addressWard ||
+    !tempAddress.value.addressStreet
+  ) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Vui lòng điền đầy đủ các trường bắt buộc.',
+      life: 3000
+    });
+    return;
+  }
+  // Kiểm tra định dạng số điện thoại
+  if (!isValidPhone(tempAddress.value.receiverPhone)) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Số điện thoại không hợp lệ.',
+      life: 3000
+    });
+    return;
+  }
+  tempAddress.value.addressProvince = selectedProvince.value;
+  tempAddress.value.addressDistrict = selectedDistrict.value;
+  if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
+      life: 3000
+    });
+    return;
+  }
+  loading.value = true;
+  try {
+    const addressRequest: AddressRequest = {
+      street: tempAddress.value.addressStreet,
+      ward: tempAddress.value.addressWard,
+      city: tempAddress.value.addressCity,
+      state: tempAddress.value.addressState,
+      country: tempAddress.value.addressCountry,
+      zipcode: tempAddress.value.addressZipcode,
+      district: tempAddress.value.addressDistrict,
+      province: tempAddress.value.addressProvince,
+      receiverName: tempAddress.value.receiverName,
+      receiverPhone: tempAddress.value.receiverPhone,
+      isDefault: tempAddress.value.isDefault
+    };
+    const response = await AddressService.updateAddressForCustomer(
+      tempAddress.value.userId,
+      tempAddress.value.id,
+      addressRequest
+    );
+    if (response.data) {
+      // Cập nhật lại order.address với dữ liệu mới
+      order.value.address = { ...tempAddress.value };
+      showAddressDialog.value = false;
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Cập nhật địa chỉ thành công',
+        life: 3000
+      });
+      renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
+    }
+  } catch (error: any) {
+    console.error('Lỗi khi cập nhật địa chỉ:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
+      life: 3000
+    });
+  } finally {
+    loading.value = false;
+    submitted.value = false;
+  }
 };
 
 const steps = [
@@ -1331,7 +1428,7 @@ watch(order, (newOrder) => {
   background: #f9fafb;
 }
 
-.address-info{
+.address-info {
   display: flex;
   flex-direction: column;
   gap: 4px;

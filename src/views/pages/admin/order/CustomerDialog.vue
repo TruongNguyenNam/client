@@ -131,15 +131,18 @@
       <Button label="Làm mới" icon="pi pi-check" class="p-button-primary" @click="lamMoi"
         v-if="currentTab === 'form'" />
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
+      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" />
 
-      <!-- <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+      <!-- <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
+        @click="clearSelectedCustomer" v-if="selectedCustomer" />
+      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" /> -->
 
       <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
         @click="clearSelectedCustomer" v-if="selectedCustomer" />
-      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
-        @click="selectCustomer" v-if="currentTab === 'list'" />
-
+      <!-- <!-- <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" /> -->
     </template>
   </Dialog>
 </template>
@@ -240,6 +243,7 @@ function validatePhone(phone: string) {
   return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
 }
 
+
 // Theo dõi email
 watch(() => customer.value.email, (newEmail) => {
   if (!validateEmail(newEmail)) {
@@ -295,7 +299,6 @@ watch(() => customer.value.username, (username) => {
 const submitCustomer = async () => {
   errors.value = {};
 
-
   if (!customer.value.username.trim()) {
     errors.value.username = "Tên khách hàng không được để trống";
   }
@@ -348,7 +351,7 @@ const submitCustomer = async () => {
   if (emailExists) {
     errors.value.email = "Email này đã tồn tại";
   }
-  // Kiểm tra trùng số điện thoại
+
   const phoneExists = customers.value.some(
     c => c.phoneNumber === customer.value.phoneNumber
   );
@@ -367,7 +370,6 @@ const submitCustomer = async () => {
   }
   // Nếu có lỗi thì return
   if (Object.keys(errors.value).length > 0) return;
-
 
   const address = {
     street: customer.value.street,
@@ -427,7 +429,6 @@ const submitCustomer = async () => {
     console.error(error.response?.data || error);
   }
 };
-
 
 const lamMoi = () => {
   customer.value = {

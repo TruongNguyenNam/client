@@ -52,7 +52,7 @@
                 <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"
                   @click="showAddressDialog = true" />
               </div>
-              <div v-else-if="!invoice.isPos"  class="mt-3">
+              <div v-else-if="!invoice.isPos" class="mt-3">
                 <Button label="Thêm địa chỉ giao hàng" icon="pi pi-plus" class="w-full"
                   @click="showAddressDialog = true" />
               </div>
@@ -123,15 +123,16 @@
 
 
         <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
-            <span class="label">Khách thanh toán:</span>
-            <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
-              :min="0" :max="100000000" :useGrouping="true" placeholder="Nhập số tiền" />
-          </div>
-          <div v-if="invoice.paymentMethodId === 1 && invoice.paidAmount !== null && invoice.paidAmount > 100000000" class="text-red-600 text-sm mt-1">
-            Số tiền khách thanh toán không được vượt quá 100,000,000đ.
-          </div>
+          <span class="label">Khách thanh toán:</span>
+          <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
+            :min="0" :max="100000000" :useGrouping="true" placeholder="Nhập số tiền" />
+        </div>
+        <div v-if="invoice.paymentMethodId === 1 && invoice.paidAmount !== null && invoice.paidAmount > 100000000"
+          class="text-red-600 text-sm mt-1">
+          Số tiền khách thanh toán không được vượt quá 100,000,000đ.
+        </div>
 
-        
+
         <div v-if="invoice.paymentMethodId === 1 && changeAmount !== null && changeAmount >= 0"
           class="flex justify-between mb-2 items-center text-green-600">
           <span class="label">Tiền thừa:</span>
@@ -141,7 +142,7 @@
         <div class="mb-4">
           <label class="block mb-1 font-medium">Ghi chú</label>
           <Textarea v-model="invoice.notes" class="w-full" rows="4" />
-       </div>
+        </div>
 
         <div v-if="invoice.paymentMethodId === 2" class="mb-4">
           <Button label="Thanh toán qua VNPay" icon="pi pi-credit-card" severity="info" :loading="isPaymentProcessing"
@@ -150,10 +151,10 @@
       </div>
 
       <!-- Phương thức thanh toán -->
-      
+
 
       <!-- Ghi chú -->
-    
+
 
       <!-- Nút điều khiển -->
       <div v-if="invoice.paymentMethodId === 1" class="flex justify-end gap-2">
@@ -326,13 +327,13 @@ const initiateVNPayPayment = async () => {
       shipments: props.invoice.isPos
         ? undefined
         : [
-            {
-              carrierId: props.invoice.carrierId!,
-              shippingCost: props.invoice.shippingCost ?? 0,
-              estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
-              orderItemIds: props.invoice.items.map(item => item.id),
-            },
-          ],
+          {
+            carrierId: props.invoice.carrierId!,
+            shippingCost: props.invoice.shippingCost ?? 0,
+            estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
+            orderItemIds: props.invoice.items.map(item => item.id),
+          },
+        ],
       couponUsageIds: props.invoice.couponUsageIds?.length
         ? props.invoice.couponUsageIds
         : undefined,
