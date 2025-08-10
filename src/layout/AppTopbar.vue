@@ -7,6 +7,7 @@ import Button from 'primevue/button';
 import { AuthService } from '../service/auth/AuthService';
 import type { UserResponse } from '../service/auth/AuthService';
 
+
 const { layoutConfig, onMenuToggle } = useLayout();
 const router = useRouter();
 
@@ -50,9 +51,8 @@ onBeforeUnmount(() => {
   unbindOutsideClickListener();
 });
 
-const logoUrl = computed(() => {
-  return `layout/images/${layoutConfig.darkTheme.value ? 'logo-white' : 'logo-dark'}.svg`;
-});
+const logoUrl = new URL('@/assets/img/logo-shoe.png', import.meta.url).href;
+
 
 const onTopBarMenuButton = () => {
   topbarMenuActive.value = !topbarMenuActive.value;
@@ -127,8 +127,8 @@ const isOutsideClicked = (event: Event) => {
 <template>
   <div class="layout-topbar">
     <router-link to="/" class="layout-topbar-logo">
-      <img :src="logoUrl" alt="logo" />
-      <span>ShoeStore</span>
+      <img :src="logoUrl" alt="logo" width="80" height="100"/>
+      <span>ShoeSports</span>
     </router-link>
 
     <button class="p-link layout-menu-button layout-topbar-button" @click="onMenuToggle()">

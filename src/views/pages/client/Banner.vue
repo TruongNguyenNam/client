@@ -23,7 +23,7 @@
   
   <script setup lang="ts">
   import { ref } from 'vue';
-  
+
   const bannerImages = ref([
     {
       itemImageSrc: new URL('@/assets/img/banner4.png', import.meta.url).href,

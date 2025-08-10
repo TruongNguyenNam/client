@@ -34,17 +34,6 @@
             </div>
           </div>
 
-          <!-- Email -->
-          <!-- <div>
-          <label class="block text-sm text-gray-600 mb-1">Email</label>
-          <InputText
-            v-model="selectedCustomer.email"
-            class="w-full bg-gray-100"
-            :disabled="true"
-            placeholder="Email"
-          />
-        </div> -->
-
           <!-- Địa chỉ giao hàng -->
           <AddressSelectDialog v-model:visible="showAddressDialog" :addresses="selectedCustomer?.addresses || []"
             :customer-id="selectedCustomer.id" @select="handleAddressSelect" @submitAddress="handleAddressSubmit"
@@ -52,13 +41,10 @@
 
           <div>
             <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
-
-            <!-- Địa chỉ giao hàng (cải tiến) -->
             <div class="bg-white p-3 rounded border mb-3">
               <div class="mb-2">
                 <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
               </div>
-
               <div class="text-sm text-gray-700 leading-relaxed">
                 {{ fullAddress }}
               </div>
@@ -122,16 +108,41 @@
           <span class="label">Khách cần trả:</span>
           <span class="value kct">{{ formatCurrency(calculateFinalTotal()).replace('₫', 'đ') }}</span>
         </div>
-        <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
+
+        <div class="mb-4">
+          <label class="block mb-1 font-medium">Phương thức thanh toán</label>
+          <Dropdown v-model="invoice.paymentMethodId" :options="paymentMethods" optionLabel="name" optionValue="id"
+            placeholder="Chọn phương thức" class="w-full" @change="updatePaymentMethod" />
+        </div>
+
+        <!-- <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
           <span class="label">Khách thanh toán:</span>
           <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
             :min="0" :useGrouping="true" placeholder="Nhập số tiền" />
-        </div>
+        </div> -->
+
+
+        <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
+            <span class="label">Khách thanh toán:</span>
+            <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
+              :min="0" :max="100000000" :useGrouping="true" placeholder="Nhập số tiền" />
+          </div>
+          <div v-if="invoice.paymentMethodId === 1 && invoice.paidAmount !== null && invoice.paidAmount > 100000000" class="text-red-600 text-sm mt-1">
+            Số tiền khách thanh toán không được vượt quá 100,000,000đ.
+          </div>
+
+        
         <div v-if="invoice.paymentMethodId === 1 && changeAmount !== null && changeAmount >= 0"
           class="flex justify-between mb-2 items-center text-green-600">
           <span class="label">Tiền thừa:</span>
           <span class="value">{{ formatCurrency(changeAmount).replace('₫', 'đ') }}</span>
         </div>
+
+        <div class="mb-4">
+          <label class="block mb-1 font-medium">Ghi chú</label>
+          <Textarea v-model="invoice.notes" class="w-full" rows="4" />
+       </div>
+
         <div v-if="invoice.paymentMethodId === 2" class="mb-4">
           <Button label="Thanh toán qua VNPay" icon="pi pi-credit-card" severity="info" :loading="isPaymentProcessing"
             @click="initiateVNPayPayment" :disabled="isPaymentProcessing" />
@@ -139,17 +150,10 @@
       </div>
 
       <!-- Phương thức thanh toán -->
-      <div class="mb-4">
-        <label class="block mb-1 font-medium">Phương thức thanh toán</label>
-        <Dropdown v-model="invoice.paymentMethodId" :options="paymentMethods" optionLabel="name" optionValue="id"
-          placeholder="Chọn phương thức" class="w-full" @change="updatePaymentMethod" />
-      </div>
+      
 
       <!-- Ghi chú -->
-      <div class="mb-4">
-        <label class="block mb-1 font-medium">Ghi chú</label>
-        <Textarea v-model="invoice.notes" class="w-full" rows="4" />
-      </div>
+    
 
       <!-- Nút điều khiển -->
       <div v-if="invoice.paymentMethodId === 1" class="flex justify-end gap-2">
@@ -164,6 +168,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router'; // Thêm import useRouter
 import Sidebar from 'primevue/sidebar';
 import Button from 'primevue/button';
 import MultiSelect from 'primevue/multiselect';
@@ -191,6 +196,7 @@ import type { OrderRequest } from '../../../../model/admin/order';
 
 const confirm = useConfirm();
 const toast = useToast();
+const router = useRouter(); // Khởi tạo router
 const isVisible = ref(true);
 const showDialog = ref(false);
 const showPrintPreview = ref(false);
@@ -234,7 +240,7 @@ const props = defineProps<{
 }>();
 
 const selectedCustomerId = ref<number | null>(props.invoice.userId);
-const selectedCustomerName = ref<string>(props.invoice.customerName || '');
+const selectedCustomerName = ref<string>(props.invoice.customerName || 'khách vãng lai');
 
 const emit = defineEmits<{
   (e: 'update-total'): void;
@@ -301,6 +307,7 @@ const validateBeforeComplete = () => {
   }
   return true;
 };
+
 const initiateVNPayPayment = async () => {
   if (!validateBeforeComplete()) return;
   isPaymentProcessing.value = true;
@@ -332,14 +339,14 @@ const initiateVNPayPayment = async () => {
       payment: {
         paymentMethodId: props.invoice.paymentMethodId!,
         amount: finalTotal,
-        returnUrl: 'http://localhost:5173/#/callback',
+        returnUrl: `${window.location.origin}/callback`, // Cập nhật để tương thích với createWebHistory
       },
       notes: props.invoice.notes || undefined,
     };
 
     const response = await OrderService.addProductToOrder(props.invoice.orderCode, payload);
 
-    // ✅ Nếu gọi API thành công, lưu full thông tin hóa đơn để callback dùng
+    // Nếu gọi API thành công, lưu thông tin hóa đơn để callback dùng
     if (response && response.data && response.data.paymentUrl) {
       let invoiceTabs = JSON.parse(localStorage.getItem('invoiceTabs') || '[]');
 
@@ -358,7 +365,7 @@ const initiateVNPayPayment = async () => {
       invoiceTabs.push(fullInvoice);
       localStorage.setItem('invoiceTabs', JSON.stringify(invoiceTabs));
 
-      // ✅ Điều hướng đến VNPay sau khi lưu localStorage
+      // Điều hướng đến VNPay
       window.location.href = response.data.paymentUrl;
     } else {
       throw new Error('Không nhận được URL thanh toán từ server');
@@ -374,7 +381,6 @@ const initiateVNPayPayment = async () => {
     isPaymentProcessing.value = false;
   }
 };
-
 
 const completeAndPrint = () => {
   if (!validateBeforeComplete()) return;
@@ -519,7 +525,6 @@ const handleCustomerSelect = (customer: CustomerResponse) => {
   fetchCouponUsage();
 };
 
-
 const handleAddressSelect = (address: AddressResponse) => {
   selectedAddressId.value = address.id;
   props.invoice.addressId = address.id;
@@ -533,8 +538,6 @@ const handleAddressSelect = (address: AddressResponse) => {
   props.invoice.receiverPhone = address.receiverPhone;
   showAddressDialog.value = false;
 };
-
-
 
 const showAddressDialog = ref(false);
 
@@ -556,7 +559,6 @@ const handleAddressSubmit = async (submittedData: any) => {
 
   try {
     if (submittedData.id) {
-      // Cập nhật địa chỉ
       const resAdd = await AddressService.updateAddressForCustomer(selectedCustomer.value.id, submittedData.id, finalAddress);
       toast.add({
         severity: 'success',
@@ -566,12 +568,11 @@ const handleAddressSubmit = async (submittedData: any) => {
       });
       if (resAdd.data?.id) {
         selectedAddressId.value = resAdd.data.id;
-        await refreshSelectedCustomer(); // Đồng bộ lại dữ liệu
-        addressDialogKey.value++; // Reset dialog nếu cần
+        await refreshSelectedCustomer();
+        addressDialogKey.value++;
       }
-      selectedAddressId.value = submittedData.id; // Cập nhật lại địa chỉ đang chọn
+      selectedAddressId.value = submittedData.id;
     } else {
-      // Thêm mới địa chỉ
       const resAdd = await CustomerService.addAddressForCustomer(selectedCustomer.value.id, finalAddress);
       toast.add({
         severity: 'success',
@@ -579,73 +580,21 @@ const handleAddressSubmit = async (submittedData: any) => {
         detail: 'Đã thêm địa chỉ mới cho khách hàng.',
         life: 3000
       });
-      // Sau khi thêm xong, lấy ID địa chỉ vừa thêm nếu API trả về
       const newAddressId = resAdd.data?.id;
       if (resAdd.data?.id) {
         selectedAddressId.value = resAdd.data.id;
-        await refreshSelectedCustomer(); // Đồng bộ lại dữ liệu
-        addressDialogKey.value++; // Reset dialog nếu cần
+        await refreshSelectedCustomer();
+        addressDialogKey.value++;
       }
     }
-
   } catch (error) {
     console.error('Lỗi xử lý địa chỉ:', error);
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xử lý địa chỉ', life: 3000 });
   }
 };
 
-
-// id của địa chỉ được chọn
 const selectedAddressId = ref<number | null>(null);
-// Xử lý khi khách hàng được chọn từ CustomerDialog
-// const handleCustomerSelect = (customer: CustomerResponse) => {
-//   selectedCustomerId.value = customer.id;
-//   selectedCustomerName.value = customer.username;
-//   showDialog.value = false;
 
-//   props.invoice.userId = customer.id;
-//   props.invoice.customerName = customer.username;
-//   props.invoice.phoneNumber = customer.phoneNumber;
-//   props.invoice.email = customer.email;
-
-//   if (!props.invoice.isPos) {
-//     // Nếu là đơn giao hàng, cho phép chọn địa chỉ cụ thể
-//     // Giả sử bạn có dialog hoặc dropdown chọn địa chỉ ở đây
-//     // (hoặc đơn giản chọn địa chỉ mặc định trong danh sách)
-//     const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
-//     if (defaultAddress) {
-//       selectedAddressId.value = defaultAddress.id;
-
-//       props.invoice.addressStreet = defaultAddress.street;
-//       props.invoice.addressWard = defaultAddress.ward;
-//       props.invoice.addressDistrict = defaultAddress.district;
-//       props.invoice.addressProvince = defaultAddress.province;
-//       props.invoice.addressCity = defaultAddress.city || '';
-//       props.invoice.addressZipcode = defaultAddress.zipcode || '';
-//       props.invoice.receiverName = defaultAddress.receiverName;
-//       props.invoice.receiverPhone = defaultAddress.receiverPhone;
-//     } else {
-//       toast.add({
-//         severity: 'warn',
-//         summary: 'Chưa có địa chỉ',
-//         detail: 'Khách hàng chưa có địa chỉ giao hàng',
-//         life: 3000
-//       });
-//     }
-
-//   } else {
-//     // Đơn tại cửa hàng, không cần nhập địa chỉ
-//     props.invoice.addressStreet = '';
-//     props.invoice.addressWard = '';
-//     props.invoice.addressDistrict = '';
-//     props.invoice.addressProvince = '';
-//     props.invoice.addressCity = '';
-//     props.invoice.addressZipcode = '';
-//   }
-//   fetchCouponUsage();
-// };
-
-// lấy điạ chỉ mặc định hoặc đầu tiên
 const selectedAddress = computed(() => {
   if (!selectedCustomer.value?.addresses) return null;
   return selectedCustomer.value.addresses.find(a => a.id === selectedAddressId.value)
@@ -654,21 +603,18 @@ const selectedAddress = computed(() => {
 
 const addressDialogKey = ref(0);
 
-// đồng bộ lại thông tin khách hàng
 const refreshSelectedCustomer = async () => {
   if (!selectedCustomer.value) return;
   try {
     const res = await CustomerService.getCustomerById(selectedCustomer.value.id);
     if (res.data) {
-      Object.assign(selectedCustomer.value, res.data); // Cập nhật lại toàn bộ
+      Object.assign(selectedCustomer.value, res.data);
     }
   } catch (error) {
     console.error('Lỗi đồng bộ khách hàng:', error);
     toast.add({ severity: 'error', summary: 'Không thể đồng bộ khách hàng', life: 3000 });
   }
 };
-
-
 
 const updatePaymentMethod = () => {
   const method = props.paymentMethods.find(m => m.id === props.invoice.paymentMethodId);
@@ -777,4 +723,3 @@ watch(() => props.invoice.shippingCost, () => {
   box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
 }
 </style>
-```

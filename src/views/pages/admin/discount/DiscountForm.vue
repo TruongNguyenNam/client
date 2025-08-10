@@ -1,5 +1,3 @@
-
-
 <template>
   <div class="p-4 max-w-4xl mx-auto bg-white rounded shadow">
     <h2 class="text-xl font-semibold mb-4">Tạo khuyến mãi</h2>
@@ -8,61 +6,75 @@
       <div class="flex gap-6">
         <!-- Cột trái -->
         <div class="flex-1 space-y-4">
-          <div>
-            <label class="block font-medium">Tên khuyến mãi</label>
-            <input
-              v-model="discount.name"
-              :class="{'border-red-500': errors.name}"
-              class="w-full border px-2 py-1 rounded"
-              placeholder="Nhập tên"
-            />
-            <small v-if="errors.name" class="text-red-600 mt-1 block text-sm">{{ errors.name }}</small>
-          </div>
+    <!-- Tên khuyến mãi -->
+    <div>
+      <label class="block font-medium">Tên khuyến mãi</label>
+      <InputText
+        v-model="discount.name"
+        placeholder="Nhập tên"
+        class="w-full"
+        maxlength="40"
+        :class="{ 'p-invalid': !!errors.name }"
+      />
+      <small v-if="errors.name" class="p-error block mt-1">{{ errors.name }}</small>
+    </div>
 
-          <div>
-            <label class="block font-medium">Phần trăm giảm (%)</label>
-            <input
-              v-model.number="discount.percentValue"
-              type="number"
-              :class="{'border-red-500': errors.percentValue}"
-              class="w-full border px-2 py-1 rounded"
-            
-            />
-            <small v-if="errors.percentValue" class="text-red-600 mt-1 block text-sm">{{ errors.percentValue }}</small>
-          </div>
+    <!-- Phần trăm giảm -->
+    <div>
+      <label class="block font-medium">Phần trăm giảm (%)</label>
+      <InputNumber
+          v-model="discount.percentValue"
+          :min="0"
+          :max="100"
+          mode="decimal"
+          suffix="%"
+          class="w-full"
+          :class="{ 'p-invalid': !!errors.percentValue }"
+        />
+      <small v-if="errors.percentValue" class="p-error block mt-1">{{ errors.percentValue }}</small>
+    </div>
 
-          <div>
-            <label class="block font-medium">Ngày bắt đầu</label>
-            <input
-              v-model="discount.startDate"
-              type="datetime-local"
-              :class="{'border-red-500': errors.startDate}"
-              class="w-full border px-2 py-1 rounded"
-            />
-            <small v-if="errors.startDate" class="text-red-600 mt-1 block text-sm">{{ errors.startDate }}</small>
-          </div>
+    <!-- Ngày bắt đầu -->
+    <div>
+      <label class="block font-medium">Ngày bắt đầu</label>
+      <Calendar
+        v-model="discount.startDate"
+        showTime
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        class="w-full"
+        :class="{ 'p-invalid': !!errors.startDate }"
+      />
+      <small v-if="errors.startDate" class="p-error block mt-1">{{ errors.startDate }}</small>
+    </div>
 
-          <div>
-            <label class="block font-medium">Ngày kết thúc</label>
-            <input
-              v-model="discount.endDate"
-              type="datetime-local"
-              :class="{'border-red-500': errors.endDate}"
-              class="w-full border px-2 py-1 rounded"
-            />
-            <small v-if="errors.endDate" class="text-red-600 mt-1 block text-sm">{{ errors.endDate }}</small>
-          </div>
+    <!-- Ngày kết thúc -->
+    <div>
+      <label class="block font-medium">Ngày kết thúc</label>
+      <Calendar
+          v-model="discount.endDate"
+          showTime
+          hourFormat="24"
+          dateFormat="dd/mm/yy"
+          class="w-full"
+          :class="{ 'p-invalid': !!errors.endDate }"
+        />
+      <small v-if="errors.endDate" class="p-error block mt-1">{{ errors.endDate }}</small>
+    </div>
 
-          <div>
-            <label class="block font-medium">Ngưỡng giá áp dụng</label>
-            <input
-              v-model.number="discount.priceThreshold"
-              type="number"
-              class="w-full border px-2 py-1 rounded"
-              min="0"
-            />
-          </div>
-        </div>
+    <!-- Ngưỡng giá áp dụng -->
+    <div>
+      <label class="block font-medium">Ngưỡng giá áp dụng</label>
+      <InputNumber
+        v-model="discount.priceThreshold"
+        :min="0"
+        mode="currency"
+        currency="VND"
+        locale="vi-VN"
+        class="w-full"
+      />
+    </div>
+  </div>
 
         <!-- Cột phải -->
         <div class="flex-1 space-y-4">
@@ -107,9 +119,18 @@
         </div>
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4">
+      <!-- <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4">
         Lưu khuyến mãi
-      </button>
+      </button> -->
+
+      <div class="p-d-flex p-jc-end mt-4" style="margin-left: 925px; width: 180px; height: 100px;">
+          <Button
+            type="submit"
+            label="Lưu khuyến mãi"
+            icon="pi pi-save"
+            class="p-button-primary"
+          />
+        </div>
     </form>
 
     <Toast ref="toast" />
@@ -321,6 +342,23 @@ const onSearchInput = () => {
 </script>
 
 <style scoped>
+/* Style cho báo lỗi */
+.p-error {
+  color: #ef4444; /* Đỏ */
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Khi có lỗi thì Input, Calendar, InputNumber đều viền đỏ */
+:deep(.p-inputtext.p-invalid),
+:deep(.p-inputnumber.p-invalid > .p-inputtext),
+:deep(.p-calendar.p-invalid > .p-inputtext) {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 5px #ef4444aa;
+}
+
+
+
 form > div.flex {
   border: 1px solid #ddd;
   border-radius: 0.5rem;
@@ -362,4 +400,14 @@ input:focus {
 .p-datatable-tbody > tr > td {
   padding: 0.9rem 1.2rem;
 }
+
+
+/* Style cho báo lỗi */
+.p-error {
+  color: #ef4444; /* Đỏ */
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+
 </style>

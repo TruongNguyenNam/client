@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { ref, onMounted, watch, defineEmits } from "vue";
 import { SupplierService } from "../../../../service/admin/SupplierService";
@@ -7,17 +8,18 @@ import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
+const submitted = ref(false); // For form validation feedback
 
 // Export file Excel nhà cung cấp
-const exportSupplierss = () => {
+const exportSuppliers = () => {
     if (!suppliers.value.length) {
         toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu để xuất.', life: 3000 });
         return;
     }
 
     const data = suppliers.value.map(supplier => ({
-        Name: supplier.name,
-        Description: supplier.description
+        Name: supplier.name.trim(),
+        Description: supplier.description?.trim() || ''
     }));
 
     exportToExcel(data, 'DanhSachNhaCungCap');
@@ -29,25 +31,29 @@ const downloadSupplierTemplate = () => {
     downloadExcelTemplate(['Name', 'Description'], 'Template_Supplier');
 };
 
-const importSupplierss = async (event) => {
+// Import Excel
+const importSuppliers = async (event) => {
     const file = event.files?.[0];
-    if (!file) return;
+    if (!file) {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn file Excel.', life: 3000 });
+        return;
+    }
 
     try {
         const importedData = await importFromExcel(file);
         let added = 0;
-
-        const existingNames = suppliers.value.map(s => s.name.trim().toLowerCase());
+        const existingNames = new Set(suppliers.value.map(s => s.name.trim().toLowerCase()));
         const duplicatedNames = [];
 
         for (const item of importedData) {
             if (item.Name) {
                 const name = item.Name.trim();
-                const description = item.Description || '';
+                const description = item.Description?.trim() || '';
 
-                if (!existingNames.includes(name.toLowerCase())) {
+                if (!existingNames.has(name.toLowerCase())) {
                     const supplierData = { name, description };
                     await SupplierService.saveSupplier(supplierData);
+                    existingNames.add(name.toLowerCase());
                     added++;
                 } else {
                     duplicatedNames.push(name);
@@ -80,25 +86,23 @@ const importSupplierss = async (event) => {
     }
 };
 
-
-const suppliers = ref([]); // Danh sách nhà cung cấp
-const loading = ref(true); // Trạng thái đang tải dữ liệu
-const totalRecords = ref(0); // Tổng số nhà cung cấp
+const suppliers = ref([]);
+const loading = ref(true);
+const totalRecords = ref(0);
 const searchTerm = ref('');
 const lazyParams = ref({
     page: 0,
     size: 5,
 });
-const selectedSuppliers = ref([]); // Danh sách nhà cung cấp được chọn
-const supplierUpdateDialog = ref(false); // Dialog sửa nhà cung cấp
-const addSupplierDialog = ref(false); // Dialog thêm nhà cung cấp
-const supplier = ref({ id: null, name: '', description: '' }); // Thông tin nhà cung cấp hiện tại
-const newSupplier = ref({ name: "", description: "" }); // Biến lưu thông tin nhà cung cấp mới
+const selectedSuppliers = ref([]);
+const supplierUpdateDialog = ref(false);
+const addSupplierDialog = ref(false);
+const supplier = ref({ id: null, name: '', description: '' });
+const newSupplier = ref({ name: "", description: "" });
 
-const emit = defineEmits(); // Định nghĩa emit để truyền sự kiện ra ngoài
-const router = useRouter(); // Dùng để điều hướng trang
+const emit = defineEmits();
+const router = useRouter();
 
-// Hàm tải danh sách nhà cung cấp từ API
 const loadSuppliers = async () => {
     loading.value = true;
     try {
@@ -114,91 +118,174 @@ const loadSuppliers = async () => {
         }
     } catch (error) {
         console.error("Lỗi khi tải nhà cung cấp:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi tải danh sách nhà cung cấp.', life: 3000 });
     } finally {
         loading.value = false;
     }
 };
 
-// Hàm xử lý phân trang
 const onPage = (event) => {
-    lazyParams.value.page = event.page; // Cập nhật trang hiện tại
-    lazyParams.value.size = event.rows; // Cập nhật số lượng bản ghi trên mỗi trang
+    lazyParams.value.page = event.page;
+    lazyParams.value.size = event.rows;
     loadSuppliers();
 };
 
-
-// Mở form thêm nhà cung cấp
 const openAddDialog = () => {
-    newSupplier.value = { name: "", description: "" }; // Đặt lại thông tin nhà cung cấp mới
+    newSupplier.value = { name: "", description: "" };
+    submitted.value = false;
     addSupplierDialog.value = true;
 };
-// Đóng form thêm nhà cung cấp
+
 const hideAddDialog = () => {
     addSupplierDialog.value = false;
+    submitted.value = false;
 };
-// Thêm nhà cung cấp
+
 const addSupplier = async () => {
+    submitted.value = true;
+    const trimmedName = newSupplier.value.name.trim();
+    const trimmedDescription = newSupplier.value.description.trim();
+
+    if (!trimmedName) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cảnh báo',
+            detail: 'Tên nhà cung cấp không được để trống.',
+            life: 3000
+        });
+        return;
+    }
+
+    const existingNames = new Set(suppliers.value.map(s => s.name.trim().toLowerCase()));
+    if (existingNames.has(trimmedName.toLowerCase())) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cảnh báo',
+            detail: `Nhà cung cấp "${trimmedName}" đã tồn tại.`,
+            life: 3000
+        });
+        return;
+    }
+
     try {
-        console.log("Dữ liệu gửi đi:", newSupplier.value);
-        await SupplierService.saveSupplier(newSupplier.value);
+        await SupplierService.saveSupplier({
+            name: trimmedName,
+            description: trimmedDescription
+        });
+        toast.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Thêm nhà cung cấp thành công.',
+            life: 3000
+        });
         addSupplierDialog.value = false;
+        submitted.value = false;
         loadSuppliers();
     } catch (error) {
         console.error("Lỗi khi thêm nhà cung cấp:", error);
+        toast.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: 'Thêm nhà cung cấp thất bại.',
+            life: 3000
+        });
     }
 };
-// Mở dialog chỉnh sửa nhà cung cấp
+
 const editSupplier = (supplier) => {
-    openEdit(supplier.id); // Mở dialog chỉnh sửa
+    openEdit(supplier.id);
 };
 
-// Mở dialog chỉnh sửa nhà cung cấp
 const openEdit = async (supplierId) => {
     try {
         const response = await SupplierService.getSupplierById(supplierId);
         supplier.value = response.data;
+        submitted.value = false;
         supplierUpdateDialog.value = true;
     } catch (error) {
         console.error("Lỗi khi tải thông tin nhà cung cấp:", error);
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi tải thông tin nhà cung cấp.', life: 3000 });
     }
 };
-// Ẩn dialog sửa
+
 const hideUpdateDialog = () => {
     supplierUpdateDialog.value = false;
-    supplier.value = { id: null, name: '', description: '' }; // Reset thông tin nhà cung cấp
+    supplier.value = { id: null, name: '', description: '' };
+    submitted.value = false;
 };
 
-// Hàm sửa nhà cung cấp
 const saveSupplier = async () => {
+    submitted.value = true;
+    const trimmedName = supplier.value.name.trim();
+    const trimmedDescription = supplier.value.description.trim();
+
+    if (!trimmedName) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cảnh báo',
+            detail: 'Tên nhà cung cấp không được để trống.',
+            life: 3000
+        });
+        return;
+    }
+
+    const existingNames = new Set(
+        suppliers.value
+            .filter(s => s.id !== supplier.value.id)
+            .map(s => s.name.trim().toLowerCase())
+    );
+
+    if (existingNames.has(trimmedName.toLowerCase())) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cảnh báo',
+            detail: `Nhà cung cấp "${trimmedName}" đã tồn tại.`,
+            life: 3000
+        });
+        return;
+    }
+
     try {
         if (supplier.value.id) {
-            await SupplierService.updateSupplier(supplier.value.id, supplier.value);
+            await SupplierService.updateSupplier(supplier.value.id, {
+                name: trimmedName,
+                description: trimmedDescription
+            });
+            toast.add({
+                severity: 'success',
+                summary: 'Thành công',
+                detail: 'Cập nhật nhà cung cấp thành công.',
+                life: 3000
+            });
         } else {
-            await SupplierService.saveSupplier(supplier.value);
+            await SupplierService.saveSupplier({
+                name: trimmedName,
+                description: trimmedDescription
+            });
+            toast.add({
+                severity: 'success',
+                summary: 'Thành công',
+                detail: 'Thêm nhà cung cấp thành công.',
+                life: 3000
+            });
         }
         supplierUpdateDialog.value = false;
+        submitted.value = false;
         loadSuppliers();
     } catch (error) {
         console.error("Lỗi khi lưu nhà cung cấp:", error);
+        toast.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: 'Lưu nhà cung cấp thất bại.',
+            life: 3000
+        });
     }
 };
 
-// Tính năng import/export (placeholder)
-const importSuppliers = () => {
-
-    console.log("Import function triggered");
-};
-
-const exportSuppliers = () => {
-    console.log("Export function triggered");
-};
-
-onMounted(loadSuppliers);
-
-// Method để xóa tìm kiếm
 const clearSearch = () => {
     searchTerm.value = '';
-    loadSuppliers(); // Reset về danh sách ban đầu
+    loadSuppliers();
 };
 
 const searchSuppliers = async () => {
@@ -206,9 +293,9 @@ const searchSuppliers = async () => {
         await loadSuppliers();
         return;
     }
-    loading.value = true; // Bắt đầu trạng thái loading
+    loading.value = true;
     try {
-        const response = await SupplierService.findByName(searchTerm.value);
+        const response = await SupplierService.findByName(searchTerm.value.trim());
         console.log("Kết quả tìm kiếm:", response);
         if (response && response.data) {
             suppliers.value = Array.isArray(response.data) ? response.data : [response.data];
@@ -221,47 +308,46 @@ const searchSuppliers = async () => {
         console.error("Lỗi khi tìm kiếm nhà cung cấp:", error);
         suppliers.value = [];
         totalRecords.value = 0;
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi tìm kiếm nhà cung cấp.', life: 3000 });
     } finally {
         loading.value = false;
     }
 };
 
-// Thêm debounce cho tìm kiếm để tránh gọi API quá nhiều lần
 let searchTimeout = null;
-const debouncedSearch = (event) => {
+const debouncedSearch = () => {
     if (searchTimeout) {
         clearTimeout(searchTimeout);
     }
     searchTimeout = setTimeout(() => {
         searchSuppliers();
-    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+    }, 500);
 };
+
+onMounted(loadSuppliers);
 </script>
+
 <template>
     <div class="grid">
+        <Toast />
         <div class="col-12">
             <div class="card">
                 <h5>Danh sách nhà cung cấp</h5>
                 <Toolbar class="mb-4">
                     <template v-slot:start>
-                        <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openAddDialog" />
-                        <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
-                            @click="deleteSelectedSuppliers" :disabled="!selectedSuppliers.length" />
+                        <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2" @click="openAddDialog" />
                     </template>
                     <template v-slot:end>
                         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
                             @click="downloadSupplierTemplate" />
-
-                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
-                            class="mr-2 inline-block" @select="importSupplierss" :auto="true" />
-
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportSupplierss" />
+                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
+                            class="mr-2 inline-block" @select="importSuppliers" :auto="true" />
+                        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportSuppliers" />
                     </template>
-
                 </Toolbar>
+
                 <!-- Phần tìm kiếm -->
                 <div class="flex align-items-center justify-content-between mb-4">
-
                     <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2"
                         @click="clearSearch" />
                     <div class="flex ml-auto search-bar">
@@ -272,18 +358,26 @@ const debouncedSearch = (event) => {
                     </div>
                 </div>
 
+                <!-- <span class="p-input-icon-left mb-2">
+                                <i class="pi pi-search" />
+                                <InputText v-model="filters.global.value" placeholder="Tìm kiếm..."
+                                    style="width: 100%" />
+                            </span> -->
+
                 <!-- Modal Thêm Nhà Cung Cấp -->
                 <Dialog v-model:visible="addSupplierDialog" :style="{ width: '500px' }" header="Thêm Nhà Cung Cấp" modal
                     class="custom-dialog">
-
                     <div class="form-container">
                         <!-- Tên nhà cung cấp -->
                         <div class="field">
                             <label for="add-name" class="field-label">Tên nhà cung cấp</label>
                             <span class="p-input-icon-left">
                                 <InputText id="add-name" v-model="newSupplier.name" placeholder="Nhập tên nhà cung cấp"
-                                    required autofocus class="field-input" />
+                                    required autofocus class="field-input"
+                                    :maxlength="30"
+                                    :class="{ 'p-invalid': submitted && !newSupplier.name.trim() }" />
                             </span>
+                            <small class="p-error" v-if="submitted && !newSupplier.name.trim()">Tên nhà cung cấp không được để trống</small>
                         </div>
 
                         <!-- Mô tả -->
@@ -291,51 +385,54 @@ const debouncedSearch = (event) => {
                             <label for="add-description" class="field-label">Mô tả</label>
                             <span class="p-input-icon-left">
                                 <Textarea id="add-description" v-model="newSupplier.description" rows="3"
-                                    placeholder="Nhập mô tả" class="field-textarea" />
+                                placeholder="Nhập mô tả" class="field-textarea" :maxlength="255" />
                             </span>
                         </div>
                     </div>
 
                     <template #footer>
-                        <!-- Nút Hủy -->
                         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="hideAddDialog" />
-                        <!-- Nút Thêm -->
                         <Button label="Thêm" icon="pi pi-check" class="p-button-primary save-button"
                             @click="addSupplier" />
                     </template>
                 </Dialog>
-                <!-- Modal sửa nhà cung cấp -->
 
-                <Dialog v-model:visible="supplierUpdateDialog" :style="{ width: '500px' }"
-                    header="Chi tiết nhà cung cấp" modal class="custom-dialog">
-
+                <!-- Modal Sửa Nhà Cung Cấp -->
+                <Dialog v-model:visible="supplierUpdateDialog" :style="{ width: '500px' }" header="Chi tiết nhà cung cấp"
+                    modal class="custom-dialog">
                     <div class="form-container">
                         <!-- Tên nhà cung cấp -->
                         <div class="field">
                             <label for="name" class="field-label">Tên nhà cung cấp</label>
                             <span class="p-input-icon-left">
                                 <InputText id="name" v-model="supplier.name" placeholder="Nhập tên nhà cung cấp"
-                                    required autofocus class="field-input" />
+                                    required autofocus class="field-input" :maxlength="30"
+                                    :class="{ 'p-invalid': submitted && !supplier.name.trim() }" />
                             </span>
+                            <small class="p-error" v-if="submitted && !supplier.name.trim()">Tên nhà cung cấp không được để trống</small>
                         </div>
 
                         <!-- Mô tả -->
                         <div class="field">
                             <label for="description" class="field-label">Mô tả</label>
                             <span class="p-input-icon-left">
-                                <Textarea id="description" v-model="supplier.description" rows="3"
-                                    placeholder="Nhập mô tả" class="field-textarea" />
+                                <!-- <Textarea id="description" v-model="supplier.description" rows="3"
+                                    placeholder="Nhập mô tả" class="field-textarea" :maxlength="255"
+                                    :class="{ 'p-invalid': submitted && !supplier.description.trim() }" /> -->
+                                    <Textarea id="description" v-model="supplier.description" rows="3"
+                                        placeholder="Nhập mô tả" class="field-textarea" :maxlength="255" />
                             </span>
                         </div>
                     </div>
 
                     <template #footer>
-                        <!-- Nút Hủy -->
-                        <Button label="Hủy" icon="pi pi-times" class="p-button-text cancel-button"
+                        <!-- <Button label="Hủy" icon="pi pi-times" class="p-button-text cancel-button"
                             @click="hideUpdateDialog" />
-                        <!-- Nút Sửa -->
                         <Button label="Sửa" icon="pi pi-check" class="p-button-primary save-button"
-                            @click="saveSupplier" />
+                            @click="saveSupplier" /> -->
+
+                            <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="hideUpdateDialog" />
+                            <Button label="Lưu" icon="pi pi-check" class="p-button-primary" @click="saveSupplier" />
                     </template>
                 </Dialog>
 
@@ -344,9 +441,7 @@ const debouncedSearch = (event) => {
                     :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
                     emptyMessage="Không tìm thấy nhà cung cấp nào." :loading="loading" @page="onPage"
                     :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['name', 'description']"
-                     class="p-datatable-gridlines"
-                    :rowHover="true"
-                    >
+                    class="p-datatable-gridlines" :rowHover="true">
                     <template #header>
                         <div class="flex justify-content-between align-items-center">
                             <span class="text-xl font-semibold">Danh sách nhà cung cấp</span>
@@ -354,14 +449,13 @@ const debouncedSearch = (event) => {
                     </template>
                     <Column selectionMode="multiple" headerStyle="width: 3em" />
                     <Column header="STT" style="width: 4rem">
-                    <template #body="slotProps">
-                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
-                    </template>
-          </Column>
-                    <!-- <Column field="id" header="ID" sortable /> -->
+                        <template #body="slotProps">
+                            {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                        </template>
+                    </Column>
                     <Column field="name" header="Tên nhà cung cấp" sortable class="nhaCungCap" />
                     <Column field="description" header="Mô tả" sortable />
-                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem" >
+                    <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
                             <div class="flex">
                                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
@@ -381,6 +475,11 @@ const debouncedSearch = (event) => {
         transform: scale(1.1);
     }
 }
+
+:deep(.p-invalid) {
+    border-color: #f44336 !important;
+}
+
 
 ::v-deep(.p-datatable) {
     .p-paginator-bottom {
@@ -482,3 +581,4 @@ const debouncedSearch = (event) => {
     justify-content: center;
 }
 </style>
+```

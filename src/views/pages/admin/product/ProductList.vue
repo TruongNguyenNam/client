@@ -180,14 +180,14 @@ const onPageChange = (event: any) => {
           <template v-slot:start>
             <div class="my-2">
               <RouterLink to="/productadd">
-                <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" />
+                <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2" />
               </RouterLink>
-              <Button label="Delete" icon="pi pi-trash" class="p-button-danger" :disabled="!selectedProducts.length" />
+              <!-- <Button label="Delete" icon="pi pi-trash" class="p-button-danger" :disabled="!selectedProducts.length" /> -->
             </div>
           </template>
 
           <template v-slot:end>
-            <Button label="Import" icon="pi pi-upload" class="p-button-help mr-2" />
+            <!-- <Button label="Import" icon="pi pi-upload" class="p-button-help mr-2" /> -->
             <Button label="Xuất Excel" icon="pi pi-file-excel" class="p-button-success" @click="exportAllProducts" />
 
           </template>

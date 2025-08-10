@@ -45,6 +45,7 @@ export interface ShoppingCartRequest {
 
 export interface OrderRequestClient {
   userId: number;
+  addressId?:number; 
   nodes?: string;
   items?: OrderItemRequest[]; 
   payment?: PaymentRequest;
@@ -108,6 +109,9 @@ export interface AddressResponse {
   addressZipcode: string;
   addressDistrict: string;
   addressProvince: string;
+  receiverName: string;
+  receiverPhone: string;
+  isDefault:boolean;
   isActive: boolean;
 }
 

@@ -10,7 +10,7 @@
     <!-- Danh sách khách hàng -->
     <div v-if="currentTab === 'list'">
       <div class="mb-3">
-        <span class="p-input-icon-left w-\">
+        <span class="p-input-icon-left w-full">
           <i class="pi pi-search" />
           <InputText v-model="filters.global.value" placeholder="Tìm theo tên, email, số điện thoại..."
             class="search-input-box w-full" />
@@ -24,8 +24,6 @@
         <Column field="username" header="Tên người dùng" style="min-width: 10rem" />
         <Column field="email" header="Email" style="min-width: 14rem" />
         <Column field="phoneNumber" header="SĐT" style="min-width: 10rem" />
-        <!-- <Column field="addressDistrict" header="Quận/Huyện" />
-        <Column field="addressProvince" header="Tỉnh/TP" /> -->
         <Column field="active" header="Trạng thái">
           <template #body="{ data }">
             <Tag :value="data.active ? 'Hoạt động' : 'Không hoạt động'"
@@ -34,7 +32,6 @@
         </Column>
       </DataTable>
     </div>
-
 
     <!-- Form thêm khách hàng -->
     <div v-else>
@@ -67,11 +64,9 @@
               <option value="" disabled>Chọn giới tính</option>
               <option v-for="g in genderOptions" :value="g.value" :key="g.value">{{ g.label }}</option>
             </select>
-                <div v-if="errors.gender" class="error-message">{{ errors.gender }}</div>
+            <div v-if="errors.gender" class="error-message">{{ errors.gender }}</div>
           </div>
         </div>
-        <!-- Địa chỉ dạng cấp -->
-        <!-- Người nhận + SĐT người nhận -->
         <div class="form-title">Địa Chỉ</div>
         <div class="form-row">
           <div class="form-group">
@@ -87,25 +82,22 @@
             <div v-if="errors.receiverPhone" class="error-message">{{ errors.receiverPhone }}</div>
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label for="province">Tỉnh/Thành phố</label>
             <select id="province" v-model="customer.province">
               <option value="">Chọn tỉnh/thành</option>
-              <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}
-              </option>
+              <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}</option>
             </select>
-             <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
+            <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
           </div>
           <div class="form-group">
             <label for="district">Quận/Huyện</label>
             <select id="district" v-model="customer.district" :disabled="!customer.province">
               <option value="">Chọn quận/huyện</option>
-              <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}
-              </option>
+              <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}</option>
             </select>
-             <div v-if="errors.district" class="error-message">{{ errors.district }}</div>
+            <div v-if="errors.district" class="error-message">{{ errors.district }}</div>
           </div>
           <div class="form-group">
             <label for="ward">Phường/Xã</label>
@@ -113,7 +105,7 @@
               <option value="">Chọn phường/xã</option>
               <option v-for="w in wardOptions" :key="w.level3_id" :value="w.level3_id">{{ w.name }}</option>
             </select>
-              <div v-if="errors.ward" class="error-message">{{ errors.ward }}</div>
+            <div v-if="errors.ward" class="error-message">{{ errors.ward }}</div>
           </div>
         </div>
         <div class="form-group full-width">
@@ -139,10 +131,16 @@
       <Button label="Làm mới" icon="pi pi-check" class="p-button-primary" @click="lamMoi"
         v-if="currentTab === 'form'" />
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
+
+      <!-- <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" /> -->
+
+      <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
+        @click="clearSelectedCustomer" v-if="selectedCustomer" />
       <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" />
-    </template>
 
+    </template>
   </Dialog>
 </template>
 
@@ -177,7 +175,6 @@ const customer = ref({
   receiverPhone: ""
 });
 
-
 const genderOptions = [
   { label: "Nam", value: "MALE" },
   { label: "Nữ", value: "FEMALE" }
@@ -190,7 +187,6 @@ const wardOptions = computed(() =>
   districtOptions.value.find(d => d.level2_id === customer.value.district)?.level3s || []
 );
 
-// Địa chỉ đầy đủ để hiển thị
 const fullAddress = computed(() =>
   [
     customer.value.street,
@@ -201,7 +197,6 @@ const fullAddress = computed(() =>
 );
 
 const selectedCustomer = ref<CustomerResponse | null>(null);
-
 
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -244,6 +239,7 @@ function validateEmail(email: string) {
 function validatePhone(phone: string) {
   return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
 }
+
 // Theo dõi email
 watch(() => customer.value.email, (newEmail) => {
   if (!validateEmail(newEmail)) {
@@ -296,10 +292,10 @@ watch(() => customer.value.username, (username) => {
   }
 });
 
-
 const submitCustomer = async () => {
   errors.value = {};
-  // Kiểm tra rỗng & định dạng
+
+
   if (!customer.value.username.trim()) {
     errors.value.username = "Tên khách hàng không được để trống";
   }
@@ -346,7 +342,6 @@ const submitCustomer = async () => {
     errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
   }
 
-  // Kiểm tra trùng email
   const emailExists = customers.value.some(
     c => c.email.toLowerCase() === customer.value.email.toLowerCase()
   );
@@ -360,6 +355,7 @@ const submitCustomer = async () => {
   if (phoneExists) {
     errors.value.phoneNumber = "Số điện thoại này đã tồn tại";
   }
+
   if (Object.keys(errors.value).length > 0) {
     toast.add({
       severity: 'warn',
@@ -371,6 +367,7 @@ const submitCustomer = async () => {
   }
   // Nếu có lỗi thì return
   if (Object.keys(errors.value).length > 0) return;
+
 
   const address = {
     street: customer.value.street,
@@ -431,6 +428,7 @@ const submitCustomer = async () => {
   }
 };
 
+
 const lamMoi = () => {
   customer.value = {
     username: "",
@@ -452,10 +450,19 @@ const lamMoi = () => {
 };
 
 const selectCustomer = () => {
-  if (selectedCustomer.value) {
-    emit('selected', selectedCustomer.value);
-    visible.value = false;
-  }
+  emit('selected', selectedCustomer.value);
+  visible.value = false;
+};
+
+const clearSelectedCustomer = () => {
+  selectedCustomer.value = null;
+  emit('selected', null);
+  toast.add({
+    severity: 'info',
+    summary: 'Hủy chọn',
+    detail: 'Đã hủy chọn khách hàng.',
+    life: 3000
+  });
 };
 </script>
 
@@ -517,7 +524,6 @@ textarea:focus {
   border-color: #6c63ff;
   background: #fff;
 }
-
 
 .form-actions {
   margin-top: 20px;

@@ -15,9 +15,11 @@
       <!-- </div> -->
     <!-- </div>  -->
 
-      <div style="border: 1px solid red; margin-top: 10px;">
-        <h1>xin chào</h1>
-      </div>
+    <div style="border: 2px solid #eee; margin-top: 20px; background: linear-gradient(to right, #ffe6e6, #fff); padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
+  <marquee behavior="scroll" direction="left" scrollamount="6" style="font-size: 28px; font-weight: bold; color: #d32f2f; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);">
+    👟🎉 Chào mừng bạn đã đến với ShoeStore VN - Nơi hội tụ những đôi giày chất lượng & thời trang nhất! 🎉👟
+  </marquee>
+</div>
 
 
  <!-- Product List Section -->
@@ -103,9 +105,17 @@
         </div>
       </div>
     </div>
+      
+    <div style="margin-top: 10px; margin-bottom: 2px;">
+      <h1 style="margin-left: 30px; margin-top: 10px;">adidas x Mercedes-AMG PETRONAS F1</h1>
+    </div>
 
     <div class="banner-v2">
-        <Banner></Banner>
+        <!-- <Banner></Banner> -->
+        <div class="ima">
+              <Image style="width: 900px; height: auto;"></Image>
+        </div>
+
     </div>
 
     <!-- <div class="banner-v2">
@@ -130,6 +140,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import Image from './Image.vue';
 import { useToast } from 'primevue/usetoast';
 import { ProductClientService } from '../../../service/client/ProductClientService';
 import type { ProductResponseClient } from '../../../model/client/product';
@@ -354,7 +365,7 @@ const toggleCart = async (parentProductId: number | null) => {
 
 
 .list{
-  border: 1px solid red;
+  /* border: 1px solid red; */
   /* height: auto; */
   margin-top: 10px;
   /* height: 100px; */
@@ -365,7 +376,8 @@ const toggleCart = async (parentProductId: number | null) => {
   width: 100%;
   /* border: 1px solid red; */
   margin-top: 10px;
-  height: auto;
+  /* height: auto; */
+  /* border: 1px solid red; */
 }
 
 .banner-video {
@@ -383,7 +395,7 @@ const toggleCart = async (parentProductId: number | null) => {
 .filter {
   width: 20%;
   padding: 20px;
-  border: 1px solid #ddd;
+  /* border: 1px solid #ddd; */
   border-radius: 8px;
   background-color: #f9f9f9;
   margin-right: 20px;
@@ -398,7 +410,7 @@ const toggleCart = async (parentProductId: number | null) => {
 .header {
     width: 1450px;
     margin: 0 auto;
-    border:  1px solid red;
+    border: 1px solid #eee;
     height: 1000px;
     margin-top: 10px;
 }
@@ -410,7 +422,7 @@ const toggleCart = async (parentProductId: number | null) => {
   max-width: 250px;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid red;
+  border: 1px solid #eee;
   background: #fff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;

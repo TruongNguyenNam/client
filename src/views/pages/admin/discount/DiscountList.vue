@@ -134,12 +134,12 @@ onMounted(fetchProducts);
 
   <div class="menuat">
     <RouterLink to="/discountadd">
-      <Button label="New" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" />
+      <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" />
     </RouterLink>
-    <div class="imandex">
+    <!-- <div class="imandex">
       <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" />
       <Button label="Export" icon="pi pi-upload" class="p-button-help" />
-    </div>
+    </div> -->
   </div>
 
   <div class="search-wrapper" style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem; align-items:center;">

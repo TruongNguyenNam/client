@@ -6,12 +6,14 @@
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
-            <InputText id="productName" v-model="product.name" placeholder="nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" />
+            <InputText id="productName" v-model="product.name" 
+            placeholder="Nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" 
+            maxlength="50"/>
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="sku">Mã Sản Phẩm</label>
-            <InputText id="sku" v-model="product.sku" placeholder="tự động sinh" disabled />
+            <InputText id="sku" v-model="product.sku" placeholder="Tự động sinh" disabled />
           </div>
           <div class="field col-12 md:col-6">
             <label for="productCategory">Danh mục</label>
@@ -21,14 +23,19 @@
               :options="categories"
               optionLabel="name"
               optionValue="id"
-              placeholder="chọn danh mục"
+              placeholder="Chọn danh mục"
               :class="{'p-invalid': submitted && !product.categoryId}"
             />
             <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="sportType">Loại thể thao</label>
-            <InputText id="sportType" v-model="product.sportType" placeholder="Enter sport type" />
+            <InputText id="sportType" v-model="product.sportType" 
+            placeholder="Nhập loại thể thao" 
+            maxlength="50"
+            :class="{'p-invalid': submitted && !product.sportType}"
+            />
+            <small class="p-error" v-if="submitted && !product.sportType">Loại thể thao là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="productTag">Nhãn</label>
@@ -38,9 +45,11 @@
               :options="productTags"
               optionLabel="name"
               optionValue="id"
-              placeholder="chọn nhãn"
+              placeholder="Chọn nhãn"
               :multiple="true"
+              :class="{'p-invalid': submitted && product.tagId.length === 0}"
             />
+            <small class="p-error" v-if="submitted && product.tagId.length === 0">Nhãn là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="supplier">Nhà cung cấp</label>
@@ -50,7 +59,7 @@
               :options="suppliers"
               optionLabel="name"
               optionValue="id"
-              placeholder="chọn nhà cung cấp"
+              placeholder="Chọn nhà cung cấp"
               :class="{'p-invalid': submitted && !product.supplierId}"
             />
             <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
@@ -61,8 +70,9 @@
               id="productDescription" 
               v-model="product.description" 
               rows="4" 
-              placeholder="nhập mô tả"
+              placeholder="Nhập mô tả"
               :class="{'p-invalid': submitted && !product.description}"
+              maxlength="100"
             />
             <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
@@ -84,7 +94,7 @@
         </div>
 
         <div class="variants mt-4">
-          <h3>Thuộc tính sản phẩm</h3>
+          <h3>Thuộc tính sản phẩm</h3>  
           <div class="variant-row" v-for="(variant, index) in variants" :key="index">
             <Dropdown
               v-model="variant.attributeId"
@@ -128,7 +138,7 @@
               <div class="value-chips mt-2">
                 <Chip
                   v-for="(value, valueIndex) in variant.values"
-                  :key="valueIndex"
+                  :key="value"
                   :label="value"
                   removable
                   @remove="removeVariantValue(index, valueIndex)"
@@ -154,7 +164,7 @@
           />
         </div>
 
-        <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
+        <!-- <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
           <h3>Danh sách biến thể</h3>
           <DataTable :value="variantCombinations" responsiveLayout="scroll">
             <Column header="Hình ảnh">
@@ -180,25 +190,46 @@
               </template>
             </Column>
             <Column header="Giá">
-              <template #body="slotProps">
-                <InputNumber 
-                  v-model="slotProps.data.price"
-                  mode="currency"
-                  currency="VND"
-                  :minFractionDigits="0"
-                  :class="{'p-invalid': submitted && slotProps.data.price === undefined}"
-                />
-              </template>
+                <template #body="slotProps">
+                  <InputNumber 
+                    v-model="slotProps.data.price"
+                    mode="currency"
+                    currency="VND"
+                
+                    :max="100000000"
+                    :step="1000"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="0"
+                    :class="{
+                      'p-invalid': submitted &&
+                        (slotProps.data.price === undefined || 
+                        slotProps.data.price < 20000 || 
+                        slotProps.data.price > 100000000)
+                    }"
+                  />
+                </template>
             </Column>
-            <Column header="Số Lượng">
+
+            <Column header="Số lượng">
               <template #body="slotProps">
                 <InputNumber 
                   v-model="slotProps.data.stockQuantity"
-                  :min="0"
-                  :class="{'p-invalid': submitted && slotProps.data.stockQuantity === undefined}"
+                  :min="1"
+                  
+                  :step="1"
+                  :maxFractionDigits="0"
+                  :class="{
+                    'p-invalid': submitted &&
+                      (slotProps.data.stockQuantity === undefined || 
+                      slotProps.data.stockQuantity < 1 || 
+                      slotProps.data.stockQuantity > 1000)
+                  }"
                 />
               </template>
             </Column>
+
+
+
             <Column>
               <template #body="slotProps">
                 <Button 
@@ -210,6 +241,120 @@
               </template>
             </Column>
           </DataTable>
+        </div> -->
+   
+
+        <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
+          <h3>Danh sách biến thể</h3>
+          <div class="flex justify-content-between mb-3 align-items-end">
+            <div class="flex gap-3 align-items-end">
+              <div class="field">
+                <label for="defaultPrice">Giá mặc định: </label>
+                <InputNumber 
+                  id="defaultPrice"
+                  v-model="defaultPrice"
+                  mode="currency"
+                  currency="VND"
+                  :min="20000"
+                  :max="100000000"
+                  :step="1000"
+                  :minFractionDigits="0"
+                  :maxFractionDigits="0"
+                  placeholder="Nhập giá mặc định"
+                />
+              </div>
+              <div class="field">
+                <label for="defaultStock">Số lượng mặc định: </label>
+                <InputNumber 
+                  id="defaultStock"
+                  v-model="defaultStock"
+                  :min="1"
+                  :max="1000"
+                  :step="1"
+                  :minFractionDigits="0"
+                  :maxFractionDigits="0"
+                  placeholder="Nhập số lượng mặc định"
+                />
+              </div>
+              <Button 
+                label="Áp dụng" 
+                icon="pi pi-check-circle" 
+                @click="applyDefaultValues" 
+                severity="info"
+                style="margin-bottom: 15px;"
+                :disabled="!defaultPrice || !defaultStock"
+              />
+            </div>
+          </div>
+      <DataTable :value="variantCombinations" responsiveLayout="scroll">
+        <Column header="Hình ảnh">
+          <template #body="slotProps">
+            <div class="variant-image-upload">
+              <FileUpload
+                :name="'variantImages' + slotProps.index"
+                :multiple="true"
+                accept="image/*"
+                :auto="false"
+                chooseLabel="chọn hình ảnh"
+                @select="onVariantImageUpload(slotProps.index, $event)"
+                :maxFileSize="1000000"
+                @error="onError"
+                :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
+              />
+            </div>
+          </template>
+        </Column>
+        <Column header="Tên">
+          <template #body="slotProps">
+            {{ slotProps.data.name }}
+          </template>
+        </Column>
+        <Column header="Giá">
+          <template #body="slotProps">
+            <InputNumber 
+              v-model="slotProps.data.price"
+              mode="currency"
+              currency="VND"
+              :max="100000000"
+              :step="1000"
+              :minFractionDigits="0"
+              :maxFractionDigits="0"
+              :class="{
+                'p-invalid': submitted &&
+                  (slotProps.data.price === undefined || 
+                  slotProps.data.price < 20000 || 
+                  slotProps.data.price > 100000000)
+              }"
+            />
+          </template>
+        </Column>
+        <Column header="Số lượng">
+          <template #body="slotProps">
+            <InputNumber 
+              v-model="slotProps.data.stockQuantity"
+              :min="1"
+              :step="1"
+              :maxFractionDigits="0"
+              :class="{
+                'p-invalid': submitted &&
+                  (slotProps.data.stockQuantity === undefined || 
+                  slotProps.data.stockQuantity < 1 || 
+                  slotProps.data.stockQuantity > 1000)
+              }"
+            />
+          </template>
+    </Column>
+    <Column>
+      <template #body="slotProps">
+        <Button 
+          icon="pi pi-trash" 
+          severity="danger" 
+          @click="variantCombinations.splice(slotProps.index, 1)"
+          :class="{'p-button-sm': true}"
+        />
+      </template>
+    </Column>
+  </DataTable>
         </div>
 
         <div class="flex justify-content-end mt-4">
@@ -262,6 +407,10 @@ const parentImages = ref<File[]>([]);
 const productAttributes = ref<ProductAttributeResponse[]>([]);
 const availableAttributes = ref<ProductAttributeResponse[]>([]);
 
+const defaultPrice = ref(500000)
+const defaultStock = ref(100)
+
+
 const product = reactive<ProductRequest>({
   name: '',
   description: '',
@@ -293,11 +442,87 @@ const getAttributeName = (attributeId: number) => {
   return attribute ? attribute.name : '';
 };
 
+
+const applyDefaultValues = () => {
+  if (!defaultPrice.value || !defaultStock.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Vui lòng nhập cả giá và số lượng mặc định.',
+      life: 3000
+    });
+    return;
+  }
+
+  if (
+    defaultPrice.value < 20000 ||
+    defaultPrice.value > 100000000 ||
+    defaultStock.value < 1 ||
+    defaultStock.value > 1000
+  ) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Lỗi',
+      detail: 'Giá phải từ 20,000 đến 100,000,000 VND và số lượng từ 1 đến 1,000.',
+      life: 3000
+    });
+    return;
+  }
+
+  variantCombinations.value.forEach(variant => {
+    variant.price = defaultPrice.value;
+    variant.stockQuantity = defaultStock.value;
+  });
+
+  toast.add({
+    severity: 'success',
+    summary: 'Thành công',
+    detail: `Đã áp dụng giá ${defaultPrice.value.toLocaleString('vi-VN')} VND và số lượng ${defaultStock.value} cho tất cả biến thể.`,
+    life: 3000
+  });
+};
+// const onParentImageUpload = (event: any) => {
+//   const selectedFiles: File[] = event.files;
+//   parentImages.value = selectedFiles;
+//   toast.add({ severity: 'success', summary: 'Hình ảnh sản phẩm cha đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho sản phẩm cha`, life: 3000 });
+// };
+
 const onParentImageUpload = (event: any) => {
   const selectedFiles: File[] = event.files;
+
+  // Các định dạng ảnh cho phép
+  const validImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+
+  // Tìm file không hợp lệ (bao gồm cả Excel)
+  const invalidFiles = selectedFiles.filter(file => !validImageTypes.includes(file.type));
+
+  if (invalidFiles.length > 0) {
+    // Thông báo lỗi
+    toast.add({
+      severity: 'error',
+      summary: 'File không hợp lệ',
+      detail: 'Chỉ cho phép hình ảnh (JPG, PNG, WEBP, GIF). Không được tải lên file Excel hoặc định dạng khác.',
+      life: 4000
+    });
+
+    // Xóa hết file đã chọn (PrimeVue FileUpload)
+    event.options.clear();
+
+    // Reset lại biến lưu
+    parentImages.value = [];
+    return;
+  }
+
+  // Nếu hợp lệ thì gán vào biến
   parentImages.value = selectedFiles;
-  toast.add({ severity: 'success', summary: 'Hình ảnh sản phẩm cha đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho sản phẩm cha`, life: 3000 });
+  toast.add({
+    severity: 'success',
+    summary: 'Hình ảnh hợp lệ',
+    detail: `Đã chọn ${selectedFiles.length} hình ảnh`,
+    life: 3000
+  });
 };
+
 
 const onError = (error: any) => {
   toast.add({ severity: 'error', summary: 'Lỗi tải lên', detail: error.message, life: 3000 });
@@ -416,11 +641,26 @@ watch(
   { deep: true }
 );
 
+watch(
+  () => product.name,
+  (newName) => {
+    if (!newName) return;
+    variantCombinations.value = variantCombinations.value.map((combination) => {
+      const variantName = `${newName} - ${combination.attributes.map(attr => attr.value).join(' - ')}`;
+      return {
+        ...combination,
+        name: variantName,
+        sku: `${product.sku}-${combination.attributes.map(attr => attr.value).join('-')}`
+      };
+    });
+  }
+);
+
 const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  if (!product.name || !product.categoryId || !product.supplierId || !product.description) {
+  if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType || !product.tagId.length) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
@@ -434,22 +674,25 @@ const submitProduct = async () => {
 
   if (
     variantCombinations.value.length > 0 &&
-    variantCombinations.value.some(
-      v =>
-        v.price === undefined ||
+    variantCombinations.value.some(v => {
+      const price = Number(v.price);
+      const stock = Number(v.stockQuantity);
+      return (
         v.price === null ||
-        isNaN(Number(v.price)) ||
-        Number(v.price) <= 20000 ||
-        v.stockQuantity === undefined ||
+        isNaN(price) ||
+        price < 20000 ||
+        price > 100000000 ||
         v.stockQuantity === null ||
-        isNaN(Number(v.stockQuantity)) ||
-        Number(v.stockQuantity) < 0
-    )
+        isNaN(stock) ||
+        stock < 1 ||
+        stock > 1000
+      );
+    })
   ) {
     toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Vui lòng nhập giá > 20000đ và số lượng >= 0 cho tất cả biến thể.',
+      severity: 'warn',
+      summary: 'Lỗi',
+      detail: 'Vui lòng nhập giá từ 20.000đ đến 100.000.000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
       life: 3000
     });
     isSubmitting.value = false;
@@ -643,4 +886,6 @@ onMounted(async () => {
 :deep(.p-fileupload .p-button) {
   margin-top: 0.5rem;
 }
+
+
 </style>

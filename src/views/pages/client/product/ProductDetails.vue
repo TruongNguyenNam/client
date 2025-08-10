@@ -103,14 +103,25 @@
           </p>
         </div>
       </div>
+    
       <div v-else class="text-center text-gray-500 py-10">Không có dữ liệu sản phẩm.</div>
     </div>
+
+    <div v-if="selectedProduct.parentProductId" class="productchat mx-auto p-4">
+        <ProductReview :product="selectedProduct" />
+    </div>
+   
+    
+
+    
+
   </template>
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ProductClientService } from '../../../../service/client/ProductClientService';
 import type { ProductResponseClient } from '../../../../model/client/product';
+import ProductReview from './ProductReview.vue';
 import { useAuthStore } from '../../../../stores/auth';
 import { useToast } from 'primevue/usetoast';
 
@@ -398,8 +409,10 @@ const getBrandName = (name: string): string => {
 
 onMounted(async () => {
   await fetchProductDetails();
+  console.log('selectedProduct:', selectedProduct.value); // Debug
+  console.log('selectedProduct.id:', selectedProduct.value.id); // Debug
   if (authStore.userId) {
-    await authStore.fetchCart(); 
+    await authStore.fetchCart();
   }
 });
 </script>

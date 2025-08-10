@@ -271,14 +271,14 @@ onMounted(fetchProducts);
 
 
     <div class="menuat">
-      <Button label="New" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" @click="openAddDialog" />
+      <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" @click="openAddDialog" />
       <div class="imandex">
         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary" @click="downloadAttributeTemplate" />
 
-        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
+        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
           class="mr-2 inline-block" @select="importAttributes" :auto="true" />
 
-        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
+        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
 
       </div>
     </div>
