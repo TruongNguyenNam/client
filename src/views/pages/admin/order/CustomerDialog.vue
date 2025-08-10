@@ -10,7 +10,7 @@
     <!-- Danh sách khách hàng -->
     <div v-if="currentTab === 'list'">
       <div class="mb-3">
-        <span class="p-input-icon-left w-\">
+        <span class="p-input-icon-left w-full">
           <i class="pi pi-search" />
           <InputText v-model="filters.global.value" placeholder="Tìm theo tên, email, số điện thoại..."
             class="search-input-box w-full" />
@@ -24,8 +24,6 @@
         <Column field="username" header="Tên người dùng" style="min-width: 10rem" />
         <Column field="email" header="Email" style="min-width: 14rem" />
         <Column field="phoneNumber" header="SĐT" style="min-width: 10rem" />
-        <!-- <Column field="addressDistrict" header="Quận/Huyện" />
-        <Column field="addressProvince" header="Tỉnh/TP" /> -->
         <Column field="active" header="Trạng thái">
           <template #body="{ data }">
             <Tag :value="data.active ? 'Hoạt động' : 'Không hoạt động'"
@@ -34,7 +32,6 @@
         </Column>
       </DataTable>
     </div>
-
 
     <!-- Form thêm khách hàng -->
     <div v-else>
@@ -66,8 +63,6 @@
             </select>
           </div>
         </div>
-        <!-- Địa chỉ dạng cấp -->
-        <!-- Người nhận + SĐT người nhận -->
         <div class="form-title">Địa Chỉ</div>
         <div class="form-row">
           <div class="form-group">
@@ -80,22 +75,19 @@
             <div v-if="errors.receiverPhone" class="error-message">{{ errors.receiverPhone }}</div>
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label for="province">Tỉnh/Thành phố</label>
             <select id="province" v-model="customer.province" required>
               <option value="">Chọn tỉnh/thành</option>
-              <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}
-              </option>
+              <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}</option>
             </select>
           </div>
           <div class="form-group">
             <label for="district">Quận/Huyện</label>
             <select id="district" v-model="customer.district" :disabled="!customer.province" required>
               <option value="">Chọn quận/huyện</option>
-              <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}
-              </option>
+              <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}</option>
             </select>
           </div>
           <div class="form-group">
@@ -125,11 +117,22 @@
 
     <template #footer>
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
-
-      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
-        @click="selectCustomer" v-if="currentTab === 'list'" />
+      <Button 
+        label="Hủy chọn khách hàng" 
+        icon="pi pi-user-minus" 
+        class="p-button-warning" 
+        @click="clearSelectedCustomer" 
+        v-if="selectedCustomer"
+      />
+      <Button 
+        label="Chọn" 
+        icon="pi pi-check" 
+        class="p-button-primary" 
+        :disabled="!selectedCustomer" 
+        @click="selectCustomer" 
+        v-if="currentTab === 'list'" 
+      />
     </template>
-
   </Dialog>
 </template>
 
@@ -164,7 +167,6 @@ const customer = ref({
   receiverPhone: ""
 });
 
-
 const genderOptions = [
   { label: "Nam", value: "MALE" },
   { label: "Nữ", value: "FEMALE" }
@@ -177,7 +179,6 @@ const wardOptions = computed(() =>
   districtOptions.value.find(d => d.level2_id === customer.value.district)?.level3s || []
 );
 
-// Địa chỉ đầy đủ để hiển thị
 const fullAddress = computed(() =>
   [
     customer.value.street,
@@ -188,7 +189,6 @@ const fullAddress = computed(() =>
 );
 
 const selectedCustomer = ref<CustomerResponse | null>(null);
-
 
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -231,10 +231,10 @@ function validateEmail(email: string) {
 function validatePhone(phone: string) {
   return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
 }
+
 const submitCustomer = async () => {
   errors.value = {};
 
-  // Kiểm tra rỗng & định dạng
   if (!customer.value.username.trim()) {
     errors.value.username = "Tên khách hàng không được để trống";
   }
@@ -260,7 +260,6 @@ const submitCustomer = async () => {
     errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
   }
 
-  // Kiểm tra trùng email
   const emailExists = customers.value.some(
     c => c.email.toLowerCase() === customer.value.email.toLowerCase()
   );
@@ -268,24 +267,22 @@ const submitCustomer = async () => {
     errors.value.email = "Email này đã tồn tại";
   }
 
-  // Kiểm tra trùng số điện thoại
   const phoneExists = customers.value.some(
     c => c.phoneNumber === customer.value.phoneNumber
   );
   if (phoneExists) {
     errors.value.phoneNumber = "Số điện thoại này đã tồn tại";
   }
-if (Object.keys(errors.value).length > 0) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Dữ liệu không hợp lệ',
-            detail: 'Vui lòng kiểm tra lại các thông tin.',
-            life: 3000
-        });
-        return;
-    }
-  // Nếu có lỗi thì return
-  if (Object.keys(errors.value).length > 0) return;
+
+  if (Object.keys(errors.value).length > 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Dữ liệu không hợp lệ',
+      detail: 'Vui lòng kiểm tra lại các thông tin.',
+      life: 3000
+    });
+    return;
+  }
 
   const address = {
     street: customer.value.street,
@@ -346,13 +343,20 @@ if (Object.keys(errors.value).length > 0) {
   }
 };
 
-
-
 const selectCustomer = () => {
-  if (selectedCustomer.value) {
-    emit('selected', selectedCustomer.value);
-    visible.value = false;
-  }
+  emit('selected', selectedCustomer.value);
+  visible.value = false;
+};
+
+const clearSelectedCustomer = () => {
+  selectedCustomer.value = null;
+  emit('selected', null);
+  toast.add({
+    severity: 'info',
+    summary: 'Hủy chọn',
+    detail: 'Đã hủy chọn khách hàng.',
+    life: 3000
+  });
 };
 </script>
 
@@ -415,7 +419,6 @@ textarea:focus {
   background: #fff;
 }
 
-
 .form-actions {
   margin-top: 20px;
   display: flex;
@@ -473,10 +476,11 @@ textarea:focus {
     padding: 18px 8px;
   }
 }
+
 .error-message {
-    color: #e11d48;
-    font-size: 0.96rem;
-    margin-top: 5px;
-    margin-bottom: 2px;
+  color: #e11d48;
+  font-size: 0.96rem;
+  margin-top: 5px;
+  margin-bottom: 2px;
 }
 </style>

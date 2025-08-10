@@ -13,6 +13,7 @@
             <InputText
               id="newAttributeName"
               v-model="newAttribute.name"
+              maxlength="20"
               required
               autofocus
             />
@@ -22,7 +23,8 @@
             <InputText
               id="newAttributeDescription"
               v-model="newAttribute.description"
-              required
+              maxlength="255"
+              
             />
           </div>
         </div>
@@ -37,7 +39,7 @@
             label="Lưu"
             icon="pi pi-check"
             @click="saveNewAttribute"
-            :disabled="!newAttribute.name || !newAttribute.description"
+            :disabled="!newAttribute.name"
           />
         </template>
       </Dialog>

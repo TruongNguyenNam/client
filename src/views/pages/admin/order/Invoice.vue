@@ -145,9 +145,10 @@ const getAllChildProduct = async () => {
     if (response && response.data) {
       listProduct.value = response.data.map((product: any) => ({
         ...product,
-        stockQuantity: product.stockQuantity ?? 0 // Lấy giá trị ban đầu
+        stockQuantity: product.stockQuantity ?? 0 // Lấy giá trị ban đầu từ server
       }));
-      loadStockQuantitiesFromStorage(); // Áp dụng trạng thái đã lưu
+       loadStockQuantitiesFromStorage(); 
+       localStorage.removeItem("stockQuantities")// Áp dụng trạng thái đã lưu từ localStorage (uncomment dòng này)
       totalRecords.value = response.data.length;
     } else {
       listProduct.value = [];
@@ -364,9 +365,11 @@ const loadStockQuantitiesFromStorage = () => {
     listProduct.value.forEach((product: any) => {
       if (stockQuantities[product.id] !== undefined) {
         product.stockQuantity = stockQuantities[product.id];
-        console.log('stockQuantities', stockQuantities[product.id]);
+        console.log(`Áp dụng stock từ storage cho sản phẩm ${product.id}: ${stockQuantities[product.id]}`);
       }
     });
+  } else {
+    console.log('Không có stockQuantities trong localStorage để load.');
   }
 };
 
@@ -427,10 +430,12 @@ const addProductToActiveInvoice = (product: any) => {
   }
   // Cập nhật stockQuantity trong listProduct
   const productInList = listProduct.value.find((p: any) => p.id === product.id);
-  if (productInList) {
-    productInList.stockQuantity = Math.max(0, (productInList.stockQuantity ?? 0) - 1);
-    saveStockQuantitiesToStorage(); // Lưu sau khi thay đổi
-  }
+if (productInList) {
+  productInList.stockQuantity = Math.max(0, (productInList.stockQuantity ?? 0) - 1);
+  saveStockQuantitiesToStorage();
+} else {
+  console.warn(`Sản phẩm ${product.id} không tồn tại trong listProduct`);
+}
   recalculateTotal(activeInvoice);
   saveInvoicesToStorage();
   resetTimerOnInteraction(activeInvoice);
@@ -486,11 +491,15 @@ const decrementQuantity = (invoice: any, index: number) => {
 };
 
 const removeItem = (invoice: any, index: number) => {
-  const product = listProduct.value.find((p: any) => p.id === invoice.items[index].id);
+  const item = invoice.items[index]; // Lấy item trước để truy cập quantity
+  const quantityToRestore = item.quantity; // Lưu quantity cần khôi phục
+  const product = listProduct.value.find((p: any) => p.id === item.id);
   if (product) {
-      product.stockQuantity = (product.stockQuantity ?? 0) + 1;
-      saveStockQuantitiesToStorage(); // Lưu sau khi giảm
-    }
+    product.stockQuantity = Math.max(0, (product.stockQuantity ?? 0) + quantityToRestore); // + đúng quantity
+    saveStockQuantitiesToStorage(); // Lưu sau khi cập nhật
+  } else {
+    console.warn(`Sản phẩm ${item.id} không tồn tại trong listProduct`);
+  }
   invoice.items.splice(index, 1);
   recalculateTotal(invoice);
   saveInvoicesToStorage();

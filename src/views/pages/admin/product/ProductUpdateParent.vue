@@ -44,7 +44,10 @@
               id="sportType" 
               v-model="product.sportType" 
               placeholder="nhập loại sản phẩm" 
+              maxlength="50"
+              :class="{'p-invalid': submitted && !product.sportType}"
             />
+            <small class="p-error" v-if="submitted && !product.sportType">Loại thể thao là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="productTag">Thẻ</label>
@@ -365,7 +368,7 @@ const deleteImages = async (index: number) => {
 const submitProduct = async () => {
   submitted.value = true;
   
-  if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description) {
+  if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description || !product.sportType) {
     toast.add({ 
       severity: 'warn', 
       summary: 'Lỗi', 

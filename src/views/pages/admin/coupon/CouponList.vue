@@ -295,20 +295,22 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2"
                             @click="openAddDialog" />
                     </template>
-                    <template v-slot:end>
+                    <!-- <template v-slot:end>
                         <Button label="Nhập" icon="pi pi-upload" class="p-button-help mr-2" @click="importCoupons" />
                         <Button label="Xuất" icon="pi pi-download" class="p-button-info" @click="exportCoupons" />
-                    </template>
+                    </template> -->
                 </Toolbar>
                 <!-- Phần tìm kiếm -->
-                <div class="flex align-items-center justify-content-between mb-4">
+                <div class="flex align-items-center justify-content-between mb-4" style="margin-right: 50px;">
                     <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2"
                         @click="clearSearch" />
                     <div class="search-bar-vertical">
                         <div class="search-bar-row">
                             <InputNumber v-model="minDiscount" :min="0" placeholder="Giá trị giảm từ"
-                                class="filter-input" />
+                                class="filter-input"/>
+
                             <span class="filter-separator">-</span>
+
                             <InputNumber v-model="maxDiscount" :min="0" placeholder="Đến" class="filter-input" />
                         </div>
                         <span class="p-input-icon-left">

@@ -210,7 +210,7 @@
             @click="router.push('/documentation')" 
           />
           <Button 
-            label="Cập nhật sản phẩm con" 
+            label="Cập nhật sản phẩm chi tiết" 
             icon="pi pi-check" 
             @click="submitChildProduct" 
             :loading="isSubmitting" 

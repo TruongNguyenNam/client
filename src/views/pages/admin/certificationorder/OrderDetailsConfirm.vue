@@ -185,47 +185,50 @@
     </div>
 
     <Dialog v-model:visible="showAddressDialog" modal header="Cập nhật địa chỉ" :style="{ width: '50vw' }">
-      <div class="p-field">
-        <label for="receiverName">Tên người nhận</label>
-        <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" />
-      </div>
-      <div class="p-field">
-        <label for="receiverPhone">Số điện thoại</label>
-        <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full" />
-      </div>
-      <div class="p-field">
-        <label for="email">Email</label>
-        <InputText id="email" v-model="tempAddress.email" disabled class="w-full" />
-      </div>
-      <div class="p-field">
-        <label for="province">Tỉnh/Thành phố</label>
-        <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name"
-          option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố" />
-      </div>
-      <div class="p-field">
-        <label for="district">Quận/Huyện</label>
-        <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name"
-          option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện"
-          :disabled="!selectedProvince" />
-      </div>
-      <div class="p-field">
-        <label for="ward">Phường/Xã</label>
-        <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name"
-          option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" />
-      </div>
-      <div class="p-field">
-        <label for="street">Đường</label>
-        <InputText id="street" v-model="tempAddress.addressStreet" class="w-full" />
-      </div>
-      <div class="p-field">
-        <label for="zipcode">Mã bưu điện</label>
-        <InputText id="zipcode" v-model="tempAddress.addressZipcode" class="w-full" />
-      </div>
-      <div class="flex justify-content-end gap-2">
-        <Button label="Hủy" class="p-button-text" @click="showAddressDialog = false" />
-        <Button label="Lưu" class="p-button-primary" @click="saveAddress" :loading="loading" />
-      </div>
-    </Dialog>
+  <div class="p-field">
+    <label for="receiverName">Tên người nhận <span class="text-red-500">*</span></label>
+    <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" :class="{'p-invalid': submitted && !tempAddress.receiverName}" maxlength="30" />
+    <small class="p-error" v-if="submitted && !tempAddress.receiverName">Tên người nhận là bắt buộc.</small>
+  </div>
+  <div class="p-field">
+    <label for="receiverPhone">Số điện thoại <span class="text-red-500">*</span></label>
+    <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full" :class="{'p-invalid': submitted && !tempAddress.receiverPhone}" maxlength="10" />
+    <small class="p-error" v-if="submitted && !tempAddress.receiverPhone">Số điện thoại là bắt buộc.</small>
+    <small class="p-error" v-if="submitted && tempAddress.receiverPhone && !isValidPhone(tempAddress.receiverPhone)">Số điện thoại không hợp lệ.</small>
+  </div>
+  <div class="p-field">
+    <label for="email">Email</label>
+    <InputText id="email" v-model="tempAddress.email" disabled class="w-full" />
+  </div>
+  <div class="p-field">
+    <label for="province">Tỉnh/Thành phố <span class="text-red-500">*</span></label>
+    <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name" option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố" :class="{'p-invalid': submitted && !selectedProvince}" />
+    <small class="p-error" v-if="submitted && !selectedProvince">Tỉnh/Thành phố là bắt buộc.</small>
+  </div>
+  <div class="p-field">
+    <label for="district">Quận/Huyện <span class="text-red-500">*</span></label>
+    <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name" option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện" :disabled="!selectedProvince" :class="{'p-invalid': submitted && !selectedDistrict}" />
+    <small class="p-error" v-if="submitted && !selectedDistrict">Quận/Huyện là bắt buộc.</small>
+  </div>
+  <div class="p-field">
+    <label for="ward">Phường/Xã <span class="text-red-500">*</span></label>
+    <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name" option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" :class="{'p-invalid': submitted && !tempAddress.addressWard}" />
+    <small class="p-error" v-if="submitted && !tempAddress.addressWard">Phường/Xã là bắt buộc.</small>
+  </div>
+  <div class="p-field">
+    <label for="street">Đường <span class="text-red-500">*</span></label>
+    <InputText id="street" v-model="tempAddress.addressStreet" class="w-full" :class="{'p-invalid': submitted && !tempAddress.addressStreet}" />
+    <small class="p-error" v-if="submitted && !tempAddress.addressStreet">Đường là bắt buộc.</small>
+  </div>
+  <div class="p-field">
+    <label for="zipcode">Mã bưu điện</label>
+    <InputText id="zipcode" v-model="tempAddress.addressZipcode" class="w-full" />
+  </div>
+  <div class="flex justify-content-end gap-2">
+    <Button label="Hủy" class="p-button-text" @click="showAddressDialog = false" />
+    <Button label="Lưu" class="p-button-primary" @click="saveAddress" :loading="loading" />
+  </div>
+</Dialog>
 
     <Dialog v-model:visible="showProductDialog" modal header="Chọn sản phẩm" :style="{ width: '80vw' }">
       <ListProduct @select="handleAddProduct" />
@@ -297,6 +300,7 @@ import provincesData from '../../../../assets/data/vietnam_provinces.json';
 import { useAuthStore } from '../../../../stores/auth';
 
 // Thêm renderKey để kiểm soát render
+const submitted = ref(false)
 const renderKey = ref(0);
 const authStore =  useAuthStore();
 const route = useRoute();
@@ -416,6 +420,11 @@ const provinceOptions = ref(provincesData.data);
 const districtOptions = ref<any[]>([]);
 const wardOptions = ref<any[]>([]);
 
+  const isValidPhone = (phone: string): boolean => {
+  const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+  return phoneRegex.test(phone);
+};
+
 const openAddressDialog = () => {
   if (!order.value?.address) {
     toast.add({
@@ -426,7 +435,7 @@ const openAddressDialog = () => {
     });
     return;
   }
-
+  submitted.value = false;
   // Sao chép dữ liệu địa chỉ hiện tại vào tempAddress
   tempAddress.value = { ...order.value.address };
   console.log('Order Address:', tempAddress.value); // Debug: Log address data
@@ -506,64 +515,153 @@ const updateWards = () => {
 };
 
 // Lưu địa chỉ đã chỉnh sửa
+// const saveAddress = async () => {
+//   submitted.value = true;
+
+//   tempAddress.value.addressProvince = selectedProvince.value;
+//   tempAddress.value.addressDistrict = selectedDistrict.value;
+//   if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
+//       life: 3000
+//     });
+//     return;
+//   }
+
+//   loading.value = true;
+//   try {
+//     const addressRequest: AddressRequest = {
+//       street: tempAddress.value.addressStreet,
+//       ward: tempAddress.value.addressWard,
+//       city: tempAddress.value.addressCity,
+//       state: tempAddress.value.addressState,
+//       country: tempAddress.value.addressCountry,
+//       zipcode: tempAddress.value.addressZipcode,
+//       district: tempAddress.value.addressDistrict,
+//       province: tempAddress.value.addressProvince,
+//       receiverName: tempAddress.value.receiverName,
+//       receiverPhone: tempAddress.value.receiverPhone,
+//       isDefault: tempAddress.value.isDefault
+//     };
+
+//     const response = await AddressService.updateAddressForCustomer(
+//       tempAddress.value.userId,
+//       tempAddress.value.id,
+//       addressRequest
+//     );
+
+//     if (response.data) {
+//       // Cập nhật lại order.address với dữ liệu mới
+//       order.value.address = { ...tempAddress.value };
+//       showAddressDialog.value = false;
+//       toast.add({
+//         severity: 'success',
+//         summary: 'Thành công',
+//         detail: 'Cập nhật địa chỉ thành công',
+//         life: 3000
+//       });
+//       renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
+//     }
+//   } catch (error: any) {
+//     console.error('Lỗi khi cập nhật địa chỉ:', error);
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
+//       life: 3000
+//     });
+//   } finally {
+//     loading.value = false;
+//     submitted.value = false;
+//   }
+// };
+
 const saveAddress = async () => {
-  tempAddress.value.addressProvince = selectedProvince.value;
-  tempAddress.value.addressDistrict = selectedDistrict.value;
-  if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
-      life: 3000
-    });
-    return;
-  }
-
-  loading.value = true;
-  try {
-    const addressRequest: AddressRequest = {
-      street: tempAddress.value.addressStreet,
-      ward: tempAddress.value.addressWard,
-      city: tempAddress.value.addressCity,
-      state: tempAddress.value.addressState,
-      country: tempAddress.value.addressCountry,
-      zipcode: tempAddress.value.addressZipcode,
-      district: tempAddress.value.addressDistrict,
-      province: tempAddress.value.addressProvince,
-      receiverName: tempAddress.value.receiverName,
-      receiverPhone: tempAddress.value.receiverPhone,
-      isDefault: tempAddress.value.isDefault
-    };
-
-    const response = await AddressService.updateAddressForCustomer(
-      tempAddress.value.userId,
-      tempAddress.value.id,
-      addressRequest
-    );
-
-    if (response.data) {
-      // Cập nhật lại order.address với dữ liệu mới
-      order.value.address = { ...tempAddress.value };
-      showAddressDialog.value = false;
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Cập nhật địa chỉ thành công',
-        life: 3000
-      });
-      renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
-    }
-  } catch (error: any) {
-    console.error('Lỗi khi cập nhật địa chỉ:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
+submitted.value = true;
+// Kiểm tra các trường bắt buộc
+if (
+!tempAddress.value.receiverName ||
+!tempAddress.value.receiverPhone ||
+!selectedProvince.value ||
+!selectedDistrict.value ||
+!tempAddress.value.addressWard ||
+!tempAddress.value.addressStreet
+) {
+toast.add({
+severity: 'error',
+summary: 'Lỗi',
+detail: 'Vui lòng điền đầy đủ các trường bắt buộc.',
+life: 3000
+});
+return;
+}
+// Kiểm tra định dạng số điện thoại
+if (!isValidPhone(tempAddress.value.receiverPhone)) {
+toast.add({
+severity: 'error',
+summary: 'Lỗi',
+detail: 'Số điện thoại không hợp lệ.',
+life: 3000
+});
+return;
+}
+tempAddress.value.addressProvince = selectedProvince.value;
+tempAddress.value.addressDistrict = selectedDistrict.value;
+if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
+toast.add({
+severity: 'error',
+summary: 'Lỗi',
+detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
+life: 3000
+});
+return;
+}
+loading.value = true;
+try {
+const addressRequest: AddressRequest = {
+street: tempAddress.value.addressStreet,
+ward: tempAddress.value.addressWard,
+city: tempAddress.value.addressCity,
+state: tempAddress.value.addressState,
+country: tempAddress.value.addressCountry,
+zipcode: tempAddress.value.addressZipcode,
+district: tempAddress.value.addressDistrict,
+province: tempAddress.value.addressProvince,
+receiverName: tempAddress.value.receiverName,
+receiverPhone: tempAddress.value.receiverPhone,
+isDefault: tempAddress.value.isDefault
+};
+const response = await AddressService.updateAddressForCustomer(
+tempAddress.value.userId,
+tempAddress.value.id,
+addressRequest
+);
+if (response.data) {
+// Cập nhật lại order.address với dữ liệu mới
+order.value.address = { ...tempAddress.value };
+showAddressDialog.value = false;
+toast.add({
+severity: 'success',
+summary: 'Thành công',
+detail: 'Cập nhật địa chỉ thành công',
+life: 3000
+});
+renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
+}
+} catch (error: any) {
+console.error('Lỗi khi cập nhật địa chỉ:', error);
+toast.add({
+severity: 'error',
+summary: 'Lỗi',
+detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
+life: 3000
+});
+} finally {
+loading.value = false;
+submitted.value = false;
+}
 };
 
 const steps = [
@@ -912,6 +1010,16 @@ watch(order, (newOrder) => {
   margin-bottom: 0.5rem;
 }
 
+.p-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
 .custom-timeline {
   display: flex;
   flex-direction: row;
@@ -923,13 +1031,15 @@ watch(order, (newOrder) => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+
 .timeline-step {
   display: flex;
-  align-items: center;
+  /* align-items: center; */
   gap: 15px;
   color: #4b5e7e;
   position: relative;
   flex: 1;
+
 }
 
 .timeline-step:not(:last-child)::after {

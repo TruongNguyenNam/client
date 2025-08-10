@@ -351,9 +351,17 @@ const isDuplicateCategoryName = (name, excludeId = null) => {
 
                     <div class="field">
                         <label for="description">Mô tả</label>
-                        <Textarea id="description" v-model="category.description" rows="3" :maxlength="255"
+                        <!-- <Textarea id="description" v-model="category.description" rows="3" :maxlength="255"
                             :class="{'p-invalid': submitted && !category.description.trim()}" />
-                        <small class="p-error" v-if="submitted && !category.description.trim()">Mô tả không được để trống</small>
+                        <small class="p-error" v-if="submitted && !category.description.trim()">Mô tả không được để trống</small> -->
+                        <Textarea
+                            id="description"
+                            v-model="category.description"
+                            rows="3"
+                            :maxlength="255"
+                            :class="{'p-invalid': false}" 
+                        />
+
                     </div>
 
                     <template #footer>

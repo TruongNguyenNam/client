@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { ref, onBeforeMount, watch, defineEmits } from "vue";
 import { ProductTagService } from "../../../../service/admin/ProductTagService";
@@ -20,9 +21,11 @@ const exportTagsToExcel = () => {
 
     exportToExcel(exportData, "DanhSachTag");
 };
+
 const downloadTagTemplate = () => {
     downloadExcelTemplate(['Name', 'Description'], 'Template_Tag');
 };
+
 const importTagsFromExcel = async (event) => {
     const file = event.files?.[0];
     if (!file) return;
@@ -76,9 +79,6 @@ const importTagsFromExcel = async (event) => {
     }
 };
 
-
-
-
 const tags = ref([]);
 const loading = ref(true);
 const totalRecords = ref(0);
@@ -97,7 +97,7 @@ const tagDialog = ref(false);
 const tag = ref({
     id: null,
     name: '',
-    description: '' // Thêm description vào đây
+    description: ''
 });
 const selectedTags = ref([]);
 const deleteTagDialog = ref(false);
@@ -147,7 +147,7 @@ onBeforeMount(() => {
 const deleteTag = async () => {
     try {
         deleteTagDialog.value = false;
-        // Bạn nhớ gọi API xóa ở đây nếu có nhé
+        // Gọi API xóa tag nếu có
         await loadTags();
     } catch (error) {
         console.error("Lỗi khi xóa tag:", error);
@@ -162,7 +162,7 @@ const deleteSelectedTags = async () => {
     }
     try {
         deleteTagsDialog.value = false;
-        // Bạn nhớ gọi API xóa nhiều tag ở đây nếu có nhé
+        // Gọi API xóa nhiều tag nếu có
         await loadTags();
     } catch (error) {
         console.error("Lỗi khi xóa các tag:", error);
@@ -172,10 +172,12 @@ const deleteSelectedTags = async () => {
 const openNew = () => {
     tag.value = { id: null, name: '', description: '' };
     tagDialog.value = true;
+    errorName.value = ''; // Reset lỗi khi mở dialog mới
 };
 
 const hideDialog = () => {
     tagDialog.value = false;
+    errorName.value = ''; // Reset lỗi khi đóng dialog
 };
 
 const isDuplicateName = (name, id = null) => {
@@ -185,16 +187,24 @@ const isDuplicateName = (name, id = null) => {
     );
 };
 
-const saveTag = async () => {
+const errorName = ref('');
+
+const validateName = () => {
     const name = tag.value.name?.trim();
-
     if (!name) {
-        toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Tên tag không được để trống', life: 3000 });
-        return;
+        errorName.value = 'Tên tag không được để trống';
+        return false;
     }
-
     if (isDuplicateName(name, tag.value.id)) {
-        toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Tên tag đã tồn tại', life: 3000 });
+        errorName.value = 'Tên tag đã tồn tại';
+        return false;
+    }
+    errorName.value = '';
+    return true;
+};
+
+const saveTag = async () => {
+    if (!validateName()) {
         return;
     }
 
@@ -210,7 +220,7 @@ const saveTag = async () => {
         }
         emit("close");
         await loadTags();
-        tagDialog.value = false; // đóng dialog sau khi thêm/cập nhật
+        tagDialog.value = false;
     } catch (error) {
         console.error("Lỗi khi lưu tag:", error);
         toast.value.add({ severity: 'error', summary: 'Lỗi', detail: 'Lưu tag thất bại', life: 3000 });
@@ -222,6 +232,7 @@ const openEdit = async (tagId) => {
         const response = await ProductTagService.getTagById(tagId);
         tag.value = response.data;
         tagDialog.value = true;
+        errorName.value = ''; // Reset lỗi khi mở edit
     } catch (error) {
         console.error("Lỗi khi tải tag:", error);
     }
@@ -235,6 +246,13 @@ const confirmDeleteTag = (selectedTag) => {
     tag.value = selectedTag;
     deleteTagDialog.value = true;
 };
+
+// Watch để validate realtime khi thay đổi name
+watch(() => tag.value.name, () => {
+    if (tagDialog.value) { // Chỉ validate khi dialog mở
+        validateName();
+    }
+});
 </script>
 
 <template>
@@ -252,13 +270,10 @@ const confirmDeleteTag = (selectedTag) => {
                     <template v-slot:end>
                         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
                             @click="downloadTagTemplate" />
-
                         <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
                             class="mr-2 inline-block" @select="importTagsFromExcel" :auto="true" />
-
                         <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportTagsToExcel" />
                     </template>
-
                 </Toolbar>
 
                 <!-- Modal thêm/sửa tag -->
@@ -266,11 +281,14 @@ const confirmDeleteTag = (selectedTag) => {
                     class="p-fluid">
                     <div class="field">
                         <label for="name">Tên của tag</label>
-                        <InputText id="name" v-model="tag.name" required autofocus />
+                        <InputText id="name" v-model="tag.name" required autofocus :class="{ 'p-invalid': errorName }"
+                        maxlength="30" />
+                        <small class="p-error" v-if="errorName">{{ errorName }}</small>
                     </div>
                     <div class="field">
                         <label for="description">Mô tả</label>
-                        <Textarea id="description" v-model="tag.description" autoResize rows="3" />
+                        <Textarea id="description" v-model="tag.description" autoResize rows="3" 
+                        maxlength="255" />
                     </div>
                     <template #footer>
                         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
@@ -301,19 +319,17 @@ const confirmDeleteTag = (selectedTag) => {
                     <Column selectionMode="multiple" header="" style="min-width: 3rem" />
                     <Column header="STT" style="width: 4rem">
                         <template #body="slotProps">
-                        {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                            {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
                         </template>
-                     </Column>
-                    <!-- <Column field="id" header="ID" sortable style="min-width: 5rem"></Column> -->
+                    </Column>
                     <Column field="name" header="Tên nhãn" sortable style="min-width: 12rem"></Column>
                     <Column field="description" header="Mô tả" sortable style="min-width: 20rem"></Column>
-
                     <Column field="action" header="Thao Tác" :exportable="false" style="min-width: 8rem">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
                                 @click="editTag(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
-                                @click="confirmDeleteTag(slotProps.data)" />
+                            <!-- <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                                @click="confirmDeleteTag(slotProps.data)" /> -->
                         </template>
                     </Column>
 
@@ -350,3 +366,4 @@ const confirmDeleteTag = (selectedTag) => {
         </div>
     </div>
 </template>
+```

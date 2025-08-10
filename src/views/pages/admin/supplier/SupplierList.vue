@@ -340,9 +340,9 @@ onMounted(loadSuppliers);
                     <template v-slot:end>
                         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary mr-2"
                             @click="downloadSupplierTemplate" />
-                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
+                        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
                             class="mr-2 inline-block" @select="importSuppliers" :auto="true" />
-                        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportSuppliers" />
+                        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportSuppliers" />
                     </template>
                 </Toolbar>
 
@@ -357,6 +357,12 @@ onMounted(loadSuppliers);
                         </span>
                     </div>
                 </div>
+
+                <!-- <span class="p-input-icon-left mb-2">
+                                <i class="pi pi-search" />
+                                <InputText v-model="filters.global.value" placeholder="Tìm kiếm..."
+                                    style="width: 100%" />
+                            </span> -->
 
                 <!-- Modal Thêm Nhà Cung Cấp -->
                 <Dialog v-model:visible="addSupplierDialog" :style="{ width: '500px' }" header="Thêm Nhà Cung Cấp" modal
@@ -379,8 +385,7 @@ onMounted(loadSuppliers);
                             <label for="add-description" class="field-label">Mô tả</label>
                             <span class="p-input-icon-left">
                                 <Textarea id="add-description" v-model="newSupplier.description" rows="3"
-                                    placeholder="Nhập mô tả" class="field-textarea" :maxlength="255"
-                                    :class="{ 'p-invalid': submitted && !newSupplier.description.trim() }" />
+                                placeholder="Nhập mô tả" class="field-textarea" :maxlength="255" />
                             </span>
                         </div>
                     </div>
@@ -411,9 +416,11 @@ onMounted(loadSuppliers);
                         <div class="field">
                             <label for="description" class="field-label">Mô tả</label>
                             <span class="p-input-icon-left">
-                                <Textarea id="description" v-model="supplier.description" rows="3"
+                                <!-- <Textarea id="description" v-model="supplier.description" rows="3"
                                     placeholder="Nhập mô tả" class="field-textarea" :maxlength="255"
-                                    :class="{ 'p-invalid': submitted && !supplier.description.trim() }" />
+                                    :class="{ 'p-invalid': submitted && !supplier.description.trim() }" /> -->
+                                    <Textarea id="description" v-model="supplier.description" rows="3"
+                                        placeholder="Nhập mô tả" class="field-textarea" :maxlength="255" />
                             </span>
                         </div>
                     </div>
@@ -468,6 +475,11 @@ onMounted(loadSuppliers);
         transform: scale(1.1);
     }
 }
+
+:deep(.p-invalid) {
+    border-color: #f44336 !important;
+}
+
 
 ::v-deep(.p-datatable) {
     .p-paginator-bottom {
