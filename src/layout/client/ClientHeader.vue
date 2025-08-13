@@ -219,7 +219,7 @@ const items = computed(() => {
         { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
       ],
     },
-    { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
+    { label: 'Tin Tức', icon: 'pi pi-star', command: () => router.push('/client/about') },
     { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
   ];
 

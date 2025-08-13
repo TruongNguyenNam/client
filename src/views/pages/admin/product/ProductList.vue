@@ -188,7 +188,7 @@ const onPageChange = (event: any) => {
 
           <template v-slot:end>
             <!-- <Button label="Import" icon="pi pi-upload" class="p-button-help mr-2" /> -->
-            <Button label="Xuất Excel" icon="pi pi-file-excel" class="p-button-success" @click="exportAllProducts" />
+            <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportAllProducts" />
 
           </template>
         </Toolbar>

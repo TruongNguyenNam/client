@@ -14,7 +14,7 @@ const qrRegionId = "reader"
 const scanSuccess = (decodedText, decodedResult) => {
   console.log("Mã QR:", decodedText)
   // ✅ Tìm sản phẩm theo mã QR và thêm vào giỏ hàng
-  // emit('productScanned', decodedText) nếu cần truyền về cha
+   emit('productScanned', decodedText);
 }
 
 onMounted(() => {

@@ -147,6 +147,7 @@
                   v-model="attribute.value"
                   placeholder="Nhập giá trị"
                   class="w-full"
+                  maxlength="10"
                   :class="{ 'p-invalid': hasAttributeValueError[index] }"
                 />
                 <small class="p-error" v-if="hasAttributeValueError[index]">{{ attributeValueErrorMessages[index] }}</small>
@@ -487,6 +488,7 @@ const submitVariant = async () => {
         images: variant.images
       }]
     };
+    console.log(variantForm);
 
     await ProductService.addVariantsToProduct(parentProductId, variantForm, variant.images);
 

@@ -260,7 +260,7 @@ watch(() => tag.value.name, () => {
         <Toast ref="toast" />
         <div class="col-12">
             <div class="card">
-                <h5>Danh Sách Tag</h5>
+                <h5>Danh Sách Nhãn</h5>
                 <Toolbar class="mb-4">
                     <template v-slot:start>
                         <div class="my-2">

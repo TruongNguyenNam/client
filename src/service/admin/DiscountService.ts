@@ -46,7 +46,7 @@ export const DiscountService = {
       return response.data;
     } catch (error) {
       console.error('Error saving discount:', error);
-      throw new Error('Failed to save discount. Please try again later.');
+      throw error;
     }
   },
 

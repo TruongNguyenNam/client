@@ -127,6 +127,7 @@
                   v-model="variant.currentValue"
                   placeholder="nhập giá trị và nhấn Enter"
                   class="variant-input"
+                  maxlength="10"
                   @keydown.enter="addVariantValue(index)"
                 />
                 <Button 

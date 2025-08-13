@@ -89,7 +89,7 @@
                 </div>
               </div>
             </template>
-            <Column header="STT" style="width: 4rem">
+            <Column header="STT" style="width: 4rem"  >
                     <template #body="slotProps">
                     {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
                     </template>
@@ -99,30 +99,30 @@
               <template #body="slotProps">{{ slotProps.data.id }}</template>
             </Column> -->
   
-            <Column header="Mã đơn hàng" style="min-width: 10rem">
+            <Column header="Mã đơn hàng" style="min-width: 10rem" sortable field="orderCode">
               <template #body="slotProps">{{ slotProps.data.orderCode }}</template>
             </Column>
   
-            <Column header="Người đặt" style="min-width: 10rem">
+            <Column header="Người đặt" sortable field="address.username" style="min-width: 10rem">
               <template #body="slotProps">
                 {{ slotProps.data.address?.username || 'Vãng lai' }}
               </template>
             </Column>
 
   
-            <Column header="Tổng tiền" style="min-width: 10rem">
+            <Column header="Tổng tiền" sortable field="orderTotal" style="min-width: 10rem">
               <template #body="slotProps">
                 {{ slotProps.data.orderTotal?.toLocaleString('vi-VN') }} đ
               </template>
             </Column>
   
-            <Column header="Trạng thái đơn" style="min-width: 8rem">
+            <Column header="Trạng thái đơn" field="orderStatus" sortable style="min-width: 8rem">
               <template #body="slotProps">
                 {{ formatOrderStatus(slotProps.data.orderStatus) }}
               </template>
             </Column>
   
-            <Column header="Loại đơn" style="min-width: 8rem">
+            <Column header="Loại đơn"   field="isPos" sortable style="min-width: 8rem">
               <template #body="slotProps">
                 <Tag
                   :value="slotProps.data.isPos ? 'Tại Quầy' : 'Ship'"
@@ -131,7 +131,7 @@
               </template>
             </Column>
   
-            <Column header="Trạng thái vận chuyển" style="min-width: 12rem">
+            <Column header="Trạng thái vận chuyển" field="shipmentStatus"  sortable style="min-width: 12rem">
               <template #body="slotProps">
                 {{ formatShipmentStatus(slotProps.data.shipments?.[0]?.shipmentStatus || '---') }}
               </template>
