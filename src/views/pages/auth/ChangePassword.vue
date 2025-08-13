@@ -21,14 +21,23 @@
                 <Password v-model="form.newPassword" :feedback="true" toggleMask class="form-input"
                     placeholder="Ít nhất 5 ký tự" />
             </div>
-
+            <div v-if="form.newPassword && form.newPassword == form.currentPassword" class="error-message">
+                Mật khẩu mới giống mật khẩu cũ.
+            </div>
+            <div class="form-group">
+                <label></label>
+                <small v-if="errors.newPassword" class="error-text">{{ errors.newPassword }}</small>
+            </div>
             <!-- Nhập lại mật khẩu mới -->
             <div class="form-group">
                 <label>Xác nhận mật khẩu</label>
                 <Password v-model="form.confirmPassword" :feedback="false" toggleMask class="form-input"
                     placeholder="Nhập lại mật khẩu mới" />
             </div>
-
+            <div class="form-group">
+                <label></label>
+                <small v-if="errors.confirmPassword" class="error-text">{{ errors.confirmPassword }}</small>
+            </div>
             <!-- Thông báo lỗi xác nhận -->
             <div v-if="form.confirmPassword && form.confirmPassword !== form.newPassword" class="error-message">
                 Mật khẩu xác nhận không khớp.
@@ -45,7 +54,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
@@ -77,8 +86,30 @@ const loading = ref(false);
 // Biến lưu lỗi
 const errors = ref<{ [key: string]: string }>({});
 
+watch(() => [form.value.newPassword, form.value.confirmPassword], ([newPassword, confirmPassword]) => {
+    if (newPassword.length > 25) {
+        errors.value.newPassword = "Mật khẩu mới quá dài(tối đa 25 ký tự)";
+    } else {
+        delete errors.value.newPassword;
+    }
+    if (confirmPassword.length > 25) {
+        errors.value.confirmPassword = "Mật khẩu mới quá dài(tối đa 25 ký tự)";
+    } else {
+        delete errors.value.confirmPassword;
+    }
+
+});
 // Hàm xử lý submit
 const handleSubmit = async () => {
+    if (form.value.newPassword.length > 25) {
+        errors.value.newPassword = "Mật khẩu mới quá dài(tối đa 25 ký tự)";
+        return;
+    }
+    if (form.value.confirmPassword.length > 25) {
+        errors.value.confirmPassword = "Mật khẩu mới quá dài(tối đa 25 ký tự)";
+        return;
+    }
+
     if (!form.value.currentPassword || !form.value.newPassword || !form.value.confirmPassword) {
         toast.add({ severity: 'warn', summary: 'Thiếu thông tin', detail: 'Vui lòng nhập đầy đủ', life: 3000 });
         return;
@@ -93,7 +124,10 @@ const handleSubmit = async () => {
         toast.add({ severity: 'error', summary: 'Sai mật khẩu', detail: 'Xác nhận không khớp', life: 3000 });
         return;
     }
-
+  if (form.value.newPassword == form.value.currentPassword) {
+        toast.add({ severity: 'error', summary: 'Trùng mật khẩu', detail: 'Mật khẩu mới giống mật khẩu cũ', life: 3000 });
+        return;
+    }
     loading.value = true;
 
     try {
@@ -104,7 +138,7 @@ const handleSubmit = async () => {
 
         await AuthService.changePassword(userId.value, form.value);
         toast.add({ severity: 'success', summary: 'Thành công', detail: 'Mật khẩu đã được thay đổi', life: 3000 });
-
+        errors.value = {};
         // Reset lại form sau khi đổi mật khẩu thành công
         form.value = {
             currentPassword: '',
@@ -130,8 +164,9 @@ const handleSubmit = async () => {
             } else if (msg) {
                 errors.value.global = msg;
             }
-
             toast.add({ severity: 'error', summary: 'Thất bại', detail: 'Không thể đổi mật khẩu', life: 3000 });
+            // Nếu lỗi, không submit
+            return;
         }
     } finally {
         loading.value = false;

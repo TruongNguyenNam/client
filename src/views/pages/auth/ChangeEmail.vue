@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted,watch } from 'vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import { AuthService } from '../../../service/auth/AuthService';
@@ -59,9 +59,20 @@ onMounted(() => {
 
 // Regex kiểm tra định dạng email
 const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|vn|co\.uk|io|info)$/.test(email);
 };
-
+// Theo dõi email
+watch(() => form.value.email, (newEmail) => {
+     if (newEmail.trim() === '') {
+        emailError.value = '';
+        return;
+    }
+  if (!isValidEmail(newEmail)) {
+    emailError.value = "Email không hợp lệ";
+  } else {
+    emailError.value = "";
+  }
+});
 // Hàm xử lý lưu
 const handleSubmit = async () => {
     const email = form.value.email.trim();

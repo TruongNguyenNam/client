@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from "vue";
+import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy";
 import { AddressService } from "../../../../service/admin/AddressService";
@@ -122,14 +122,58 @@ const errors = ref<{ [key: string]: string }>({});
 
 // Regex kiểm tra email, phone
 function validateEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|vn|co\.uk|io|info)$/.test(email);
 }
 function validatePhone(phone: string) {
     return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
 }
 
+watch(() => customer.value?.email, (newEmail) => {
+    if (newEmail === undefined) return;
+    if (!validateEmail(newEmail)) {
+        errors.value.email = "Email không hợp lệ";
+    } else {
+        delete errors.value.email;
+    }
+});
+watch(() => customer?.value?.username, (username) => {
+    if (username === undefined) return;
+    if (username.length > 100) {
+        errors.value.username = "Tên khách hàng quá dài (tối đa 100 ký tự)";
+    } else {
+        delete errors.value.username;
+    }
+});
+
+watch(() => customer.value?.phoneNumber, (newPhone) => {
+    if (newPhone === undefined) return;
+    if (!validatePhone(newPhone)) {
+        errors.value.phoneNumber = "Số điện thoại không hợp lệ";
+    } else {
+        delete errors.value.phoneNumber;
+    }
+});
+
+
 // api thêm địa chỉ mới
 const saveNewAddress = async (submittedData: any) => {
+    errors.value = {};
+    if (submittedData.receiverName.length > 100) {
+        errors.value.receiverName = "Tên người nhận quá dài (tối đa 100 ký tự)";
+    }
+    if (submittedData.street.length > 100) {
+        errors.value.street = "Địa chỉ chi tiết quá dài (tối đa 100 ký tự)";
+    }
+
+    if (Object.keys(errors.value).length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Dữ liệu không hợp lệ',
+            detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
+            life: 3000
+        });
+        return;
+    }
     if (!customer.value) return;
 
     if (!submittedData.receiverName || !submittedData.receiverPhone || !submittedData.street) {
@@ -188,6 +232,23 @@ const saveNewAddress = async (submittedData: any) => {
 
 // api cập nhật địa chỉ
 const updateAddress = async (submittedData: any) => {
+    errors.value = {};
+    if (submittedData.receiverName.length > 100) {
+        errors.value.receiverName = "Tên người nhận quá dài (tối đa 100 ký tự)";
+    }
+    if (submittedData.street.length > 100) {
+        errors.value.street = "Địa chỉ chi tiết quá dài (tối đa 100 ký tự)";
+    }
+
+    if (Object.keys(errors.value).length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Dữ liệu không hợp lệ',
+            detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
+            life: 3000
+        });
+        return;
+    }
     if (!customer.value || !addressBeingEdited.value) return;
 
     if (!submittedData.receiverName || !submittedData.receiverPhone || !submittedData.street) {
@@ -266,7 +327,9 @@ const handleSubmit = async () => {
     if (!customer.value.username || customer.value.username.trim().length < 2) {
         errors.value.username = "Tên khách hàng phải có ít nhất 2 ký tự.";
     }
-
+    if (customer.value.username.trim().length > 100) {
+        errors.value.username = "Tên khách hàng quá dài (tối đa 100 ký tự)";
+    }
     if (!validateEmail(customer.value.email)) {
         errors.value.email = "Email không hợp lệ.";
     }
@@ -410,13 +473,14 @@ const handleCancel = () => {
             <div class="form-row">
                 <div class="form-group">
                     <label for="name">Tên Khách Hàng</label>
-                    <input id="name" v-model="customer.username" type="text" required />
+                    <input id="name" v-model="customer.username" type="text" 
+                        :class="{ 'border-red-500': errors.username }" />
                     <small v-if="errors.username" class="error-text">{{ errors.username }}</small>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input id="email" v-model="customer.email" type="email" required />
+                    <input id="email" v-model="customer.email" type="email"  :class="{ 'border-red-500': errors.email }" />
                     <small v-if="errors.email" class="error-text">{{ errors.email }}</small>
                 </div>
 
@@ -424,12 +488,12 @@ const handleCancel = () => {
             <div class="form-row">
                 <div class="form-group">
                     <label for="phone">Số Điện Thoại</label>
-                    <input id="phone" v-model="customer.phoneNumber" type="text" required />
+                    <input id="phone" v-model="customer.phoneNumber" type="text"  :class="{ 'border-red-500': errors.phoneNumber }"/>
                     <small v-if="errors.phoneNumber" class="error-text">{{ errors.phoneNumber }}</small>
                 </div>
                 <div class="form-group">
                     <label for="gender">Giới Tính</label>
-                    <select id="gender" v-model="customer.gender" required>
+                    <select id="gender" v-model="customer.gender" >
                         <option v-for="g in genderOptions" :key="g.value" :value="g.value">{{ g.label }}</option>
                     </select>
                 </div>

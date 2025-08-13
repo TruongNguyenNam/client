@@ -4,17 +4,19 @@
     <div class="flex flex-col md:flex-row  min-h-screen main-content">
       <!-- Sidebar trái -->
       <aside class="w-full aside md:w-1/4 p-4">
-        <div class="text-sm text-gray-500 font-semibold mb-2">Tài Khoản Của Tôi</div>
-        <div class="font-semibold text-lg">
-          <i class="pi pi-user mr-1"></i>{{ username }}
+        <div class="tk">
+          <div class="text-sm text-gray-500 font-semibold mb-2">Tài Khoản Của Tôi</div>
+          <div class="font-semibold text-lg">
+            <i class="pi pi-user mr-1"></i>{{ username }}
+          </div>
+          <router-link :to="`/auth/profile/userdetails/${userId}`" class="text-blue-600 text-sm">
+            <i class="pi pi-pencil mr-1"></i> Sửa Hồ Sơ
+          </router-link>
         </div>
-        <router-link to="/auth/profile/info" class="text-blue-600 text-sm hover:underline">
-          Sửa Hồ Sơ
-        </router-link>
-
         <ul class="space-y-3">
           <li>
-            <router-link :to="`/auth/profile/userdetails/${userId}`">
+            <router-link :to="`/auth/profile/userdetails/${userId}`" class="block"
+              :class="isActive('/auth/profile/userdetails')">
               <i class="pi pi-id-card mr-2"></i> Hồ Sơ
             </router-link>
           </li>
@@ -26,7 +28,7 @@
           <li>
             <router-link to="/auth/profile/change-password" class="block"
               :class="isActive('/auth/profile/change-password')">
-              <i class="pi pi-refresh mr-2"></i> Đổi Mật Khẩu
+              <i class="pi pi-key mr-2"></i> Đổi Mật Khẩu
             </router-link>
           </li>
           <li>
@@ -96,6 +98,12 @@ console.log('User Info:', userInfo.value)
   padding-bottom: 50px;
 
   background-color: blue;
+}
+
+.tk {
+  width: 100%;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eaeaea;
 }
 
 .layout-wrapper {
@@ -181,7 +189,7 @@ aside .text-blue-600 {
 
 /* Menu sidebar */
 ul {
-  margin: 18px 0 0 0;
+  margin: 25px 0 0 0;
   padding: 0 0 0 32px;
   list-style: none;
   width: 100%;

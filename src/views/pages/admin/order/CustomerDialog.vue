@@ -40,11 +40,14 @@
         <div class="form-row">
           <div class="form-group">
             <label for="username">Tên Khách Hàng</label>
-            <input id="username" v-model="customer.username" type="text" placeholder="Nhập tên khách hàng" required />
+            <input id="username" v-model="customer.username" type="text" placeholder="Nhập tên khách hàng"
+              :class="{ 'border-red-500': errors.username }" />
+            <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
           </div>
           <div class="form-group">
             <label for="email">Email</label>
-            <input id="email" v-model="customer.email" type="email" placeholder="Nhập địa chỉ email" required />
+            <input id="email" v-model="customer.email" type="email" placeholder="Nhập địa chỉ email"
+              :class="{ 'border-red-500': errors.email }" />
             <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
           </div>
         </div>
@@ -52,55 +55,64 @@
           <div class="form-group">
             <label for="phoneNumber">Số Điện Thoại</label>
             <input id="phoneNumber" v-model="customer.phoneNumber" type="text" placeholder="Nhập số điện thoại"
-              required />
+              :class="{ 'border-red-500': errors.phoneNumber }" />
             <div v-if="errors.phoneNumber" class="error-message">{{ errors.phoneNumber }}</div>
           </div>
           <div class="form-group">
             <label for="gender">Giới Tính</label>
-            <select id="gender" v-model="customer.gender" required>
+            <select id="gender" v-model="customer.gender">
               <option value="" disabled>Chọn giới tính</option>
               <option v-for="g in genderOptions" :value="g.value" :key="g.value">{{ g.label }}</option>
             </select>
+            <div v-if="errors.gender" class="error-message">{{ errors.gender }}</div>
           </div>
         </div>
         <div class="form-title">Địa Chỉ</div>
         <div class="form-row">
           <div class="form-group">
             <label for="receiverName">Tên người nhận</label>
-            <input id="receiverName" v-model="customer.receiverName" type="text" placeholder="Nhập tên người nhận" />
+            <input id="receiverName" v-model="customer.receiverName" type="text" placeholder="Nhập tên người nhận"
+              :class="{ 'border-red-500': errors.receiverName }" />
+            <div v-if="errors.receiverName" class="error-message">{{ errors.receiverName }}</div>
           </div>
           <div class="form-group">
             <label for="receiverPhone">SĐT người nhận</label>
-            <input id="receiverPhone" v-model="customer.receiverPhone" type="text" placeholder="Nhập SĐT người nhận" />
+            <input id="receiverPhone" v-model="customer.receiverPhone" type="text" placeholder="Nhập SĐT người nhận"
+              :class="{ 'border-red-500': errors.receiverPhone }" />
             <div v-if="errors.receiverPhone" class="error-message">{{ errors.receiverPhone }}</div>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label for="province">Tỉnh/Thành phố</label>
-            <select id="province" v-model="customer.province" required>
+            <select id="province" v-model="customer.province">
               <option value="">Chọn tỉnh/thành</option>
               <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name }}</option>
             </select>
+            <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
           </div>
           <div class="form-group">
             <label for="district">Quận/Huyện</label>
-            <select id="district" v-model="customer.district" :disabled="!customer.province" required>
+            <select id="district" v-model="customer.district" :disabled="!customer.province">
               <option value="">Chọn quận/huyện</option>
               <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name }}</option>
             </select>
+            <div v-if="errors.district" class="error-message">{{ errors.district }}</div>
           </div>
           <div class="form-group">
             <label for="ward">Phường/Xã</label>
-            <select id="ward" v-model="customer.ward" :disabled="!customer.district" required>
+            <select id="ward" v-model="customer.ward" :disabled="!customer.district">
               <option value="">Chọn phường/xã</option>
               <option v-for="w in wardOptions" :key="w.level3_id" :value="w.level3_id">{{ w.name }}</option>
             </select>
+            <div v-if="errors.ward" class="error-message">{{ errors.ward }}</div>
           </div>
         </div>
         <div class="form-group full-width">
           <label for="street">Địa chỉ chi tiết (số nhà, ngõ...)</label>
-          <input id="street" v-model="customer.street" type="text" placeholder="Nhập chi tiết địa chỉ" />
+          <input id="street" v-model="customer.street" type="text" placeholder="Nhập chi tiết địa chỉ"
+            :class="{ 'border-red-500': errors.street }" />
+          <div v-if="errors.street" class="error-message">{{ errors.street }}</div>
         </div>
         <div class="form-group full-width">
           <label>Địa chỉ đầy đủ</label>
@@ -116,7 +128,10 @@
     </div>
 
     <template #footer>
+      <Button label="Làm mới" icon="pi pi-check" class="p-button-primary" @click="lamMoi"
+        v-if="currentTab === 'form'" />
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
+
       <Button 
         label="Hủy chọn khách hàng" 
         icon="pi pi-user-minus" 
@@ -132,6 +147,20 @@
         @click="selectCustomer" 
         v-if="currentTab === 'list'" 
       />
+
+      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" />
+
+      <!-- <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
+        @click="clearSelectedCustomer" v-if="selectedCustomer" />
+      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" /> -->
+
+      <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
+        @click="clearSelectedCustomer" v-if="selectedCustomer" />
+      <!--  <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" /> -->
+
     </template>
   </Dialog>
 </template>
@@ -226,11 +255,66 @@ const getAllCustomers = async () => {
 const errors = ref<{ [key: string]: string }>({});
 
 function validateEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|vn|co\.uk|io|info)$/.test(email);
 }
 function validatePhone(phone: string) {
   return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
 }
+
+
+
+// Theo dõi email
+watch(() => customer.value.email, (newEmail) => {
+  if (!validateEmail(newEmail)) {
+    errors.value.email = "Email không hợp lệ";
+  } else {
+    delete errors.value.email;
+  }
+});
+
+// Theo dõi số điện thoại
+watch(() => customer.value.phoneNumber, (newPhone) => {
+  if (!validatePhone(newPhone)) {
+    errors.value.phoneNumber = "Số điện thoại không hợp lệ";
+  } else {
+    delete errors.value.phoneNumber;
+  }
+});
+
+watch(() => customer.value.receiverPhone, (newPhone) => {
+  if (!validatePhone(newPhone)) {
+    errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
+  } else {
+    delete errors.value.receiverPhone;
+  }
+});
+// Watcher cho street
+watch(() => customer.value.street, (street) => {
+  if (street.length > 100) {
+    errors.value.street = "Địa chỉ chi tiết quá dài (tối đa 100 ký tự)";
+  } else {
+    delete errors.value.street;
+  }
+});
+
+// Watcher cho receiverName
+watch(() => customer.value.receiverName, (receiverName) => {
+  if (receiverName.length > 100) {
+    errors.value.receiverName = "Tên người nhận quá dài (tối đa 100 ký tự)";
+  } else {
+    delete errors.value.receiverName;
+  }
+});
+
+// Watcher cho username
+watch(() => customer.value.username, (username) => {
+  if (username.length > 100) {
+    errors.value.username = "Tên khách hàng quá dài (tối đa 100 ký tự)";
+  } else {
+    delete errors.value.username;
+  }
+});
+
 
 const submitCustomer = async () => {
   errors.value = {};
@@ -238,8 +322,26 @@ const submitCustomer = async () => {
   if (!customer.value.username.trim()) {
     errors.value.username = "Tên khách hàng không được để trống";
   }
+  if (customer.value.username.length > 100) {
+    errors.value.username = "Tên khách hàng quá dài (tối đa 100 ký tự)";
+  }
+  if (!customer.value.receiverName.trim()) {
+    errors.value.receiverName = "Tên người nhận không được để trống";
+  }
+  if (customer.value.receiverName.length > 100) {
+    errors.value.receiverName = "Tên người nhận quá dài (tối đa 100 ký tự)";
+  }
+  if (!customer.value.street.trim()) {
+    errors.value.street = "Địa chỉ chi tiết không được để trống";
+  }
+  if (customer.value.street.length > 100) {
+    errors.value.street = "Địa chỉ chi tiết quá dài (tối đa 100 ký tự)";
+  }
   if (!validateEmail(customer.value.email)) {
     errors.value.email = "Email không hợp lệ";
+  }
+  if (!customer.value.phoneNumber.trim()) {
+    errors.value.phoneNumber = "Số điện thoại không được để trống";
   }
   if (!validatePhone(customer.value.phoneNumber)) {
     errors.value.phoneNumber = "Số điện thoại không hợp lệ";
@@ -255,6 +357,9 @@ const submitCustomer = async () => {
   }
   if (!customer.value.ward) {
     errors.value.ward = "Vui lòng chọn phường/xã";
+  }
+  if (!customer.value.receiverPhone.trim()) {
+    errors.value.receiverPhone = "SĐT người nhận không được để trống";
   }
   if (customer.value.receiverPhone && !validatePhone(customer.value.receiverPhone)) {
     errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
@@ -283,6 +388,11 @@ const submitCustomer = async () => {
     });
     return;
   }
+
+
+  // Nếu có lỗi thì return
+  if (Object.keys(errors.value).length > 0) return;
+
 
   const address = {
     street: customer.value.street,
@@ -342,6 +452,28 @@ const submitCustomer = async () => {
     console.error(error.response?.data || error);
   }
 };
+
+
+const lamMoi = () => {
+  customer.value = {
+    username: "",
+    email: "",
+    phoneNumber: "",
+    gender: "",
+    province: "",
+    district: "",
+    ward: "",
+    street: "",
+    receiverName: "",
+    receiverPhone: ""
+  };
+
+  // Xóa từng lỗi để đảm bảo reactivity
+  Object.keys(errors.value).forEach(key => delete errors.value[key]);
+
+  currentTab.value = 'form';
+};
+
 
 const selectCustomer = () => {
   emit('selected', selectedCustomer.value);
