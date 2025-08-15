@@ -213,7 +213,6 @@ onMounted(fetchProducts);
 </template>
 
 <style scoped>
-
 .menuat {
   background-color: rgb(234, 232, 232);
   border-radius: 5px;
@@ -245,12 +244,12 @@ onMounted(fetchProducts);
 }
 
 .p-dropdown {
-  height: 2.5rem; /* chỉnh lại chiều cao */
+  height: 2.5rem;
   display: flex;
-  align-items: center; /* giúp chữ canh giữa chiều dọc */
-  font-size: 14px; /* tùy chỉnh font */
-  line-height: 1.5; /* tránh bị thụt */
-  padding: 0 0.5rem; /* tránh chữ sát mép */
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 0 0.5rem;
   box-sizing: border-box;
 }
 
@@ -270,4 +269,33 @@ onMounted(fetchProducts);
   line-height: 1.5;
 }
 
+/* ====================== Bảng có gạch mờ ====================== */
+:deep(.p-datatable-table) {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+
+/* Gạch ngang và dọc MỜ */
+:deep(.p-datatable-thead > tr > th),
+:deep(.p-datatable-tbody > tr > td) {
+  border: 1px solid #eee !important; /* màu gạch rất nhẹ */
+  padding: 0.75rem;
+  background: #fff;
+  vertical-align: middle;
+}
+
+/* Header có viền dưới rõ hơn chút */
+:deep(.p-datatable-thead > tr > th) {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #ddd !important; /* đậm hơn body 1 chút */
+}
+
+/* Hover nhẹ nhàng */
+:deep(.p-datatable-tbody > tr:hover) {
+  background-color: #f6f6f6;
+  transition: background-color 0.2s ease-in-out;
+}
 </style>
+

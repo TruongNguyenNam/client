@@ -9,6 +9,15 @@
         />
       </template>
       <template #end>
+        
+         <div class="relative inline-block">
+    <Button
+      icon="pi pi-box"
+      class="p-button-rounded p-button-text"
+      @click="toggleMenu"
+    />
+    <Menu ref="returnMenuRef" :model="menuItems" popup />
+  </div>
         <RouterLink v-if="userId" :to="{ name: 'client-wishlist-details', params: { userId: userId } }">
           <Button
             icon="pi pi-heart"
@@ -235,6 +244,23 @@ const items = computed(() => {
   }
   return baseItems;
 });
+const returnMenuRef = ref();
+const toggleMenu = (event: Event) => {
+  returnMenuRef.value?.toggle(event);
+};
+
+const menuItems = [
+  {
+    label: 'Đã Mua',
+    icon: 'pi pi-list',
+    command: () => router.push('/client/returnoder')
+  },
+  {
+    label: 'Yêu cầu hoàn hàng của tôi',
+    icon: 'pi pi-refresh',
+    command: () => router.push('/client/return')
+  }
+];
 </script>
 
 <style scoped>
