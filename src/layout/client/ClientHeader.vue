@@ -52,12 +52,19 @@
               <div class="user-info p-2 text-center">
                 <span class="font-medium">{{ userInfo?.username || 'User' }}</span>
               </div>
+
              
-              <Button
+              <!-- <Button
                 label="Thông tin cá nhân"
                 icon="pi pi-user"
                 text
-                @click="navigate(`/auth/userdetails/${userInfo?.userId}`)"
+                @click="navigate(`/auth/userdetails/${userInfo?.userId}`)" -->
+
+             <Button
+              label="Thông tin cá nhân"
+              icon="pi pi-user"
+             text
+             @click="navigate(`/auth/profile/userdetails/${userInfo?.userId}`)"
               />
 
               <RouterLink
@@ -76,7 +83,7 @@
                 label="Đổi mật khẩu"
                 icon="pi pi-key"
                 text
-                @click="navigate('/auth/change-password')"
+                @click="navigate('/auth/profile/change-password')"
               />
               <Button
                 label="Đăng xuất"
@@ -221,7 +228,7 @@ const items = computed(() => {
         { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
       ],
     },
-    { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
+    { label: 'Tin Tức', icon: 'pi pi-star', command: () => router.push('/client/about') },
     { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
   ];
 

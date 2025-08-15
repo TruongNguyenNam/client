@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, defineEmits } from "vue";
+import { ref, computed, onMounted, defineEmits, watch } from "vue";
 import { CouponService } from "../../../../service/admin/CouponService";
 import { useRouter } from "vue-router";
 import type { CouponRequest } from "../../../../model/admin/coupon";
+import { ar } from "date-fns/locale";
+import { useToast } from 'primevue/usetoast';
+import { exportToExcel,importFromExcel } from "../../../../utils/excel";
+const errors = ref<{ [key: string]: string }>({});
+
+const toast = useToast();
 //Tìm kiếm theo khoảng giá trị giảm
 const minDiscount = ref<number | null>(null);
 const maxDiscount = ref<number | null>(null);
@@ -42,6 +48,7 @@ const coupon = ref<Coupon>({
     couponStatus: '', // status mặc định backend tự sinh
     deleted: false
 });
+
 const newCoupon = ref<Coupon>({
     id: null,
     codeCoupon: '',
@@ -135,9 +142,130 @@ const openAddDialog = () => {
 
 const hideAddDialog = () => {
     addCouponDialog.value = false;
+    errors.value = {}; // reset lỗi
 };
+watch(() => addCouponDialog.value, (visible) => {
+    if (!visible) {
+        Object.keys(errors.value).forEach(key => delete errors.value[key]);
+    }
+});
 
+watch(() => newCoupon.value.couponName, (couponName) => {
+    if (couponName.length > 100) {
+        errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
+    }
+    else {
+        delete errors.value.couponName;
+    }
+});
+watch(() => coupon.value.couponName, (couponName) => {
+    if (couponName.length > 100) {
+        errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
+    }
+    else {
+        delete errors.value.couponName;
+    }
+});
+
+
+function validateNewCoupon(): boolean {
+    errors.value = {}; // reset lỗi
+    if (newCoupon.value.couponName?.length > 100) {
+        errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
+    }
+    if (!newCoupon.value.couponName?.trim()) {
+        errors.value.couponName = "Tên phiếu giảm giá không được để trống";
+    }
+
+    if (!newCoupon.value.discountAmount || newCoupon.value.discountAmount <= 0) {
+        errors.value.discountAmount = "Giá trị giảm phải lớn hơn 0";
+    }
+
+    if (!newCoupon.value.expirationDate) {
+        errors.value.expirationDate = "Ngày hết hạn không được để trống";
+    }
+    if (
+        newCoupon.value.startDate &&
+        newCoupon.value.expirationDate &&
+        new Date(newCoupon.value.startDate) > new Date(newCoupon.value.expirationDate)
+    ) {
+        errors.value.startDate = "Ngày bắt đầu không được sau ngày kết thúc";
+        errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+    }
+    if (Object.keys(errors.value).length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Dữ liệu không hợp lệ',
+            detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
+            life: 3000
+        });
+    }
+    return Object.keys(errors.value).length === 0;
+}
+
+function validateUpdateCoupon(): boolean {
+    errors.value = {}; // reset lỗi
+    if (coupon.value.couponName?.length > 100) {
+        errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
+    }
+    if (!coupon.value.couponName?.trim()) {
+        errors.value.couponName = "Tên phiếu giảm giá không được để trống";
+    }
+
+    if (!coupon.value.discountAmount || coupon.value.discountAmount <= 0) {
+        errors.value.discountAmount = "Giá trị giảm phải lớn hơn 0";
+    }
+
+    if (!coupon.value.expirationDate) {
+        errors.value.expirationDate = "Ngày hết hạn không được để trống";
+    }
+    if (
+        coupon.value.startDate &&
+        coupon.value.expirationDate &&
+        new Date(coupon.value.startDate) > new Date(coupon.value.expirationDate)
+    ) {
+        errors.value.startDate = "Ngày bắt đầu không được sau ngày kết thúc";
+        errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+    }
+    if (Object.keys(errors.value).length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Dữ liệu không hợp lệ',
+            detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
+            life: 3000
+        });
+    }
+    return Object.keys(errors.value).length === 0;
+}
+
+watch(
+    () => [newCoupon.value.startDate, newCoupon.value.expirationDate],
+    ([start, end]) => {
+        if (start && end && new Date(start) > new Date(end)) {
+            errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+        } else {
+            // Xóa lỗi nếu hợp lệ
+            if (errors.value.expirationDate === "Ngày hết hạn không được trước ngày bắt đầu") {
+                delete errors.value.expirationDate;
+            }
+        }
+    }
+);
+watch(
+    () => [coupon.value.startDate, coupon.value.expirationDate],
+    ([start, end]) => {
+        if (start && end && new Date(start) > new Date(end)) {
+            errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+        } else {
+            // Xóa lỗi nếu hợp lệ
+            if (errors.value.expirationDate === "Ngày hết hạn không được trước ngày bắt đầu") {
+                delete errors.value.expirationDate;
+            }
+        }
+    }
+);
 const addCoupon = async (): Promise<void> => {
+    if (!validateNewCoupon()) return;
     try {
         await CouponService.saveCoupon(toCouponRequest(newCoupon.value));
         addCouponDialog.value = false;
@@ -184,9 +312,18 @@ const hideUpdateDialog = () => {
         couponStatus: '',
         deleted: false
     };
+    errors.value = {};
 };
+watch(() => couponUpdateDialog.value, (visible) => {
+    if (!visible) {
+        Object.keys(errors.value).forEach(key => delete errors.value[key]);
+    }
+});
+
+
 //cập nhật
 const saveCoupon = async (): Promise<void> => {
+    if (!validateUpdateCoupon()) return;
     try {
         if (coupon.value.id) {
             await CouponService.updateCoupon(coupon.value.id, toCouponRequestUpdate(coupon.value));
@@ -196,10 +333,43 @@ const saveCoupon = async (): Promise<void> => {
         couponUpdateDialog.value = false;
         await loadCoupons();
     } catch (error) { }
+
 };
 
-const importCoupons = (): void => { };
-const exportCoupons = (): void => { };
+const importCoupons = (): void => {
+
+
+
+ };
+
+
+
+const exportCoupons = (): void => {
+    if (!coupons.value.length) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Không có dữ liệu',
+            detail: 'Không có phiếu giảm giá nào để xuất.',
+            life: 3000
+        });
+        return;
+    }
+
+    // Chuẩn bị dữ liệu export
+    const exportData = coupons.value.map((c, index) => ({
+        STT: index + 1,
+        "Mã phiếu": c.codeCoupon,
+        "Tên phiếu": c.couponName,
+        "Đã tặng": c.usedCount ?? 0,
+        "Giá trị giảm": c.discountAmount,
+        "Ngày bắt đầu": c.startDate ? formatDate(c.startDate) : '',
+        "Ngày hết hạn": c.expirationDate ? formatDate(c.expirationDate) : '',
+        "Trạng thái": getCouponStatus(c).text
+    }));
+
+    exportToExcel(exportData, 'Danh_sach_coupon');
+};
+
 
 onMounted(loadCoupons);
 
@@ -295,20 +465,22 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2"
                             @click="openAddDialog" />
                     </template>
-                    <template v-slot:end>
-                        <Button label="Nhập" icon="pi pi-upload" class="p-button-help mr-2" @click="importCoupons" />
-                        <Button label="Xuất" icon="pi pi-download" class="p-button-info" @click="exportCoupons" />
+                    <template v-slot:end> 
+                        <!-- <Button label="Nhập Excel" icon="pi pi-upload" class=" p-button-info mr-2" @click="importCoupons" /> -->
+                        <Button label="Xuất Excel" icon="pi pi-download" class="p-button-help " @click="exportCoupons" />
                     </template>
                 </Toolbar>
                 <!-- Phần tìm kiếm -->
-                <div class="flex align-items-center justify-content-between mb-4">
+                <div class="flex align-items-center justify-content-between mb-4" style="margin-right: 50px;">
                     <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2"
                         @click="clearSearch" />
                     <div class="search-bar-vertical">
                         <div class="search-bar-row">
                             <InputNumber v-model="minDiscount" :min="0" placeholder="Giá trị giảm từ"
-                                class="filter-input" />
+                                class="filter-input"/>
+
                             <span class="filter-separator">-</span>
+
                             <InputNumber v-model="maxDiscount" :min="0" placeholder="Đến" class="filter-input" />
                         </div>
                         <span class="p-input-icon-left">
@@ -328,7 +500,9 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <div class="field">
                             <label for="add-couponName" class="field-label">Tên phiếu giảm giá *</label>
                             <InputText id="add-couponName" v-model="newCoupon.couponName"
-                                placeholder="Nhập tên phiếu giảm giá" required class="field-input" />
+                                placeholder="Nhập tên phiếu giảm giá" required class="field-input"
+                                :class="{ 'border-red-500': errors.couponName }" />
+                            <small v-if="errors.couponName" class="error-text">{{ errors.couponName }}</small>
                         </div>
 
                         <!-- Giá trị giảm -->
@@ -336,21 +510,25 @@ const goToGiftCoupon = (coupon: Coupon) => {
                             <label for="add-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
                             <InputNumber id="add-couponAmount" v-model="newCoupon.discountAmount" :min="0"
                                 mode="currency" currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm"
-                                class="field-input" />
+                                class="field-input" :class="{ 'border-red-500': errors.discountAmount }" />
+                            <small v-if="errors.discountAmount" class="error-text">{{ errors.discountAmount }}</small>
+
                         </div>
 
                         <!-- Ngày bắt đầu -->
                         <div class="field">
                             <label for="add-startDate" class="field-label">Ngày bắt đầu</label>
                             <Calendar id="add-startDate" v-model="newCoupon.startDate" dateFormat="dd/mm/yy" showTime
-                                class="field-input" />
+                                class="field-input" :class="{ 'border-red-500': errors.startDate }" />
+                            <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
                         </div>
 
                         <!-- Ngày hết hạn -->
                         <div class="field">
                             <label for="add-expirationDate" class="field-label">Ngày hết hạn</label>
                             <Calendar id="add-expirationDate" v-model="newCoupon.expirationDate" dateFormat="dd/mm/yy"
-                                showTime class="field-input" />
+                                showTime class="field-input" :class="{ 'border-red-500': errors.expirationDate }" />
+                            <small v-if="errors.expirationDate" class="error-text">{{ errors.expirationDate }}</small>
                         </div>
                     </div>
                     <template #footer>
@@ -376,28 +554,34 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <div class="field">
                             <label for="edit-couponName" class="field-label">Tên phiếu giảm giá *</label>
                             <InputText id="edit-couponName" v-model="coupon.couponName"
-                                placeholder="Nhập tên phiếu giảm giá" required class="field-input" />
+                                placeholder="Nhập tên phiếu giảm giá" required class="field-input"
+                                :class="{ 'border-red-500': errors.couponName }" />
+                            <small v-if="errors.couponName" class="error-text">{{ errors.couponName }}</small>
                         </div>
 
                         <!-- Giá trị giảm -->
                         <div class="field">
                             <label for="edit-couponAmount" class="field-label">Giá trị giảm (đ) *</label>
                             <InputNumber id="edit-couponAmount" v-model="coupon.discountAmount" :min="0" mode="currency"
-                                currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input" />
+                                currency="VND" locale="vi-VN" placeholder="Nhập giá trị giảm" class="field-input"
+                                :class="{ 'border-red-500': errors.discountAmount }" />
+                            <small v-if="errors.discountAmount" class="error-text">{{ errors.discountAmount }}</small>
                         </div>
 
                         <!-- Ngày bắt đầu -->
                         <div class="field">
                             <label for="edit-startDate" class="field-label">Ngày bắt đầu</label>
                             <Calendar id="edit-startDate" v-model="coupon.startDate" dateFormat="dd/mm/yy" showTime
-                                class="field-input" />
+                                class="field-input" :class="{ 'border-red-500': errors.startDate }" />
+                            <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
                         </div>
 
                         <!-- Ngày hết hạn -->
                         <div class="field">
                             <label for="edit-expirationDate" class="field-label">Ngày hết hạn</label>
                             <Calendar id="edit-expirationDate" v-model="coupon.expirationDate" dateFormat="dd/mm/yy"
-                                showTime class="field-input" />
+                                showTime class="field-input" :class="{ 'border-red-500': errors.expirationDate }" />
+                            <small v-if="errors.expirationDate" class="error-text">{{ errors.expirationDate }}</small>
                         </div>
                     </div>
                     <template #footer>
@@ -413,9 +597,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
                     emptyMessage="Không tìm thấy phiếu giảm giá nào." :loading="loading" @page="onPage"
                     :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['codeCoupon', 'couponName']"
-                    class="p-datatable-gridlines"
-                    :rowHover="true"
-                    >
+                    class="p-datatable-gridlines" :rowHover="true">
                     <template #header>
                         <div class="flex justify-content-between align-items-center">
                             <span class="text-xl font-semibold">Danh sách phiếu giảm giá</span>
@@ -423,14 +605,14 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     </template>
                     <Column selectionMode="multiple" headerStyle="width: 3em" />
                     <Column header="STT" style="width: 4rem">
-                    <template #body="slotProps">
-                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
-                    </template>
+                        <template #body="slotProps">
+                            {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+                        </template>
                     </Column>
                     <Column field="codeCoupon" header="Mã phiếu" />
                     <Column field="couponName" header="Tên phiếu" sortable />
                     <Column header="Đã tặng" sortable>
-                        <template #body="slotProps" >
+                        <template #body="slotProps">
                             {{ slotProps.data.usedCount ?? 0 }}
                         </template>
                     </Column>
@@ -449,7 +631,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                             {{ formatDate(slotProps.data.expirationDate) }}
                         </template>
                     </Column>
-                    <Column field="couponStatus" header="Trạng thái" >
+                    <Column field="couponStatus" header="Trạng thái">
                         <template #body="slotProps">
                             <Tag :value="getCouponStatus(slotProps.data).text"
                                 :severity="getCouponStatus(slotProps.data).severity" />
@@ -599,5 +781,12 @@ const goToGiftCoupon = (coupon: Coupon) => {
 .save-button:hover {
     background-color: #005bb5;
     border-color: #005bb5;
+}
+
+.error-text {
+    color: red;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: block;
 }
 </style>

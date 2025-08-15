@@ -195,7 +195,7 @@ export const ProductService = {
         console.log(`${key}: ${value instanceof File ? value.name : value}`);
       }
 
-      const response = await axiosInstance.post<ApiResponse<string>>(API_URL, formData, {
+      const response = await axiosInstance.post<ApiResponse<string>>(`${API_URL}/create`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

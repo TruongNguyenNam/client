@@ -1,10 +1,9 @@
-
 import { createRouter, createWebHashHistory,createWebHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
 import ClientLayout from '@/layout/client/ClientLayout.vue';
 import { AuthService } from '../service/auth/AuthService';
 import ProfileLayout from '@/layout/client/ProfileLayout.vue';
-import type { UserResponse } from '../service/auth/AuthService';
+// import type { UserResponse } from '../service/auth/AuthService';
 import { useAuthStore } from '../stores/auth';
 
 const router = createRouter({
@@ -44,17 +43,13 @@ const router = createRouter({
                 { path: '/management', name: 'management', component: () => import('@/views/pages/admin/management/ManagementList.vue') },
                 { path: '/management/order/:id', name: 'order-detail', component: () => import('@/views/pages/admin/management/Management.vue') },
                 // {path: '/findByShip',name: 'order-ship',component: () => import('@/views/pages/admin/management/ManagementShip.vue')},
-
-                {path: '/findByShip',name: 'certificationorder',component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue')},
-                {path: '/certificationorder/:id',name: 'certificationorder-detail',component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue')},
-                     {path: '/adReturnOder',name: 'adReturnOder',component: () => import('../views/pages/admin/returnorder/Return.vue')},
-          {path: '/admin/return-request/detail/:orderCode',name: 'adReturnOderDetail',component: () => import('../views/pages/admin/returnorder/ReturnRequestDetail.vue')},
-            {path: '/admin/return-request/check-order-return-Detail/:orderCode',name: 'adCheckReturnOderDetail',component: () => import('../views/pages/admin/returnorder/CheckReturnOrderDetail.vue')},
-
-
+                {path: '/adReturnOder',name: 'adReturnOder',component: () => import('../views/pages/admin/returnorder/Return.vue')},
+                {path: '/admin/return-request/detail/:orderCode',name: 'adReturnOderDetail',component: () => import('../views/pages/admin/returnorder/ReturnRequestDetail.vue')},
+                {path: '/admin/return-request/check-order-return-Detail/:orderCode',name: 'adCheckReturnOderDetail',component: () => import('../views/pages/admin/returnorder/CheckReturnOrderDetail.vue')},
+                { path: '/findByShip', name: 'certificationorder', component: () => import('@/views/pages/admin/certificationorder/ListOrderConfirm.vue') },
+                { path: '/certificationorder/:id', name: 'certificationorder-detail', component: () => import('@/views/pages/admin/certificationorder/OrderDetailsConfirm.vue') }
             ],
         },
-
         {
             path: '/client',
             component: ClientLayout,
@@ -65,10 +60,6 @@ const router = createRouter({
                 { path: 'product/collection', name: 'client-product-collection', component: () => import('@/views/pages/client/product/ProductCollection.vue') },
                 { path: 'product/:id', name: 'client-product-details', component: () => import('@/views/pages/client/product/ProductDetails.vue'), props: true, },
                 { path: 'wishlist/:userId', name: 'client-wishlist-details', component: () => import('@/views/pages/client/wishlist/FavoriteProductlist.vue') },
-                 { path: 'returnoder', name: 'client-returnOder', component: () => import('../views/pages/client/returnoder/ReturnOderList.vue') },
-          { path: '/returnoderdetail/:code', name: 'oderdetail', component: () => import('../views/pages/client/returnoder/ReturnOderDetail.vue')},
-           { path: 'return', name: 'return', component: () => import('../views/pages/client/returnoder/ReturnHistoy.vue')},
-                { path: '/return/history/:code', name: 'return-history', component: () => import('../views/pages/client/returnoder/ReturnHistoryDetail.vue')},
                 {
                     path: 'cart/:userId', name: 'cart-view', component: () => import('@/views/pages/client/cart/CartView.vue'),
                     meta: { requiresAuth: true, role: 'CUSTOMER' },
@@ -81,43 +72,45 @@ const router = createRouter({
                     component: () => import('@/views/pages/client/cart/OrdersView.vue'),
                     meta: { requiresAuth: true, role: 'CUSTOMER' },
                   },
-
-                  {
-                    path: 'order/:orderCode',
-                    name: 'client-order-details',
-                    component: () => import('@/views/pages/client/cart/OrdersDetails.vue'),
-                    meta: { requiresAuth: true, role: 'CUSTOMER' },
-                  },
                   { path: '/clientvnpay', name: 'vnpay-callback-client', component: () => import('@/views/pages/client/cart/VnpayClient.vue') },
                   { path: '/payment-return', name: 'payment-return', component: () => import('@/views/pages/client/cart/VnpayClient.vue') },
                   { path: 'product/:id/reviews', name: 'client-product-review', component: () => import('@/views/pages/client/product/ProductReview.vue'), props: true },
 
-                { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue') }
+                { path: 'checkouts', name: 'check_out', component: () => import('@/views/pages/client/cart/Checkouts.vue') },
+                { path: 'returnoder', name: 'client-returnOder', component: () => import('../views/pages/client/returnoder/ReturnOderList.vue') },
+                { path: '/returnoderdetail/:code', name: 'oderdetail', component: () => import('../views/pages/client/returnoder/ReturnOderDetail.vue')},
+                { path: 'return', name: 'return', component: () => import('../views/pages/client/returnoder/ReturnHistoy.vue')},
+                { path: '/return/history/:code', name: 'return-history', component: () => import('../views/pages/client/returnoder/ReturnHistoryDetail.vue')},
+         
             ],
         },
-        // {
-        //     path: '/auth',
-        //     component: ClientLayout,
-        //     children: [
-        //         { path: 'login', name: 'login', component: () => import('@/views/pages/auth/Login.vue') },
-        //         { path: 'register', name: 'register', component: () => import('@/views/pages/auth/Register.vue') },
-        //         {
-        //             path: 'userdetails/:id',
-        //             name: 'userdetails',
-        //             component: () => import('@/views/pages/auth/Info.vue'),
-        //             meta: { requiresAuth: true, role: 'CUSTOMER' },
-        //         },
-        //         {
-        //             path: 'change-password',
-        //             name: 'change-password',
-        //             component: () => import('@/views/pages/auth/ChangePassword.vue'),
-        //             meta: { requiresAuth: true, role: 'CUSTOMER' },
-        //         },
-        //         { path: 'access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
-        //         { path: 'error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
-        //     ],
-        // },
-
+      
+    // {
+    //   path: '/client',
+    //   component: ClientLayout,
+    //   children: [
+    //     { path: '', name: 'client-home', component: () => import('@/views/pages/client/Home.vue') },
+    //     { path: 'about', name: 'client-about', component: () => import('@/views/pages/client/About.vue') },
+    //     { path: 'product', name: 'client-product', component: () => import('@/views/pages/client/product/ProductList.vue') },
+    //     { path: 'product/collection', name: 'client-product-collection', component: () => import('@/views/pages/client/product/ProductCollection.vue') },
+    //     { path: 'product/:id', name: 'client-product-details', component: () => import('@/views/pages/client/product/ProductDetails.vue'),props: true, },
+    //     { path: 'wishlist/:userId', name: 'client-wishlist-details', component: () => import('@/views/pages/client/wishlist/FavoriteProductlist.vue') },
+    //      { path: 'returnoder', name: 'client-returnOder', component: () => import('../views/pages/client/returnoder/ReturnOderList.vue') },
+    //       { path: '/returnoderdetail/:code', name: 'oderdetail', component: () => import('../views/pages/client/returnoder/ReturnOderDetail.vue')},
+    //        { path: 'return', name: 'return', component: () => import('../views/pages/client/returnoder/ReturnHistoy.vue')},
+    //             { path: '/return/history/:code', name: 'return-history', component: () => import('../views/pages/client/returnoder/ReturnHistoryDetail.vue')},
+    //     { path: 'cart/:userId', name: 'cart-view', component: () => import('@/views/pages/client/cart/CartView.vue'),
+           
+    //     meta: { requiresAuth: true, role: 'CUSTOMER' }, },
+    //   ],
+    // },
+    
+    {
+      path: '/auth',
+      component: ClientLayout,
+      children: [
+        { path: 'login', name: 'login', component: () => import('@/views/pages/auth/Login.vue') },
+        { path: 'register', name: 'register', component: () => import('@/views/pages/auth/Register.vue') },
         {
             path: '/auth',
             component: ClientLayout, // layout này cho login, register!
@@ -167,12 +160,24 @@ const router = createRouter({
                     name: 'profile-vouchers',
                     component: () => import('@/views/pages/auth/VoucherList.vue'),
             },
+            // { path: 'userdetails/:id', name: 'userdetails', component: () => import('@/views/pages/auth/UserDetails.vue'),
+            //     meta: { requiresAuth: true, role: 'CUSTOMER' },
+            // },
             ]
-
         },
-        { path: '/landing', name: 'landing', component: () => import('@/views/pages/Landing.vue') },
-        { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('@/views/pages/NotFound.vue') },
-    ],
+        {
+          path: 'change-password',
+          name: 'change-password',
+          component: () => import('@/views/pages/auth/ChangePassword.vue'),
+          meta: { requiresAuth: true, role: 'CUSTOMER' },
+        },
+        { path: 'access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
+        { path: 'error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
+      ],
+    },
+    { path: '/landing', name: 'landing', component: () => import('@/views/pages/Landing.vue') },
+    { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('@/views/pages/NotFound.vue') },
+  ],
 });
 
 router.beforeEach(async (to, from, next) => {

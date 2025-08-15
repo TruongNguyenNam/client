@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
   product: {
@@ -8,7 +8,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['add-product']); // Thay 'click' bằng 'add-product'
+const emit = defineEmits(['click']);
 
 const stockQuantity = computed(() => props.product.stockQuantity ?? 0);
 
@@ -21,14 +21,9 @@ const discountPercentage = computed(() => {
   return Math.round((1 - props.product.price / props.product.originalPrice) * 100);
 });
 
-const clickCount = ref(0);
-
 const handleClick = () => {
-  clickCount.value++; // Tăng số lần click
-  console.log('Số lần click:', clickCount.value, 'ID sản phẩm:', props.product.id, 'Thời gian:', new Date().toISOString());
-
-  // console.log('số lần click:', props.product.id, 'là', new Date().toISOString());
-  emit('add-product', props.product); // Phát sự kiện 'add-product' thay vì 'click'
+  console.log('Click on ProductCard:', props.product.id, 'at', new Date().toISOString());
+  emit('click');
 };
 </script>
 
@@ -49,18 +44,13 @@ const handleClick = () => {
         -{{ discountPercentage }}%
       </span>
     </div>
-    <!-- <div class="product-stock" :class="{ 'out-of-stock': stockQuantity === 0 }">
-      {{ stockQuantity === 0 ? 'Hết hàng' : `Còn hàng: ${stockQuantity}` }}
-    </div> -->
-
     <div class="product-stock" :class="{ 'out-of-stock': stockQuantity === 0 }">
-     số lượng: {{ stockQuantity }}
+      {{ stockQuantity === 0 ? 'Hết hàng' : `Còn hàng: ${stockQuantity}` }}
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Giữ nguyên */
 .product-card {
   background-color: white;
   border-radius: 8px;

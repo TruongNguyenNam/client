@@ -5,15 +5,15 @@ import AppMenuItem from './AppMenuItem.vue';
 
 const model = ref([
     {
-        label: 'Home',
-        items: [{ label: 'Trang Chủ', icon: 'pi pi-fw pi-home', to: '/home' }]
+        label: 'Trang Chủ',
+        items: [{ label: 'Thống Kê', icon: 'pi pi-fw pi-home', to: '/home' }]
     },
     {
-        label: 'Pos Store',
+        label: 'Bán Hàng',
         items: [{ label: 'Bán Hàng', icon: 'pi pi-fw pi-shopping-bag', to: '/order',class:'rotated-icon' },]
     },
     {
-        label: 'Admin Store',
+        label: 'Quản Lý',
         items: [
             // { label: 'productForm', icon: 'pi pi-fw pi-id-card', to: '/prodductadd' },
             // { label: 'Doanh Thu', icon: 'pi pi-fw pi-home', to: '/home',class:'rotated-icon' },

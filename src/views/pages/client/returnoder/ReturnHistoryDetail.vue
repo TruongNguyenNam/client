@@ -138,6 +138,8 @@ const getStatusSeverity = (status: string) => {
     case 'Chờ phản hồi': return 'warning'
     case 'Đã duyệt': return 'success'
     case 'Bị từ chối': return 'danger'
+    case 'đợi hoàn tiền': return 'warning'
+     case 'Đã hoàn tiền': return 'success'
     default: return 'info'
   }
 }

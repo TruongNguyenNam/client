@@ -1,10 +1,7 @@
 <template>
   <div class="p-4 max-w-4xl mx-auto bg-white rounded shadow">
       
-      <div class="discount-banner">
-        <div class="banner-text">BIG SALE</div>
-        <div class="banner-subtext">Shoeshop</div>
-      </div>
+      
       <br>
     <h2 class="text-xl font-semibold mb-4">Cập nhật khuyến mãi</h2>
 
@@ -44,19 +41,18 @@
 
         <!-- Cột phải: chọn danh mục + sản phẩm -->
         <div class="flex-1 space-y-4">
-          <div>
-            <label class="block font-medium mb-2">Danh mục áp dụng</label>
-            <Dropdown
-              v-model="selectedCategoryId"
-              :options="categories"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Chọn danh mục"
-              class="w-full"
-              @change="fetchProductsByCategory"
-              clearable
-            />
-          </div>
+         <div>
+  <label class="block font-medium mb-2">Danh mục áp dụng</label>
+  <Dropdown
+    v-model="selectedCategoryId"
+    :options="categories"
+    optionLabel="name"
+    optionValue="id"
+    placeholder="Chọn danh mục"
+    class="w-full"
+    @change="fetchProductsByCategory"
+  />
+</div>
 
           <div>
             <label class="block font-medium mb-2">Sản phẩm áp dụng</label>
@@ -64,7 +60,7 @@
               v-model="searchKeyword"
               placeholder="Tìm kiếm sản phẩm theo tên"
               class="p-inputtext-sm w-full mb-2"
-              @input="onSearchInput"
+@input="onSearchInput"
             />
 
             <DataTable
@@ -100,7 +96,16 @@
         </div>
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4">Cập nhật khuyến mãi</button>
+<div class="flex justify-start mt-4">
+  <Button 
+    type="submit"
+    label="Cập nhật sản phẩm" 
+    icon="pi pi-box"
+    severity="primary"
+    class="px-4 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+  />
+</div>
+
     </form>
 
     <Toast ref="toast" />
@@ -137,7 +142,7 @@ interface DiscountRequest {
   percentValue: number
   startDate: string
   endDate: string
-  categoryIds: number[]
+  categoryIds?: number[]
   priceThreshold: number
   applyToAll: boolean
   productIds: number[]
@@ -147,7 +152,7 @@ const categories = ref<Category[]>([])
 const products = ref<Product[]>([])
 const selectedProducts = ref<Product[]>([])
 const searchKeyword = ref('')
-const selectedCategoryId = ref<number | null>(null)
+const selectedCategoryId = ref<number | null>(0) // Mặc định chọn "Tất cả"
 const discount = ref<DiscountRequest>({
   name: '',
   percentValue: 0,
@@ -158,7 +163,6 @@ const discount = ref<DiscountRequest>({
   applyToAll: false,
   productIds: []
 })
-
 const errors = ref<{ [key: string]: string }>({})
 const toast = useToast()
 const route = useRoute()
@@ -166,7 +170,7 @@ const id = route.params.id as string | undefined
 
 // const formatPrice = (product: Product) => {
 //   console.log(product.price)
-//   if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
+//   if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
 //   return product.price.toLocaleString('vi-VN', {
 //     style: 'currency',
 //     currency: 'VND'
@@ -204,25 +208,35 @@ const loadDiscount = async () => {
 
   try {
     const data = await DiscountService.getDiscountById(Number(id));
-
+    
     discount.value.name = data.name || '';
     discount.value.percentValue = parseFloat(String(data.discountPercentage || '').replace(/[^\d.]/g, '')) || 0;
     discount.value.startDate = data.startDate?.slice(0, 16) || '';
     discount.value.endDate = data.endDate?.slice(0, 16) || '';
-    discount.value.categoryIds = data.categoryIds || [];
+    
+    // Sửa ở đây - kiểm tra tồn tại trước khi truy cập length
+    discount.value.categoryIds = Array.isArray(data.categoryIds) ? data.categoryIds : [];
     discount.value.priceThreshold = data.priceThreshold || 0;
     discount.value.applyToAll = data.applyToAll || false;
-    discount.value.productIds = data.productResponses?.map((p: any) => p.id) || [];
+    discount.value.productIds = Array.isArray(data.productResponses) 
+      ? data.productResponses.map((p: any) => p.id) 
+      : [];
 
-    // ✅ Nếu danh sách sản phẩm chưa có → phải load xong rồi mới gán selectedProducts
     if (products.value.length === 0) {
-      await loadProductsAll(); // ⚠️ load toàn bộ sản phẩm trước
+      await loadProductsAll();
     }
 
-    // ✅ Gán lại selectedProducts dựa trên productIds
     selectedProducts.value = products.value.filter(p =>
       discount.value.productIds.includes(p.id)
     );
+
+    // Sửa phần chọn category - kiểm tra mảng có phần tử không
+    if (discount.value.categoryIds?.length > 0) {
+      selectedCategoryId.value = discount.value.categoryIds[0];
+    } else {
+      selectedCategoryId.value = 0; // Mặc định "Tất cả"
+    }
+    
   } catch (err) {
     toast.add({
       severity: 'error',
@@ -238,7 +252,7 @@ const loadProductsAll = async () => {
     const res = await ProductService.getAllChildProducts()
     products.value = res.data || []
   } catch {
-    toast.add({ severity: 'error', summary: 'Lỗi tải sản phẩm', detail: 'Không thể tải danh sách sản phẩm.', life: 3000 })
+toast.add({ severity: 'error', summary: 'Lỗi tải sản phẩm', detail: 'Không thể tải danh sách sản phẩm.', life: 3000 })
   }
 }
 
@@ -249,33 +263,31 @@ watch(selectedProducts, (val) => {
 
 // Hàm load sản phẩm theo danh mục khi chọn dropdown
 const fetchProductsByCategory = async () => {
-  console.log('Selected category id:', selectedCategoryId.value) // Log category id
-
-  if (selectedCategoryId.value === null) {
-    console.log('No category selected, loading all child products')
-    await loadProductsAll()
-   
+  if (selectedCategoryId.value === 0 || selectedCategoryId.value === null) {
+    await loadProductsAll() // Load tất cả sản phẩm khi chọn "Tất cả"
   } else {
     try {
       const res = await ProductService.getChildProductsByCategoryId(selectedCategoryId.value)
-      console.log('API response products:', res) // Log data trả về
-     products.value = res
-
-
-   
+      products.value = res
     } catch (err) {
-      console.error('Fetch products by category error:', err)
-      toast.add({ severity: 'error', summary: 'Lỗi tải sản phẩm', detail: 'Không thể tải sản phẩm từ danh mục.', life: 4000 })
+      console.error('Lỗi tải sản phẩm:', err)
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Lỗi', 
+        detail: 'Không thể tải sản phẩm từ danh mục.', 
+        life: 4000 
+      })
     }
   }
 }
-
 // Validation form
 const validate = () => {
   errors.value = {}
 
   if (!discount.value.name.trim()) errors.value.name = 'Tên khuyến mãi không được để trống.'
-  
+   else if (discount.value.name.length > 50) {
+    errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
+  }
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'
 
@@ -323,7 +335,7 @@ const handleSubmit = async () => {
 // Debounce để search khi gõ, tránh gọi API quá nhiều
 let debounceTimeout: number | undefined
 const onSearchInput = () => {
-  if (debounceTimeout) clearTimeout(debounceTimeout)
+if (debounceTimeout) clearTimeout(debounceTimeout)
   debounceTimeout = setTimeout(() => {
     doSearch(searchKeyword.value)
   }, 300)
@@ -349,7 +361,15 @@ const doSearch = async (keyword: string) => {
 }
 
 onMounted(async () => {
-  await loadInitialData()
+  try {
+    const catRes = await CategoryService.getAllCategories()
+    categories.value = [
+      { id: 0, name: 'Tất cả sản phẩm' }, // Thêm option "Tất cả"
+      ...(catRes.data || [])
+    ]
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Lỗi tải dữ liệu', detail: 'Không thể tải danh mục.', life: 4000 })
+  }
   await loadDiscount()
 })
 </script>
@@ -449,7 +469,7 @@ button[type="submit"] {
   border: none;
   cursor: pointer;
   padding: 0.75rem 0;
-  border-radius: 8px;
+border-radius: 8px;
 }
 
 button[type="submit"]:hover {
@@ -515,4 +535,3 @@ input::placeholder,
 
 
 </style>
-

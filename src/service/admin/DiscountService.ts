@@ -44,11 +44,13 @@ export const DiscountService = {
         discount
       );
       return response.data;
+
     } // ✅ Giữ nguyên lỗi từ axios để xử lý bên ngoài
 catch (err) {
   console.error('Error saving discount:', err)
   throw err 
 }
+
 
   },
 

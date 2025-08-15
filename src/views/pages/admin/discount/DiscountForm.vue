@@ -66,20 +66,18 @@
 
         <!-- Cột phải -->
         <div class="flex-1 space-y-4">
-          <div>
-            <label class="block font-medium mb-2">Danh mục áp dụng</label>
-            <Dropdown
-              v-model="selectedCategoryId"
-              :options="categories"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Chọn danh mục"
-              class="w-full"
-              @change="fetchProductsByCategory"
-              clearable
-            />
-          </div>
-
+        <div>
+  <label class="block font-medium mb-2">Danh mục áp dụng</label>
+  <Dropdown
+    v-model="selectedCategoryId"
+    :options="categories"
+    optionLabel="name"
+    optionValue="id"
+    placeholder="Chọn danh mục"
+    class="w-full"
+    @change="fetchProductsByCategory"
+  />
+</div>
           <div>
             <label class="block font-medium mb-2">Sản phẩm áp dụng</label>
               <InputText
@@ -112,9 +110,16 @@
       </div>
       
 
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4">
-        Lưu khuyến mãi
-      </button>
+    <div class="flex justify-start mt-4">
+  <Button 
+    type="submit"
+    label="Lưu khuyến mãi" 
+    icon="pi pi-save" 
+    severity="primary"
+    class="px-4 py-2"
+  />
+</div>
+
     </form>
 
     <Toast ref="toast" />
@@ -157,7 +162,7 @@ interface DiscountRequest {
 const categories = ref<Category[]>([])
 const products = ref<Product[]>([])
 const selectedProducts = ref<Product[]>([])
-const selectedCategoryId = ref<number | null>(null)
+const selectedCategoryId = ref<number | null>(0) // Mặc định chọn "Tất cả sản phẩm"
 const searchKeyword = ref('')
 const discount = ref<DiscountRequest>({
   name: '',
@@ -177,6 +182,7 @@ onMounted(async () => {
   try {
     const res = await CategoryService.getAllCategories()
     categories.value = res.data || []
+      categories.value = [{ id: 0, name: 'Tất cả sản phẩm' }, ...(res.data || [])]
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Lỗi tải danh mục', detail: 'Không thể tải danh mục.', life: 4000 })
   }
@@ -209,27 +215,23 @@ const loadAllChildProducts = async () => {
 
 // Hàm load sản phẩm theo danh mục khi chọn dropdown
 const fetchProductsByCategory = async () => {
-  console.log('Selected category id:', selectedCategoryId.value) // Log category id
-
-  if (selectedCategoryId.value === null) {
-    console.log('No category selected, loading all child products')
+  if (selectedCategoryId.value === 0 || selectedCategoryId.value === null) {
     await loadAllChildProducts()
-   
   } else {
     try {
       const res = await ProductService.getChildProductsByCategoryId(selectedCategoryId.value)
-      console.log('API response products:', res) // Log data trả về
-     products.value = res
-
-
-     
+      products.value = res
     } catch (err) {
       console.error('Fetch products by category error:', err)
-      toast.add({ severity: 'error', summary: 'Lỗi tải sản phẩm', detail: 'Không thể tải sản phẩm từ danh mục.', life: 4000 })
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Lỗi tải sản phẩm', 
+        detail: 'Không thể tải sản phẩm từ danh mục.', 
+        life: 4000 
+      })
     }
   }
 }
-
 // Cập nhật danh sách productIds mỗi khi chọn sản phẩm thay đổi
 watch(selectedProducts, (val) => {
   discount.value.productIds = val.map(p => p.id)
@@ -260,6 +262,9 @@ const formatPrice = (price: number | string | null): string => {
 const validate = () => {
   errors.value = {}
   if (!discount.value.name.trim()) errors.value.name = 'Tên khuyến mãi không được để trống.'
+   else if (discount.value.name.length > 50) {
+    errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
+  }
   if (!discount.value.percentValue || discount.value.percentValue < 1 || discount.value.percentValue > 100) {
     errors.value.percentValue = 'Phần trăm giảm phải từ 1 đến 100.'
   }
@@ -382,5 +387,9 @@ input:focus {
 }
 .p-datatable-tbody > tr > td {
   padding: 0.9rem 1.2rem;
+}
+.p-dropdown-items-wrapper .p-dropdown-item:first-child {
+  font-weight: bold;
+  color: #3b82f6;
 }
 </style>

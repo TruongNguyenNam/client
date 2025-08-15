@@ -86,12 +86,40 @@ export const AuthService = {
     const response = await axiosInstance.put<ApiResponse<UserResponse>>(`/${userId}/address`, data);
     return response.data;
   },
+
+  changePassword: async (userId: number, form: ChangePasswordForm): Promise<ApiResponse<string>> => {
+    const response = await axiosInstance.put<ApiResponse<string>>(`/change-password`, form, {
+      params: { userId },
+    });
+    return response.data;
+  },
+  updateUserInfo: async (userId: number, data: UpdateUserInfo): Promise<ApiResponse<UserResponse>> => {
+    const response = await axiosInstance.put<ApiResponse<UserResponse>>(`/${userId}/info`, data);
+
+    // ✅ Nếu backend trả status trong body (ví dụ 404), phải kiểm tra thủ công
+    if (response.data.status !== 200) {
+      throw new Error(response.data.message || 'Cập nhật thất bại');
+    }
+    return response.data; // ✅ TS hiểu đúng
+  },
+getCouponListForUser: async (userId: number): Promise<ApiResponse<CouponUserResponse[]>> => {
+  const response = await axiosInstance.get<ApiResponse<CouponUserResponse[]>>(`/${userId}/coupons`);
+  return response.data;
+}
+
+
 };
 
 // DTOs
 export interface LoginForm {
   username: string;
   password: string;
+}
+
+export interface ChangePasswordForm {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface RegisterForm {
@@ -153,4 +181,20 @@ export interface UpdateUserForm {
   phoneNumber: string;
   gender: string;
   addresses: UserAddress;
+}
+export interface UpdateUserInfo {
+  email: string;
+  phoneNumber: string;
+  gender: string;
+}
+
+export interface CouponUserResponse {
+  id: number;                   // ID của CouponUsage
+  couponCode: string;              // Mã giảm giá (từ Coupon)
+  couponName: string;               // Tên giảm giá (từ Coupon)
+  couponDiscountAmount: number;   // Số tiền giảm
+  couponStatus: string;            // Trạng thái ACTIVE, USED, EXPIRED (từ Coupon)
+  startDate: string | null;        // Ngày bắt đầu có hiệu lực
+  expiredDate: string | null;     // Ngày hết hạn
+  usedDate: string | null; // Ngày sử dụng (nếu đã sử dụng)
 }

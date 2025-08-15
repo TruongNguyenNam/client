@@ -181,6 +181,11 @@ const form = ref<CheckoutForm>({
   paymentMethod: null,
 });
 
+const isValidPhone = (phone: string): boolean => {
+  const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+  return phoneRegex.test(phone);
+};
+
 const provinces = ref<Location[]>([]);
 
 interface Location {
@@ -314,35 +319,79 @@ watch(addresses, (newAddresses) => {
 }, { immediate: true });
 
 const handleAddressSubmit = async (submittedData: any) => {
-  if (!authStore.userInfo?.userId) return;
+  if (!authStore.userInfo?.userId) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Kiểm tra các trường bắt buộc
+  if (
+    !submittedData.receiverName ||
+    !submittedData.receiverPhone ||
+    !submittedData.province ||
+    !submittedData.district ||
+    !submittedData.ward ||
+    !submittedData.street
+  ) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Vui lòng điền đầy đủ các trường bắt buộc: Tên người nhận, Số điện thoại, Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Đường.',
+      life: 3000
+    });
+    return;
+  }
+
+  // Kiểm tra định dạng số điện thoại
+  if (!isValidPhone(submittedData.receiverPhone)) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Số điện thoại không hợp lệ.',
+      life: 3000
+    });
+    return;
+  }
+
   const province = provinceOptions.find(p => p.level1_id === submittedData.province);
   const district = province?.level2s.find(d => d.level2_id === submittedData.district);
   const ward = district?.level3s.find(w => w.level3_id === submittedData.ward);
 
+  if (!province || !district || !ward) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Thông tin địa chỉ không hợp lệ. Vui lòng kiểm tra lại.',
+      life: 3000
+    });
+    return;
+  }
+
   const finalAddress = {
     ...submittedData,
-    province: province?.name || '',
-    district: district?.name || '',
-    ward: ward?.name || '',
+    province: province.name,
+    district: district.name,
+    ward: ward.name,
     country: 'Việt Nam'
   };
+
   try {
+    let resAdd;
     if (submittedData.id) {
-      const resAdd = await AddressService.updateAddressForCustomer(authStore.userInfo?.userId, submittedData.id, finalAddress);
+      resAdd = await AddressService.updateAddressForCustomer(authStore.userInfo.userId, submittedData.id, finalAddress);
       toast.add({
         severity: 'success',
         summary: 'Thành công',
         detail: 'Đã cập nhật địa chỉ thành công.',
         life: 3000
       });
-      if (resAdd.data?.id) {
-        await authStore.fetchUserInfo();
-        addressDialogKey.value++;
-        showAddressDialog.value = false;
-      }
-      selectedAddressId.value = submittedData.id;
     } else {
-      const resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
+      resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
       toast.add({
         severity: 'success',
         summary: 'Thành công',
@@ -350,12 +399,27 @@ const handleAddressSubmit = async (submittedData: any) => {
         life: 3000
       });
     }
-    await authStore.fetchUserInfo();
-    addressDialogKey.value++;
-    showAddressDialog.value = false;
-  } catch (error) {
+
+    if (resAdd.data?.id) {
+      await authStore.fetchUserInfo();
+      addressDialogKey.value++;
+      showAddressDialog.value = false;
+      selectedAddressId.value = resAdd.data.id;
+      selectedAddress.value = mapToUserAddress(resAdd.data);
+      form.value.addressProvince = resAdd.data.addressProvince;
+      form.value.addressDistrict = resAdd.data.addressDistrict;
+      form.value.addressWard = resAdd.data.addressWard;
+      form.value.receiverName = resAdd.data.receiverName || '';
+      form.value.receiverPhone = resAdd.data.receiverPhone || '';
+    }
+  } catch (error: any) {
     console.error('Lỗi xử lý địa chỉ:', error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xử lý địa chỉ', life: 3000 });
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.response?.data?.message || 'Không thể xử lý địa chỉ.',
+      life: 3000
+    });
   }
 };
 
@@ -378,7 +442,7 @@ const total: ComputedRef<number> = computed(() => {
 const isFormValid: ComputedRef<boolean> = computed(() =>
   !!form.value.fullName &&
   !!form.value.phone &&
-  /^\d{10}$/.test(form.value.phone) &&
+  isValidPhone(form.value.phone) &&
   !!form.value.email &&
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email) &&
   !!form.value.addressProvince &&
@@ -386,7 +450,10 @@ const isFormValid: ComputedRef<boolean> = computed(() =>
   !!form.value.addressWard &&
   !!form.value.shippingMethod &&
   !!form.value.paymentMethod &&
-  !!selectedAddressId.value
+  !!selectedAddressId.value &&
+  !!selectedAddress.value?.receiverName &&
+  !!selectedAddress.value?.receiverPhone &&
+  isValidPhone(selectedAddress.value?.receiverPhone || '')
 );
 
 
@@ -639,13 +706,128 @@ const getAttributesText = (attributes: { attributeName: string; value: string }[
     : 'Không có thuộc tính chính';
 };
 
+// const submitOrder = async () => {
+//   if (!authStore.userId) {
+//     toast.add({
+//       severity: 'warn',
+//       summary: 'Cảnh báo',
+//       detail: 'Vui lòng đăng nhập để thanh toán.',
+//       life: 3000,
+//     });
+//     router.push('/login');
+//     return;
+//   }
+
+//   // if (!isFormValid.value) {
+//   //   toast.add({
+//   //     severity: 'warn',
+//   //     summary: 'Cảnh báo',
+//   //     detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
+//   //     life: 3000,
+//   //   });
+//   //   return;
+//   // }
+
+//   if (authStore.cart.length === 0) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Vui lòng thêm sản phẩm vào giỏ hàng.',
+//       life: 3000,
+//     });
+//     return;
+//   }
+
+//   if (authStore.cart.some(item => item.quantity > (item.product?.stockQuantity ?? 0))) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Một số sản phẩm trong giỏ hàng không đủ tồn kho.',
+//       life: 3000,
+//     });
+//     return;
+//   }
+
+//   loading.value = true;
+//   try {
+   
+
+//     const orderRequest: OrderRequestClient = {
+//       userId: authStore.userId,
+//       addressId: selectedAddressId.value || undefined,
+//       nodes: note.value,
+//       items: authStore.cart.map(item => ({
+//         productId: item.product.id,
+//         quantity: item.quantity,
+//       })),
+//       payment: {
+//         paymentMethodId: form.value.paymentMethod?.id || 1,
+//         amount: total.value,
+//         returnUrl: window.location.origin + '/payment-return',
+//       },
+//       couponUsageIds: selectedCoupons.value.map(coupon => coupon.id) || [],
+//       shipments: [
+//         {
+//           carrierId: form.value.shippingMethod?.id || 1,
+//           shippingCost: shippingCost.value,
+//           estimatedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+//           orderItemIds: authStore.cart.map(item => item.id),
+//         },
+//       ],
+//     };
+
+//     console.log('Payload gửi đến backend:', orderRequest);
+
+//     const response = await CartClientService.checkout(orderRequest);
+//     console.log('Response from checkout API:', response);
+//     await authStore.fetchUserInfo();
+//     console.log('Checkout Response:', response.data);
+//     if (response.status === 200 && response.data) {
+//       const orderResponse: OrderResponseClient = response.data;
+//       toast.add({
+//         severity: 'success',
+//         summary: 'Thành công',
+//         detail: `Đơn hàng ${orderResponse.orderCode} đã được tạo.`,
+//         life: 5000,
+//       });
+
+//       if (orderResponse.paymentUrl) {
+//         window.location.href = orderResponse.paymentUrl;
+//       } else {
+//         authStore.cart = [];
+//         localStorage.removeItem('cartNote');
+//         authStore.cartCount = 0;
+//         router.push(`/client/cart/${authStore.userId}`);
+//       }
+//     }
+//   } catch (error: any) {
+//     console.error('Lỗi khi tạo đơn hàng:', error);
+//     let errorMessage = error.response?.data?.message || 'Không thể tạo đơn hàng.';
+//     if (error.response?.status === 400) {
+//       errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ.';
+//     } else if (error.response?.status === 401) {
+//       errorMessage = 'Vui lòng đăng nhập lại.';
+//       router.push('/login');
+//     }
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: errorMessage,
+//       life: 3000,
+//     });
+//   } finally {
+//     loading.value = false;
+//     showConfirmDialog.value = false;
+//   }
+// };
+
 const submitOrder = async () => {
   if (!authStore.userId) {
     toast.add({
       severity: 'warn',
       summary: 'Cảnh báo',
       detail: 'Vui lòng đăng nhập để thanh toán.',
-      life: 3000,
+      life: 3000
     });
     router.push('/login');
     return;
@@ -656,7 +838,7 @@ const submitOrder = async () => {
   //     severity: 'warn',
   //     summary: 'Cảnh báo',
   //     detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
-  //     life: 3000,
+  //     life: 3000
   //   });
   //   return;
   // }
@@ -666,7 +848,7 @@ const submitOrder = async () => {
       severity: 'error',
       summary: 'Lỗi',
       detail: 'Vui lòng thêm sản phẩm vào giỏ hàng.',
-      life: 3000,
+      life: 3000
     });
     return;
   }
@@ -676,15 +858,13 @@ const submitOrder = async () => {
       severity: 'error',
       summary: 'Lỗi',
       detail: 'Một số sản phẩm trong giỏ hàng không đủ tồn kho.',
-      life: 3000,
+      life: 3000
     });
     return;
   }
 
   loading.value = true;
   try {
-   
-
     const orderRequest: OrderRequestClient = {
       userId: authStore.userId,
       addressId: selectedAddressId.value || undefined,
@@ -714,14 +894,13 @@ const submitOrder = async () => {
     const response = await CartClientService.checkout(orderRequest);
     console.log('Response from checkout API:', response);
     await authStore.fetchUserInfo();
-    console.log('Checkout Response:', response.data);
     if (response.status === 200 && response.data) {
       const orderResponse: OrderResponseClient = response.data;
       toast.add({
         severity: 'success',
         summary: 'Thành công',
         detail: `Đơn hàng ${orderResponse.orderCode} đã được tạo.`,
-        life: 5000,
+        life: 5000
       });
 
       if (orderResponse.paymentUrl) {
@@ -746,7 +925,7 @@ const submitOrder = async () => {
       severity: 'error',
       summary: 'Lỗi',
       detail: errorMessage,
-      life: 3000,
+      life: 3000
     });
   } finally {
     loading.value = false;

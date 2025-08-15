@@ -5,66 +5,102 @@ import { CustomerService } from "../../../../service/admin/CustomerServiceLegacy
 import type { CustomerResponse } from "../../../../model/admin/customer";
 import { exportToExcel, importFromExcel, downloadExcelTemplate } from '../../../../utils/excel';
 import { useToast } from 'primevue/usetoast';
+import type { CustomerRequest } from "../../../../model/admin/customer";
 const toast = useToast();
 // Tải file mẫu Excel
 const downloadCustomerTemplate = () => {
   const exampleData = [
     {
-      Name: 'Nguyễn Văn A',
-      Email: 'vana@example.com',
-      PhoneNumber: '0912345678',
-      AddressStreet: '123 Đường ABC',
-      Ward: 'Phường 1',
-      District: 'Quận 1',
-      Province: 'TP.HCM',
-      City: 'Hồ Chí Minh',
+      Name: 'Nguyễn Văn Minh',
+      Email: 'minh.nguyen@example.com',
+      PhoneNumber: '0911222333',
       Gender: 'MALE',
+      ReceiverName: 'Nguyễn Văn Minh',
+      ReceiverPhone: '0911222333',
+      IsDefault: true,
+      AddressStreet2: '12 Đường Trần Hưng Đạo',
+      Ward2: 'Phường Bến Nghé',
+      District2: 'Quận 1',
+      Province2: 'TP.HCM',
+      City2: 'Hồ Chí Minh',
+      State2: 'Miền Nam',
+      Country2: 'Vietnam',
+      Zipcode2: '710000',
     },
     {
-      Name: 'Trần Thị B',
-      Email: 'thib@example.com',
-      PhoneNumber: '0987654321',
-      AddressStreet: '456 Đường DEF',
-      Ward: 'Phường 3',
-      District: 'Quận 2',
-      Province: 'Hà Nội',
-      City: 'Hà Nội',
+      Name: 'Trần Thị Mai',
+      Email: 'mai.tran@example.com',
+      PhoneNumber: '0933444555',
       Gender: 'FEMALE',
-    },
+      ReceiverName: 'Trần Thị Mai',
+      ReceiverPhone: '0933444555',
+      IsDefault: false,
+      AddressStreet2: '89 Đường Cầu Giấy',
+      Ward2: 'Phường Dịch Vọng',
+      District2: 'Quận Cầu Giấy',
+      Province2: 'Hà Nội',
+      City2: 'Hà Nội',
+      State2: 'Miền Bắc',
+      Country2: 'Vietnam',
+      Zipcode2: '110000',
+    }
   ];
+
   exportToExcel(exampleData, 'Template_KhachHang', 'KhachHangTemplate-DayDu');
+
   toast.add({
     severity: 'info',
     summary: 'Tải mẫu thành công',
-    detail: 'File mẫu đã được tải về với các cột đầy đủ',
+    detail: 'File mẫu đã được tải về.',
     life: 3000,
   });
 };
 
-
 // Xuất danh sách khách hàng ra Excel
 const exportCustomers = () => {
   if (!customers.value.length) {
-    toast.add({ severity: 'warn', summary: 'Không có dữ liệu', detail: 'Danh sách khách hàng trống', life: 3000 });
+    toast.add({
+      severity: 'warn',
+      summary: 'Không có dữ liệu',
+      detail: 'Danh sách khách hàng trống',
+      life: 3000
+    });
     return;
   }
 
-  const data = customers.value.map(c => ({
-    Name: c.username,
-    Email: c.email,
-    PhoneNumber: c.phoneNumber,
-    // Address: [
-    //   c.addressStreet, c.addressWard, c.addressDistrict,
-    //   c.addressProvince, c.addressCity
-    // ].filter(Boolean).join(', '),
-    Gender: c.gender
-  }));
+  const data = customers.value.map(c => {
+    const defaultAddress = c.addresses?.find(addr => addr.isDefault);
+    const fullAddress = defaultAddress
+      ? [
+        defaultAddress.street,
+        defaultAddress.ward,
+        defaultAddress.district,
+        defaultAddress.province,
+        defaultAddress.city
+      ]
+        .filter(Boolean)
+        .join(', ')
+      : '—';
+
+    console.log(`📦 ${c.username} => ${fullAddress}`);
+
+    return {
+      Name: c.username,
+      Email: c.email,
+      PhoneNumber: c.phoneNumber,
+      Address: fullAddress,
+      Gender: c.gender
+    };
+  });
 
   exportToExcel(data, 'DanhSachKhachHang');
-  toast.add({ severity: 'success', summary: 'Xuất thành công', detail: 'Đã xuất file Excel', life: 3000 });
+  toast.add({
+    severity: 'success',
+    summary: 'Xuất thành công',
+    detail: 'Đã xuất file Excel',
+    life: 3000
+  });
 };
-import type { CustomerRequest } from "../../../../model/admin/customer"; // hoặc đúng đường dẫn file chứa định nghĩa
-
 // Import danh sách khách hàng từ Excel
 const importCustomers = async (event: any) => {
   const file = event.files?.[0];
@@ -84,24 +120,26 @@ const importCustomers = async (event: any) => {
           phoneNumber: item.PhoneNumber?.trim(),
           gender: ['MALE', 'FEMALE', 'OTHER'].includes(gender) ? gender : 'OTHER',
           role: 'CUSTOMER',
-          // address: {
-          //   street: item.AddressStreet?.trim() || '',
-          //   ward: item.Ward?.trim() || '',
-          //   district: item.District?.trim() || '',
-          //   province: item.Province?.trim() || '',
-          //   city: item.City?.trim() || '',
-          //   state: item.State?.trim() || '',         // thêm vào
-          //   country: item.Country?.trim() || 'Vietnam',  // thêm vào
-          //   zipcode: item.Zipcode?.trim() || '',     // thêm vào
-          // },
+          address: {
+            receiverName: item.ReceiverName?.trim() || '',
+            receiverPhone: item.ReceiverPhone?.trim() || '',
+            isDefault: item.IsDefault ?? false,
+            street: item.AddressStreet2?.trim() || '',
+            ward: item.Ward2?.trim() || '',
+            district: item.District2?.trim() || '',
+            province: item.Province2?.trim() || '',
+            city: item.City2?.trim() || '',
+            state: item.State2?.trim() || '',
+            country: item.Country2?.trim() || '',
+            zipcode: item.Zipcode2?.trim() || '',
+          },
         };
-
 
         try {
           await CustomerService.createCustomer(customerData);
           added++;
         } catch (error) {
-          console.error("❌ Lỗi tạo khách hàng:", customerData, error);
+          console.error(" Lỗi tạo khách hàng:", customerData, error);
         }
       }
     }
@@ -124,6 +162,7 @@ const importCustomers = async (event: any) => {
     });
   }
 };
+
 
 const customers = ref<CustomerResponse[]>([]);
 const loading = ref<boolean>(true);
@@ -233,7 +272,7 @@ const formatGender = (gender: string | null | undefined) => {
 
         </Toolbar>
         <div class="flex align-items-center justify-content-between mb-4">
-          <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2" @click="clearSearch" />
+          <Button icon="pi pi-filter-slash" label="Xóa bộ lọc" class="p-button-outlined mr-2" @click="clearSearch" />
           <div class="search-bar-vertical">
             <span class="p-input-icon-left">
               <i class="pi pi-search"></i>
@@ -254,9 +293,9 @@ const formatGender = (gender: string | null | undefined) => {
           </template>
           <Column selectionMode="multiple" headerStyle="width: 3em" />
           <Column header="STT" style="width: 4rem">
-                    <template #body="slotProps">
-                    {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
-                    </template>
+            <template #body="slotProps">
+              {{ lazyParams.page * lazyParams.size + slotProps.index + 1 }}
+            </template>
           </Column>
           <Column field="username" header="Tên khách hàng" sortable />
           <Column field="email" header="Email" sortable />
@@ -273,8 +312,8 @@ const formatGender = (gender: string | null | undefined) => {
                     defaultAddress.district,
                     defaultAddress.province,
                     defaultAddress.city
-              ].filter(Boolean).join(', ');
-              })()
+                  ].filter(Boolean).join(', ');
+                })()
               }}
             </template>
 

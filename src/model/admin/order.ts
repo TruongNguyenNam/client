@@ -58,6 +58,17 @@ export interface OrderRequest {
     quantity: number;
     unitPrice: number;
   }
+
+  // export interface OrderItemResponse {
+  //   id: number;
+  //   productId: number;
+  //   name: string;
+  //   price: number;
+  //   quantity: number;
+  //   unitPrice:number;
+  //   sku?: string;
+  //   imageUrl?: string[]; // Thêm imageUrl để khớp với ProductResponse
+  // }
   
   export interface PaymentResponse {
     id: number;

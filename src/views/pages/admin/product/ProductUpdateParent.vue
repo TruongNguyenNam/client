@@ -10,6 +10,7 @@
               id="productName" 
               v-model="product.name" 
               placeholder="nhập tên sản phẩm" 
+              maxlength="50"
               :class="{'p-invalid': submitted && !product.name}" 
             />
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
@@ -43,7 +44,10 @@
               id="sportType" 
               v-model="product.sportType" 
               placeholder="nhập loại sản phẩm" 
+              maxlength="50"
+              :class="{'p-invalid': submitted && !product.sportType}"
             />
+            <small class="p-error" v-if="submitted && !product.sportType">Loại thể thao là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
             <label for="productTag">Thẻ</label>
@@ -169,14 +173,14 @@
 
         <div class="flex justify-content-end mt-4">
           <Button 
-            label="Cancel" 
+            label="Hủy" 
             icon="pi pi-times" 
             severity="secondary" 
             class="mr-2" 
             @click="router.push('/documentation')" 
           />
           <Button 
-            label="Submit Product" 
+            label="Cập Nhật Sản Phẩm" 
             icon="pi pi-check" 
             @click="submitProduct" 
             :loading="isSubmitting" 
@@ -364,7 +368,7 @@ const deleteImages = async (index: number) => {
 const submitProduct = async () => {
   submitted.value = true;
   
-  if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description) {
+  if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description || !product.sportType) {
     toast.add({ 
       severity: 'warn', 
       summary: 'Lỗi', 

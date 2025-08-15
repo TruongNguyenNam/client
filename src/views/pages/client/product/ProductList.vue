@@ -168,7 +168,8 @@ const goToDetails = (id: number | null) => {
   width: 100%;
   max-width: 1350px;
   margin: 20px auto;
-  border: 1px solid red;
+  /* border: 1px solid red; */
+
 }
 
 .product-card {

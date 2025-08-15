@@ -145,7 +145,7 @@ const formatDate = (date: Date | string | null): string => {
   });
 };
 
-const searchEmail = ref(""); 
+const searchEmail = ref("");
 const filteredCustomers = computed(() =>
   searchEmail.value
     ? customers.value.filter((cus) =>
@@ -232,15 +232,14 @@ const selectedCount = computed(() => selectedCustomers.value.length);
                   slotProps.data.gender === 'MALE' ? 'Nam'
                     : slotProps.data.gender === 'FEMALE' ? 'Nữ'
                       : slotProps.data.gender === 'OTHER' ? 'Khác'
-                : ''
+                        : ''
                 }}
               </template>
             </Column>
             <Column header="Hành động" headerClass="center-header" bodyClass="center-cell">
               <template #body="slotProps">
                 <Button label="Tặng" icon="pi pi-gift" class="p-button-success p-button-sm"
-                  :disabled="giftStatus[slotProps.data.id] === 'success'"
-                  @click="handleGift(slotProps.data)" />
+                  :disabled="giftStatus[slotProps.data.id] === 'success'" @click="handleGift(slotProps.data)" />
                 <span v-if="giftStatus[slotProps.data.id] === 'success'" style="color:green;margin-left:8px;">✔️</span>
                 <span v-if="giftStatus[slotProps.data.id] === 'error'" style="color:red;margin-left:8px;">Lỗi</span>
               </template>
