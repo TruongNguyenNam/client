@@ -4,13 +4,40 @@ import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { DiscountService } from '../../../../service/admin/DiscountService';
 import type { DiscountResponse } from '../../../../model/admin/discount';
-
+import { exportToExcel,importFromExcel } from "../../../../utils/excel";
 const ListDiscount = ref<DiscountResponse[]>([]);
 const loading = ref(false);
 const first = ref(0);
 const searchTerm = ref('');
 const filterStatus = ref<string | null>(null);
 const toast = useToast();
+
+const exportDiscounts = (): void => {
+    if (!ListDiscount.value.length) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Không có dữ liệu',
+            detail: 'Không có phiếu giảm giá nào để xuất.',
+            life: 3000
+        });
+        return;
+    }
+
+    // Chuẩn bị dữ liệu export
+    const exportData = ListDiscount.value.map((c, index) => ({
+        STT: index + 1,
+        // "Mã phiếu": c.name,
+        "Tên phiếu": c.name,
+        "Phần trăm giảm": c.discountPercentage,
+        // "Số lượng sản phẩm giảm giá": c.productResponses.le
+        // "Trạng Thái": c.status,
+        "Ngày bắt đầu": c.startDate,
+        "Ngày hết hạn": c.endDate
+    }));
+
+    exportToExcel(exportData, 'danh sách đợt giảm giá');
+};
+
 
 // Lấy toàn bộ danh sách khuyến mãi
 const fetchProducts = async () => {
@@ -124,6 +151,12 @@ watch(filterStatus, async (newStatus) => {
   }
 });
 
+const clearFilter = () => {
+  searchTerm.value = '';
+  filterStatus.value = '';
+};
+
+
 onMounted(fetchProducts);
 </script>
 
@@ -136,15 +169,19 @@ onMounted(fetchProducts);
     <RouterLink to="/discountadd">
       <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" />
     </RouterLink>
-    <!-- <div class="imandex">
-      <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" />
-      <Button label="Export" icon="pi pi-upload" class="p-button-help" />
-    </div> -->
+    <div class="imandex">
+      <!-- <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" /> -->
+      <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportDiscounts" />
+    </div>
+    
   </div>
 
-  <div class="search-wrapper" style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem; align-items:center;">
-    <InputText v-model="searchTerm" placeholder="Tìm kiếm khuyến mãi" class="p-inputtext-sm" />
+ 
 
+  <div class="search-wrapper" style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem; align-items:center;">
+    <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-5"
+                                @click="clearFilter()"  style="margin-right: 600px; margin-top: 25px;"/>
+    <InputText v-model="searchTerm" placeholder="Tìm kiếm khuyến mãi" class="p-inputtext-sm" />
     <Dropdown
       v-model="filterStatus"
       :options="[
@@ -179,6 +216,7 @@ onMounted(fetchProducts);
       <div class="flex justify-content-between align-items-center">
         <span class="text-xl font-semibold">Danh sách khuyến mãi</span>
       </div>
+     
     </template>
 
     <Column header="STT" style="width: 80px">

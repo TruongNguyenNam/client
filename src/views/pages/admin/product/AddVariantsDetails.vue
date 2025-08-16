@@ -160,7 +160,6 @@
                   outlined
                   rounded
                   @click="removeAttribute(index)"
-                  v-if="attributes.length > 1"
                   :disabled="isSubmitting"
                 />
               </div>
@@ -275,12 +274,22 @@ const updateErrorArrays = () => {
 updateErrorArrays();
 
 // Computed
+// const getAvailableAttributes = computed(() => (currentIndex: number) => {
+//   return productAttributes.value.map(attr => ({
+//     ...attr,
+//     disabled: isAttributeDisabled(attr.id, currentIndex)
+//   }));
+// });
+
 const getAvailableAttributes = computed(() => (currentIndex: number) => {
-  return productAttributes.value.map(attr => ({
-    ...attr,
-    disabled: isAttributeDisabled(attr.id, currentIndex)
-  }));
+  // Lấy tất cả id đã chọn trừ chính attribute ở index hiện tại
+  const selectedIds = attributes.value
+    .filter((_, idx) => idx !== currentIndex)
+    .map(attr => attr.attributeId);
+
+  return productAttributes.value.filter(attr => !selectedIds.includes(attr.id));
 });
+
 
 // Methods
 const loadParentProduct = async () => {

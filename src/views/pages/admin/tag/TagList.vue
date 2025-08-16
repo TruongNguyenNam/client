@@ -277,7 +277,8 @@ watch(() => tag.value.name, () => {
                 </Toolbar>
 
                 <!-- Modal thêm/sửa tag -->
-                <Dialog v-model:visible="tagDialog" :style="{ width: '450px' }" header="Chi tiết Tag" :modal="true"
+                <Dialog v-model:visible="tagDialog" :style="{ width: '450px' }"  :header="tag.id ? 'Chi tiết nhãn' : 'Thêm nhãn mới'" 
+    :modal="true" 
                     class="p-fluid">
                     <div class="field">
                         <label for="name">Tên của tag</label>

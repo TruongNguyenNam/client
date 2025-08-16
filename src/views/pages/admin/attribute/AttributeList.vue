@@ -264,6 +264,11 @@ const saveAttribute = async () => {
   }
 };
 
+const clearFilter = () => {
+  searchTerm.value = '';
+  fetchProducts();
+}
+
 onMounted(fetchProducts);
 </script>
 
@@ -276,16 +281,19 @@ onMounted(fetchProducts);
       <div class="imandex">
         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary" @click="downloadAttributeTemplate" />
 
-        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
+        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
           class="mr-2 inline-block" @select="importAttributes" :auto="true" />
 
-        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
+        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
       </div>
     </div>
 
     <!-- Tìm kiếm riêng, căn phải -->
     <div class="search-wrapper">
-      <InputText v-model="searchTerm" placeholder="Tìm kiếm thuộc tính" class="p-inputtext-sm" @input="searchByName" />
+      <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-5"
+                                @click="clearFilter()" style="margin-right: 750px; margin-top: 20px;"  />
+      <InputText v-model="searchTerm" placeholder="Tìm kiếm thuộc tính" class="p-inputtext-sm" @input="searchByName" style="margin-top: 20px;"/>
+    
     </div>
     
     <DataTable 

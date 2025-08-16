@@ -102,7 +102,9 @@ const formatShippingStatus = (status: string) => {
   const map: Record<string, string> = {
     PENDING: 'Đang chờ',
     SHIPPED: 'Đang giao',
-    DELIVERED: 'Đã giao'
+    DELIVERED: 'Đã giao',
+    RETURNED:'Trả Hàng',
+    CANCELED:'Huỷ'
   };
   return map[status] || status;
 };

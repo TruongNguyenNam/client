@@ -22,8 +22,10 @@
         <p><strong>SĐT:</strong> {{ order.address?.receiverPhone }}</p>
         <p>
           {{ order.address?.addressStreet }},
+          {{ order.address?.addressWard }},
           {{ order.address?.addressDistrict }},
-          {{ order.address?.addressCity }}
+          <!-- {{ order.address?.addressCity }}, -->
+          {{ order.address?.addressProvince }}
         </p>
       </div>
 

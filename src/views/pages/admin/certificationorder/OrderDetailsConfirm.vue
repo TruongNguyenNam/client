@@ -36,7 +36,7 @@
         <h3 class="mb-2 font-semibold text-lg">Đơn Hàng</h3>
         <div class="space-y-1 text-gray-700">
           <p><strong>Mã đơn hàng:</strong> {{ order?.orderCode }}</p>
-          <p><strong>Trạng thái:</strong> {{ order?.orderStatus }}</p>
+          <p><strong>Trạng thái:</strong> {{getOrdersByStatus(order?.orderStatus) }}</p>
           <p><strong>Loại đơn:</strong> {{ order?.isPos ? "Tại quầy" : "Ship" }}</p>
           <p><strong>Tổng tiền:</strong> {{ order?.orderTotal?.toLocaleString("vi-VN") }} đ</p>
           <p><strong>Ngày tạo:</strong> {{ formatDate(order?.orderDate) }}</p>
@@ -84,6 +84,10 @@
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
       <p><strong>Ngày thanh toán:</strong> {{ formatDate(order?.payment?.paymentDate) }}</p>
+      <p><strong>Ngày thanh toán:</strong> {{ getPaymentStatusLabel(order?.payment?.paymentStatus) }}</p>
+      <p v-if="order?.payment?.paymentMethodName === 'VNpay'">
+        <strong>Mã giao dịch:</strong> {{ order?.payment?.transactionId }}
+      </p>
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
         style="margin-top: 10px;" :disabled="loading" />
     </div>
@@ -287,6 +291,30 @@ const shipmentStatusLabels = {
   RETURNED: 'Trả hàng',
   CANCELED: 'Hủy'
 };
+
+const OrderStatusLabels = {
+  PENDING: 'Chờ xác nhận',
+  SHIPPED: 'Đang giao',
+  COMPLETED: 'Hoàn thành',
+  DELIVERED: 'Đã giao hàng',
+  RETURNED: 'Trả hàng',
+  CANCELED: 'Hủy'
+}
+
+const paymentStatusLabels = {
+ 
+  COMPLETED: 'Hoàn thành',
+  
+}
+
+const getPaymentStatusLabel = (status?: string): string => {
+  return paymentStatusLabels[status as keyof typeof paymentStatusLabels] || 'Không xác định';
+}
+
+const getOrdersByStatus = (status?: string): string => {
+  return OrderStatusLabels[status as keyof typeof OrderStatusLabels] || 'Không xác định';
+};
+
 
 const getShipmentStatusLabel = (status: string): string => {
   return shipmentStatusLabels[status as keyof typeof shipmentStatusLabels] || 'Không xác định';
