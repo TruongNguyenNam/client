@@ -28,42 +28,42 @@
   import { ref } from 'vue';
   
   const articles = ref([
-    {
-      image: new URL('@/assets/img/airforce1.png', import.meta.url).href,
-      alt: 'img 1',
-      day: '10',
-      month: '8',
-      title: 'Review chi tiết Nike Ja 3 – Siêu phẩm tốc độ của Ja Morant'
-    },
-    {
-      image: new URL('@/assets/img/airforce2.png', import.meta.url).href,
-      alt: 'img 2',
-      day: '10',
-      month: '8',
-      title: 'Review chi tiết Nike Ja 3 – Siêu phẩm tốc độ của Ja Morant'
-    },
-    {
-      image: new URL('@/assets/img/airforce3.png', import.meta.url).href,
-      alt: 'img 2',
-      day: '10',
-      month: '8',
-      title: 'Review chi tiết Nike Ja 3 – Siêu phẩm tốc độ của Ja Morant'
-    },
-    {
-      image: new URL('@/assets/img/airforce1.png', import.meta.url).href,
-      alt: 'img 1',
-      day: '10',
-      month: '8',
-      title: 'Review chi tiết Nike Ja 3 – Siêu phẩm tốc độ của Ja Morant'
-    },
-    {
-      image: new URL('@/assets/img/airforce2.png', import.meta.url).href,
-      alt: 'img 2',
-      day: '31',
-      month: '7',
-      title: 'Di sản của Tinker: Bộ sưu tập Air Max 90 “Racing” tri ân tốc độ'
-    }
-  ]);
+  {
+    image: new URL('@/assets/img/airforce1.png', import.meta.url).href,
+    alt: 'img 1',
+    day: '10',
+    month: '8',
+    title: 'Nike Ja 3 – Đôi giày tốc độ bùng nổ cùng Ja Morant, mang đến sự linh hoạt tối đa cho những pha bứt phá trên sân.'
+  },
+  {
+    image: new URL('@/assets/img/airforce2.png', import.meta.url).href,
+    alt: 'img 2',
+    day: '15',
+    month: '8',
+    title: 'Khám phá chi tiết Nike Air Force 1: Thiết kế kinh điển kết hợp phong cách hiện đại, phù hợp cả trên sân bóng và streetwear.'
+  },
+  {
+    image: new URL('@/assets/img/airforce3.png', import.meta.url).href,
+    alt: 'img 3',
+    day: '20',
+    month: '8',
+    title: 'Top 5 lý do bạn nên sở hữu Air Jordan Retro – Biểu tượng không chỉ của bóng rổ mà còn của thời trang đường phố.'
+  },
+  {
+    image: new URL('@/assets/img/airforce1.png', import.meta.url).href,
+    alt: 'img 4',
+    day: '25',
+    month: '8',
+    title: 'Adidas Harden Vol.7 – Đôi giày được thiết kế dành riêng cho những cú step-back huyền thoại và khả năng bùng nổ điểm số.'
+  },
+  {
+    image: new URL('@/assets/img/airforce2.png', import.meta.url).href,
+    alt: 'img 5',
+    day: '31',
+    month: '7',
+    title: 'Bộ sưu tập Air Max 90 “Racing”: Lời tri ân tốc độ, kết hợp công nghệ đệm khí êm ái cùng phong cách thể thao đầy cá tính.'
+  }
+]);
   </script>
   
   <style scoped>

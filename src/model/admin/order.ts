@@ -75,6 +75,7 @@ export interface OrderRequest {
     paymentMethodName: string;
     paymentMethodId:number;
     amount: number;
+    changeAmount: number;
     transactionId?: string;
     paymentStatus: string;
     paymentDate?: string; 

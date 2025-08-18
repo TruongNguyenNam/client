@@ -661,7 +661,16 @@ const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType || !product.tagId.length) {
+  const nameRegex = /^[\p{L}\s]+$/u;
+
+  // Validate tên sản phẩm
+  if (!product.name || !product.name.trim()) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
+    isSubmitting.value = false;
+    return;
+  } 
+
+    if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType || !product.tagId.length) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;

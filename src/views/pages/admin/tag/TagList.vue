@@ -191,6 +191,7 @@ const errorName = ref('');
 
 const validateName = () => {
     const name = tag.value.name?.trim();
+    const nameRegex = /^[\p{L}\d\s]+$/u; 
     if (!name) {
         errorName.value = 'Tên tag không được để trống';
         return false;
@@ -199,6 +200,11 @@ const validateName = () => {
         errorName.value = 'Tên tag đã tồn tại';
         return false;
     }
+    if (!nameRegex.test(name)) {
+        errorName.value = 'Tên tag không được chứa ký tự đặc biệt';
+        return false;
+    }
+
     errorName.value = '';
     return true;
 };

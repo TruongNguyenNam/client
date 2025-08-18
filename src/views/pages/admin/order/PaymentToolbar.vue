@@ -429,7 +429,7 @@ const initiateVNPayPayment = async () => {
 
   try {
     const finalTotal = calculateFinalTotal();
-
+    props.invoice.paidAmount = finalTotal;
     const payload: OrderRequest = {
       orderCode: props.invoice.orderCode,
       userId: selectedCustomerId.value || undefined,
