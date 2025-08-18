@@ -205,11 +205,17 @@ function validateNewCoupon(): boolean {
 
 function validateUpdateCoupon(): boolean {
     errors.value = {}; // reset lỗi
+    const nameRegex = /^[\p{L}\d\s]+$/u; 
+
     if (coupon.value.couponName?.length > 100) {
         errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
     }
     if (!coupon.value.couponName?.trim()) {
         errors.value.couponName = "Tên phiếu giảm giá không được để trống";
+    }
+
+    else if (!nameRegex.test(coupon.value.couponName.trim())) {
+        errors.value.couponName = "Tên phiếu giảm giá không được chứa ký tự đặc biệt";
     }
 
     if (!coupon.value.discountAmount || coupon.value.discountAmount <= 0) {

@@ -1,5 +1,4 @@
-<!-- Cái này đang check cứ đợi xây dựng -->
-
+```vue
 <template>
   <div class="p-4">
     <div class="card mb-4">
@@ -36,7 +35,7 @@
         <h3 class="mb-2 font-semibold text-lg">Đơn Hàng</h3>
         <div class="space-y-1 text-gray-700">
           <p><strong>Mã đơn hàng:</strong> {{ order?.orderCode }}</p>
-          <p><strong>Trạng thái:</strong> {{ order?.orderStatus }}</p>
+          <p><strong>Trạng thái:</strong> {{ getOrdersByStatus(order?.orderStatus) }}</p>
           <p><strong>Loại đơn:</strong> {{ order?.isPos ? "Tại quầy" : "Ship" }}</p>
           <p><strong>Tổng tiền:</strong> {{ order?.orderTotal?.toLocaleString("vi-VN") }} đ</p>
           <p><strong>Ngày tạo:</strong> {{ formatDate(order?.orderDate) }}</p>
@@ -50,7 +49,8 @@
           <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
           <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
           <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
-          <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
+          <p><strong>Phí vận chuyển:</strong> {{ order?.shipments[0].shippingCost?.toLocaleString('vi-VN') }} đ</p>
+          <p><strong>Dự kiến giao:</strong> {{ formatDate(order?.shipments[0].estimatedDeliveryDate) }}</p>
         </div>
         <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
       </div>
@@ -80,10 +80,29 @@
     </div>
 
     <div class="card mb-4">
+      <h3>Phiếu Giảm Giá</h3>
+      <div v-if="order?.couponUsages?.length">
+        <div v-for="coupon in order.couponUsages" :key="coupon.id" class="mb-2">
+          <p><strong>Mã phiếu:</strong> {{ coupon.couponCode }}</p>
+          <p><strong>Số tiền giảm:</strong> {{ coupon.discountAmount.toLocaleString('vi-VN') }} đ</p>
+          <p><strong>Ngày sử dụng:</strong> {{ formatDate(coupon.usedDate) }}</p>
+        </div>
+      </div>
+      <div v-else>
+        <p>Không có phiếu giảm giá nào được áp dụng.</p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
       <h3>💳 Thông tin thanh toán</h3>
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
+      <p><strong>Tiền thừa:</strong> {{ order?.payment?.changeAmount.toLocaleString('vi-VN') }} đ</p>
       <p><strong>Ngày thanh toán:</strong> {{ formatDate(order?.payment?.paymentDate) }}</p>
+      <p><strong>Trạng Thái:</strong> {{ getPaymentStatusLabel(order?.payment?.paymentStatus) }}</p>
+      <p v-if="order?.payment?.paymentMethodName === 'VNPay'">
+        <strong>Mã giao dịch:</strong> {{ order?.payment?.transactionId }}
+      </p>
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
         style="margin-top: 10px;" :disabled="loading" />
     </div>
@@ -265,7 +284,8 @@ const loadingPaymentMethods = ref(true);
 const paymentShortage = ref(0);
 const tempPayment = ref({
   paymentMethodId: 0,
-  additionalAmount: 0
+  additionalAmount: 0,
+  changeAmount: 0
 });
 
 const formatDate = (dateString: string | undefined | null): string => {
@@ -286,6 +306,27 @@ const shipmentStatusLabels = {
   DELIVERED: 'Đã giao hàng',
   RETURNED: 'Trả hàng',
   CANCELED: 'Hủy'
+};
+
+const OrderStatusLabels = {
+  PENDING: 'Chờ xác nhận',
+  SHIPPED: 'Đang giao',
+  COMPLETED: 'Hoàn thành',
+  DELIVERED: 'Đã giao hàng',
+  RETURNED: 'Trả hàng',
+  CANCELED: 'Hủy'
+};
+
+const paymentStatusLabels = {
+  COMPLETED: 'Hoàn thành',
+};
+
+const getPaymentStatusLabel = (status?: string): string => {
+  return paymentStatusLabels[status as keyof typeof paymentStatusLabels] || 'Không xác định';
+};
+
+const getOrdersByStatus = (status?: string): string => {
+  return OrderStatusLabels[status as keyof typeof OrderStatusLabels] || 'Không xác định';
 };
 
 const getShipmentStatusLabel = (status: string): string => {
@@ -311,6 +352,7 @@ interface OrderItemRequest {
 interface PaymentRequest {
   paymentMethodId: number;
   amount: number;
+  changeAmount?: number;
 }
 
 interface ShipmentRequest {
@@ -319,7 +361,7 @@ interface ShipmentRequest {
   estimatedDeliveryDate: string;
 }
 
-export interface AddressRequest {
+interface AddressRequest {
   street: string;
   ward: string;
   city: string;
@@ -606,8 +648,6 @@ const getAllPaymentMethods = async () => {
     paymentMethods.value = response?.data || [];
     if (paymentMethods.value.length > 0 && !paymentMethods.value.some(pm => pm.id === tempPayment.value.paymentMethodId)) {
       tempPayment.value.paymentMethodId = paymentMethods.value[0].id;
-    } else {
-      tempPayment.value.paymentMethodId = paymentMethods.value[0]?.id || 0;
     }
   } catch (error) {
     console.error('Lỗi khi lấy danh sách phương thức thanh toán:', error);
@@ -626,16 +666,23 @@ const getAllPaymentMethods = async () => {
 
 const getOrderDetails = async () => {
   const id = route.params.id;
-  const response = await OrderService.getOrderById(Number(id));
-  if (response.data) {
-    order.value = response.data;
-    tempPayment.value.paymentMethodId = order.value.payment?.paymentMethodId || 0;
-    console.log('Fetched Order Details - Status:', order.value.orderStatus);
-    console.log("order", order.value);
-    renderKey.value += 1;
-  } else {
-    order.value = undefined;
-    console.log('No order data fetched');
+  try {
+    const response = await OrderService.getOrderById(Number(id));
+    if (response.data) {
+      order.value = response.data;
+      tempPayment.value.paymentMethodId = order.value.payment?.paymentMethodId || 0;
+      tempPayment.value.changeAmount = order.value.payment?.changeAmount || 0;
+      console.log('Fetched Order Details - Status:', order.value.orderStatus);
+      console.log("order", order.value);
+      syncOrderItems();
+      renderKey.value += 1;
+    } else {
+      order.value = undefined;
+      console.log('No order data fetched');
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy chi tiết đơn hàng:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải chi tiết đơn hàng', life: 3000 });
   }
 };
 
@@ -650,12 +697,30 @@ const calculateTotal = () => {
   return orderItems.value.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
 };
 
+const calculateDiscount = () => {
+  return order.value?.couponUsages?.reduce((total, coupon) => total + coupon.discountAmount, 0) || 0;
+};
+
 const checkPaymentSufficiency = () => {
-  const newTotal = calculateTotal();
+  const totalProductAmount = calculateTotal();
   const currentPayment = order.value?.payment?.amount || 0;
-  paymentShortage.value = Math.max(0, newTotal - currentPayment);
+  const additionalAmount = tempPayment.value.additionalAmount || 0;
+  const changeAmount = order.value?.payment?.changeAmount || 0;
+  const shippingCost = order.value?.shipments?.[0]?.shippingCost || 0;
+  const discountAmount = calculateDiscount();
+
+  const totalPaid = currentPayment + additionalAmount;
+  const effectiveTotal = totalPaid - changeAmount + shippingCost + discountAmount;
+  paymentShortage.value = Math.max(0, totalProductAmount - effectiveTotal);
+
   const isSufficient = paymentShortage.value === 0;
-  console.log('Payment Check - Total:', newTotal, 'Paid:', currentPayment, 'Shortage:', paymentShortage.value, 'Sufficient:', isSufficient);
+
+  console.log('Payment Check - Total Product (before discount):', totalProductAmount, 
+              'Paid:', totalPaid, 'Change:', changeAmount, 
+              'Shipping:', shippingCost, 'Discount:', discountAmount, 
+              'Effective Total:', effectiveTotal, 'Shortage:', paymentShortage.value, 
+              'Sufficient:', isSufficient);
+
   if (!isSufficient) {
     toast.add({
       severity: 'warn',
@@ -664,6 +729,7 @@ const checkPaymentSufficiency = () => {
       life: 5000
     });
   }
+
   return isSufficient;
 };
 
@@ -680,24 +746,17 @@ const openPaymentDialog = () => {
   showPaymentDialog.value = true;
 };
 
-const checkAndUpdateOrderItems = async () => {
-  if (!checkPaymentSufficiency()) {
-    showPaymentDialog.value = true;
-    return;
-  }
-  await updateOrderItems();
-};
-
 const savePayment = async () => {
-  if (tempPayment.value.additionalAmount < paymentShortage.value) {
+  if (!checkPaymentSufficiency()) {
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: `Số tiền thêm phải ít nhất ${paymentShortage.value.toLocaleString('vi-VN')} đ`,
+      detail: `Số tiền thiếu: ${paymentShortage.value.toLocaleString('vi-VN')} đ. Vui lòng nhập số tiền bổ sung đủ.`,
       life: 3000
     });
     return;
   }
+
   if (!paymentMethods.value.some(pm => pm.id === tempPayment.value.paymentMethodId)) {
     toast.add({
       severity: 'error',
@@ -707,6 +766,7 @@ const savePayment = async () => {
     });
     return;
   }
+
   showPaymentDialog.value = false;
   await updateOrderItems();
 };
@@ -716,6 +776,7 @@ const updateOrderItems = async () => {
 
   const newTotal = calculateTotal();
   const additionalAmount = tempPayment.value.additionalAmount || 0;
+
   const orderRequest: UpdateOrderRequest = {
     orderCode: order.value.orderCode,
     userId: order.value.address?.userId || 0,
@@ -726,18 +787,21 @@ const updateOrderItems = async () => {
     })),
     payment: {
       paymentMethodId: tempPayment.value.paymentMethodId || order.value.payment?.paymentMethodId || 1,
-      amount: (order.value.payment?.amount || 0) + additionalAmount
+      amount: (order.value.payment?.amount || 0) + additionalAmount,
+      changeAmount: order.value.payment?.changeAmount || 0
     },
+    couponUsageIds: order.value.couponUsages?.map(coupon => coupon.id) || [],
     shipments: order.value?.shipments && !order.value.isPos
       ? order.value.shipments.map(s => ({
-        carrierId: s.carrierId,
-        shippingCost: s.shippingCost,
-        estimatedDeliveryDate: s.estimatedDeliveryDate
-      }))
+          carrierId: s.carrierId,
+          shippingCost: s.shippingCost,
+          estimatedDeliveryDate: s.estimatedDeliveryDate
+        }))
       : []
   };
 
   try {
+    loading.value = true;
     const response = await OrderService.updateOrder(order.value.orderCode!, orderRequest);
     if (response.data) {
       order.value = { ...response.data };
@@ -749,8 +813,18 @@ const updateOrderItems = async () => {
     }
   } catch (error: any) {
     console.error('Lỗi cập nhật đơn hàng:', error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: error.message || 'Cập nhật đơn hàng thất bại', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: error.response?.data?.message || 'Cập nhật đơn hàng thất bại', life: 3000 });
+  } finally {
+    loading.value = false;
   }
+};
+
+const checkAndUpdateOrderItems = async () => {
+  if (!checkPaymentSufficiency()) {
+    showPaymentDialog.value = true;
+    return;
+  }
+  await updateOrderItems();
 };
 
 const increaseQuantity = async (index: number) => {
@@ -852,7 +926,7 @@ const updateOrderStatus = async () => {
       console.log('No data in response');
     }
   } catch (error: any) {
-    console.error('Lỗi cập nhật trạng thái đơn hàng:', error.response?.data || error.message);
+    console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
     toast.add({
       severity: 'error',
       summary: 'Lỗi',

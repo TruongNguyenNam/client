@@ -22,7 +22,7 @@
     </template>
   </Column>
       <Column field="code" header="Mã Hoàn hàng" sortable />
-      <Column field="userName" header="userName" sortable />
+      <Column field="userName" header="Người hoàn" sortable />
       <Column field="requestDate" header="Ngày tạo" />
       <Column field="note" header="Ghi chú" />
       <Column field="totalProduct" header="Số SP" />

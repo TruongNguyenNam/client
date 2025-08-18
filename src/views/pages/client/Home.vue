@@ -8,7 +8,7 @@
     <!-- <div class="list">
       <div class="list bg-gradient-to-r from-blue-400 to-purple-500 py-8 text-white">
         <h1 class="text-4xl md:text-5xl font-bold text-center animate-pulse">
-          <!-- <span class="pi pi-shopping-cart mr-2"></span> -->
+          <span class="pi pi-shopping-cart mr-2"></span> -->
           <!-- Chào mừng đến với ShoeStore VN -->
           <!-- <span class="pi pi-heart-fill ml-2 text-red-500" style="font-size: 2rem"></span> -->
         <!-- </h1> -->

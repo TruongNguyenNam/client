@@ -99,7 +99,7 @@
 <div class="flex justify-start mt-4">
   <Button 
     type="submit"
-    label="Cập nhật sản phẩm" 
+    label="Cập nhật đợt giảm giá" 
     icon="pi pi-box"
     severity="primary"
     class="px-4 py-2 font-semibold shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
@@ -283,10 +283,16 @@ const fetchProductsByCategory = async () => {
 // Validation form
 const validate = () => {
   errors.value = {}
+  const nameRegex = /^[\p{L}\d\s]+$/u 
+  // \p{L} = chữ cái Unicode, \d = số, \s = khoảng trắng
 
-  if (!discount.value.name.trim()) errors.value.name = 'Tên khuyến mãi không được để trống.'
-   else if (discount.value.name.length > 50) {
+  // ✅ Check tên khuyến mãi
+  if (!discount.value.name?.trim()) {
+    errors.value.name = 'Tên khuyến mãi không được để trống.'
+  } else if (discount.value.name.length > 50) {
     errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
+  } else if (!nameRegex.test(discount.value.name.trim())) {
+    errors.value.name = 'Tên khuyến mãi không được chứa ký tự đặc biệt.'
   }
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'

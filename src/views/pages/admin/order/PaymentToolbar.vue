@@ -100,12 +100,22 @@
 
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Ngày giao dự kiến</label>
-        <Calendar v-model="invoice.estimatedDeliveryDate" showTime hourFormat="24" class="w-full" 
-          :minDate="minDeliveryDate" :class="{ 'p-invalid': showDeliveryDateError && isPastDate }" />
-        <div v-if="showDeliveryDateError && isPastDate" class="text-red-600 text-sm mt-1">
-          Ngày giao dự kiến không được là ngày trong quá khứ.
+        <Calendar
+          v-model="invoice.estimatedDeliveryDate"
+          showTime
+          hourFormat="24"
+          :minDate="minDeliveryDate"
+          :class="{ 'p-invalid': showDeliveryDateError && (!invoice.estimatedDeliveryDate || invoice.estimatedDeliveryDate < minDeliveryDate) }"
+          class="w-full"
+        />
+        <div
+          v-if="showDeliveryDateError && (!invoice.estimatedDeliveryDate || invoice.estimatedDeliveryDate < minDeliveryDate)"
+          class="text-red-600 text-sm mt-1"
+        >
+          Ngày giao dự kiến không được để trống hoặc là ngày trong quá khứ.
         </div>
       </div>
+
 
       <!-- Tính tiền -->
       <div class="mb-4">
@@ -353,16 +363,18 @@ const validateBeforeComplete = () => {
     isValid = false;
   }
 
-  if (!props.invoice.isPos && isPastDate.value) {
-    showDeliveryDateError.value = true;
-    toast.add({
-      severity: 'error',
-      summary: 'Ngày giao không hợp lệ',
-      detail: 'Ngày giao dự kiến không được là ngày trong quá khứ',
-      life: 3000
-    });
-    isValid = false;
-  }
+if (!props.invoice.isPos && 
+    (!props.invoice.estimatedDeliveryDate || props.invoice.estimatedDeliveryDate < minDeliveryDate.value)) {
+  showDeliveryDateError.value = true;
+  toast.add({
+    severity: 'error',
+    summary: 'Ngày giao không hợp lệ',
+    detail: 'Ngày giao dự kiến không được để trống hoặc là ngày trong quá khứ',
+    life: 3000
+  });
+  isValid = false;
+}
+
 
   if (!props.invoice.paymentMethodId) {
     toast.add({
@@ -373,6 +385,16 @@ const validateBeforeComplete = () => {
     });
     isValid = false;
   }
+
+  // if (!props.invoice.estimatedDeliveryDate) {
+  //   toast.add({
+  //     severity: 'error',
+  //     summary: 'Ngày giao dự kiến không được trống',
+  //     detail: 'Vui thêm ngày  giao dự kiến',
+  //     life: 3000
+  //   });
+  //   isValid = false;
+  // }
 
   const required = calculateFinalTotal();
   const paid = props.invoice.paidAmount || 0;
@@ -407,7 +429,7 @@ const initiateVNPayPayment = async () => {
 
   try {
     const finalTotal = calculateFinalTotal();
-
+    props.invoice.paidAmount = finalTotal;
     const payload: OrderRequest = {
       orderCode: props.invoice.orderCode,
       userId: selectedCustomerId.value || undefined,
@@ -851,11 +873,11 @@ watch(() => props.invoice.estimatedDeliveryDate, () => {
   border-color: #dc3545;
 }
 
-:deep(.p-calendar.p-invalid) {
+:deep(.p-inputnumber.p-invalid) .p-inputtext {
   border-color: #dc3545;
 }
 
-:deep(.p-inputnumber.p-invalid) .p-inputtext {
+:deep(.p-calendar.p-invalid) .p-inputtext {
   border-color: #dc3545;
 }
 </style>

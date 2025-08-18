@@ -367,6 +367,20 @@ const deleteImages = async (index: number) => {
 // Submit form cập nhật sản phẩm cha
 const submitProduct = async () => {
   submitted.value = true;
+
+  // const nameRegex = /^[\p{L}\s]+$/u;
+  
+  // Validate tên sản phẩm
+  if (!product.name || !product.name.trim()) {
+    toast.add({ severity: 'warn', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
+    isSubmitting.value = false;
+    return;
+  }
+  // } else if (!nameRegex.test(product.name.trim())) {
+  //   toast.add({ severity: 'warn', summary: 'Error', detail: 'Tên sản phẩm chỉ được chứa chữ cái và khoảng trắng, không chứa ký tự đặc biệt.', life: 3000 });
+  //   isSubmitting.value = false;
+  //   return;
+  // }
   
   if (!product.name || !product.sku || !product.supplierId || !product.categoryId || !product.description || !product.sportType) {
     toast.add({ 

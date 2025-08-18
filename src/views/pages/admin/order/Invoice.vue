@@ -515,9 +515,12 @@ const recalculateTotal = (invoice: any) => {
 
 const openPaymentToolbar = (invoice: any) => {
   selectedInvoice.value = { ...invoice };
-  selectedInvoice.value.paidAmount = 0;
+  // selectedInvoice.value.paidAmount = 0;
   selectedInvoice.value.shippingCost = selectedInvoice.value.shippingCost || 0;
   selectedInvoice.value.addressId = invoice.addressId ?? undefined; // Convert null to undefined
+  if (selectedInvoice.value.paymentMethodId === 2 && !selectedInvoice.value.paidAmount) {
+    selectedInvoice.value.paidAmount = calculateFinalTotal(); // Gán paidAmount cho VNPay nếu chưa có
+  }
   updateChange();
   resetTimerOnInteraction(invoice);
 };
@@ -576,6 +579,7 @@ const handleVNPayCallback = async (queryParams: any) => {
       const invoice = invoiceTabs.value.find(tab => tab.orderCode === orderCode);
       if (invoice) {
         invoice.orderStatus = 'COMPLETED';
+        invoice.paidAmount = calculateFinalTotal();
         invoice.items.forEach((item: any) => {
           const product = listProduct.value.find((p: any) => p.id === item.id);
           if (product) {
@@ -659,7 +663,7 @@ const completePayment = async () => {
     })),
     payment: {
       paymentMethodId: selectedInvoice.value.paymentMethodId || 1,
-      amount: finalTotal,
+      amount: selectedInvoice.value.paidAmount || 0,
       returnUrl: selectedInvoice.value.paymentMethodId === 2 ? 'http://localhost:5173/#/callback' : undefined
     },
     couponUsageIds: selectedInvoice.value.couponUsageIds?.length ? selectedInvoice.value.couponUsageIds : undefined

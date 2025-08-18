@@ -179,12 +179,18 @@ const openEditDialog = async (id: number) => {
   }
 };
 
+
 const validateForm = () => {
   let isValid = true;
-   const nameRegex = /^[A-Za-zÀ-ỹà-ỹ\s]+$/u; // Cho phép chữ cái và khoảng trắng (bao gồm cả tiếng Việt)
 
+  
+  const nameRegex = /^[A-Za-zÀ-ỹà-ỹ\s]+$/u; // Cho phép chữ cái và khoảng trắng (bao gồm cả tiếng Việt)
+  if (!nameRegex.test(name.value.trim())) {
+    nameError.value = 'Tên thuộc tính chỉ được chứa chữ cái và không chứa ký tự đặc biệt';
+    isValid = false;
+  }
   // Validate name
-  if (!name.value.trim()) {
+ else if (!name.value.trim()) {
     nameError.value = 'Tên thuộc tính không được để trống';
     isValid = false;
   } else if (name.value.trim().length < 1 || name.value.trim().length > 20) {
@@ -270,6 +276,11 @@ const saveAttribute = async () => {
   }
 };
 
+const clearFilter = () => {
+  searchTerm.value = '';
+  fetchProducts();
+}
+
 onMounted(fetchProducts);
 </script>
 
@@ -282,17 +293,34 @@ onMounted(fetchProducts);
       <div class="imandex">
         <Button label="Tải mẫu" icon="pi pi-download" class="p-button-secondary" @click="downloadAttributeTemplate" />
 
-        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Import Excel"
+        <FileUpload mode="basic" accept=".xlsx" :maxFileSize="1000000" chooseLabel="Nhập Excel"
           class="mr-2 inline-block" @select="importAttributes" :auto="true" />
 
-        <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
+        <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
       </div>
     </div>
 
     <!-- Tìm kiếm riêng, căn phải -->
-    <div class="search-wrapper">
-      <InputText v-model="searchTerm" placeholder="Tìm kiếm thuộc tính" class="p-inputtext-sm" @input="searchByName" />
-    </div>
+   <!-- Tìm kiếm riêng -->
+<div class="search-wrapper">
+  <!-- Clear bên trái -->
+  <Button 
+    type="button" 
+    icon="pi pi-filter-slash" 
+    label="Clear" 
+    class="p-button-outlined"
+    @click="clearFilter()" 
+  />
+
+  <!-- Input search bên phải -->
+  <InputText 
+    v-model="searchTerm" 
+    placeholder="Tìm kiếm thuộc tính" 
+    class="p-inputtext-sm" 
+    @input="searchByName"
+  />
+</div>
+
     
     <DataTable 
       :value="listProduct" 
@@ -397,4 +425,17 @@ onMounted(fetchProducts);
   color: #f44336;
   font-size: 0.875rem;
 }
+.search-wrapper {
+  display: flex;
+  justify-content: space-between; /* Clear bên trái, search bên phải */
+  align-items: center;
+  margin-bottom: 1rem;
+  margin-top: 20px;
+}
+
+.search-wrapper .p-inputtext-sm {
+  width: 250px;
+  height: 2.5rem;
+}
+
 </style>

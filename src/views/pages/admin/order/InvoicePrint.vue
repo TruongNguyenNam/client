@@ -1,8 +1,9 @@
 <template>
   <div id="print-invoice">
     <div class="text-center mb-4">
-      <img src="" alt="Logo công ty" class="h-16 mx-auto mb-2" />
-      <h2 class="font-bold text-xl">CỬA HÀNG BÁN GIÀY THỂ THAO SHOESHOP</h2>
+      <!-- <img src="../../../../assets/logo.png" alt="Logo công ty" class="h-16 mx-auto mb-2" /> -->
+      <img :src="logoUrl" alt="Logo công ty" class="h-16 mx-auto mb-2" width="70px"/>
+      <h2 class="font-bold text-xl">CỬA HÀNG BÁN GIÀY THỂ THAO ShoeSports</h2>
       <p class="text-sm">Địa chỉ: 13 Trịnh Văn Bô, Xuân Phương, Nam Từ Liêm, Hà Nội.</p>
       <p class="text-sm">Hotline: 0123 456 789</p>
     </div>
@@ -85,7 +86,7 @@ const { invoice, changeAmount } = defineProps<{
   changeAmount: number | null;
 }>();
 
-
+const logoUrl = new URL('@/assets/img/logo-shoe.png', import.meta.url).href;
 const currentDate = new Date().toLocaleString('vi-VN');
 const items = computed(() => invoice?.items || []);
 

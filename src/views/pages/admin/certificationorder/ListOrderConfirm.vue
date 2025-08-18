@@ -325,7 +325,105 @@ const getOrderList = async () => {
   });
 
 
-  const printInvoice = (order: OrderResponse) => {
+//   const printInvoice = (order: OrderResponse) => {
+//   const printWindow = window.open('', '', 'width=800,height=600');
+//   if (!printWindow) return;
+
+//   const formatCurrency = (value?: number | null) =>
+//     (value ?? 0)
+//       .toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+//       .replace('₫', 'đ');
+
+//   const discount = order.couponUsages?.[0]?.discountAmount ?? 0;
+//   const paymentAmount = order.payment?.amount ?? 0;
+//   const changeAmount = paymentAmount - ((order.orderTotal ?? 0) - discount);
+
+//   const rowsHtml = order.items?.map((item, index) => `
+//     <tr>
+//       <td class="text-center">${index + 1}</td>
+//       <td>${item.productName || '---'}</td>
+//       <td class="text-center">${item.quantity || 0}</td>
+//       <td class="text-right">${formatCurrency(item.unitPrice)}</td>
+//       <td class="text-right">${formatCurrency((item.unitPrice ?? 0) * (item.quantity ?? 0))}</td>
+//     </tr>
+//   `).join('') || '';
+
+//   const htmlContent = `
+//     <html>
+//     <head>
+//       <title>Hóa đơn - ${order.orderCode}</title>
+//       <style>
+//         body { font-family: Arial, sans-serif; font-size: 14px; padding: 20px; }
+//         .text-center { text-align: center; }
+//         .text-right { text-align: right; }
+//         .font-bold { font-weight: bold; }
+//         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+//         th, td { border: 1px solid #000; padding: 6px; }
+//         th { background: #f5f5f5; }
+//         .mb-2 { margin-bottom: 8px; }
+//         .mb-3 { margin-bottom: 12px; }
+//         .mb-4 { margin-bottom: 16px; }
+//       </style>
+//     </head>
+//     <body>
+//       <div class="text-center mb-4">
+//         <h2 class="font-bold">CỬA HÀNG BÁN GIÀY THỂ THAO SHOESHOP</h2>
+//         <p>Địa chỉ: 13 Trịnh Văn Bô, Xuân Phương, Nam Từ Liêm, Hà Nội.</p>
+//         <p>Hotline: 0123 456 789</p>
+//       </div>
+
+//       <h2 class="text-center font-bold mb-4">HÓA ĐƠN THANH TOÁN</h2>
+
+//       <div class="mb-3">
+//         <p><strong>Ngày in:</strong> ${new Date().toLocaleString('vi-VN')}</p>
+//         <p><strong>Mã đơn:</strong> ${order.orderCode}</p>
+//         <p><strong>Loại đơn:</strong> ${order.isPos ? 'Tại quầy' : 'Ship'}</p>
+//         <p><strong>Khách hàng:</strong> ${order.address?.receiverName || 'Vãng lai'}</p>
+//         <p><strong>SĐT:</strong> ${order.address?.receiverPhone || ''}</p>
+//         <p><strong>Địa chỉ:</strong> 
+//           ${order.address?.addressStreet || ''}, 
+//           ${order.address?.addressWard || ''}, 
+//           ${order.address?.addressDistrict || ''}, 
+//           ${order.address?.addressProvince || ''}
+//         </p>
+//       </div>
+
+//       <table>
+//         <thead>
+//           <tr>
+//             <th>STT</th>
+//             <th>Sản phẩm</th>
+//             <th>Số lượng</th>
+//             <th>Đơn giá</th>
+//             <th>Thành tiền</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           ${rowsHtml}
+//         </tbody>
+//       </table>
+
+//       <div class="text-right" style="margin-top: 12px;">
+//         <p><strong>Tổng tiền hàng:</strong> ${formatCurrency(order.orderTotal)}</p>
+//         <p><strong>Số tiền giảm:</strong> ${formatCurrency(discount)}</p>
+//         <p><strong>Khách thanh toán:</strong> ${formatCurrency(paymentAmount)}</p>
+//         <p><strong>Tiền thừa:</strong> ${formatCurrency(changeAmount)}</p>
+//       </div>
+//     </body>
+//     </html>
+//   `;
+
+//   printWindow.document.write(htmlContent);
+//   printWindow.document.close();
+
+//   // Đảm bảo in sau khi nội dung đã render xong
+//   printWindow.onload = () => {
+//     printWindow.focus();
+//     printWindow.print();
+//     printWindow.close();
+//   };
+// };
+const printInvoice = (order: OrderResponse) => {
   const printWindow = window.open('', '', 'width=800,height=600');
   if (!printWindow) return;
 
@@ -334,10 +432,16 @@ const getOrderList = async () => {
       .toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
       .replace('₫', 'đ');
 
+  // Kiểm tra discount, chỉ hiển thị nếu > 0
   const discount = order.couponUsages?.[0]?.discountAmount ?? 0;
-  const paymentAmount = order.payment?.amount ?? 0;
-  const changeAmount = paymentAmount - ((order.orderTotal ?? 0) - discount);
+  const discountDisplay = discount > 0 ? `<p><strong>Số tiền giảm:</strong> ${formatCurrency(discount)}</p>` : '';
 
+  // Sử dụng payment.amount làm paymentAmount
+  const paymentAmount = order.payment?.amount ?? 0;
+  const orderTotal = order.orderTotal ?? 0;
+  const changeAmount = paymentAmount > orderTotal ? paymentAmount - orderTotal : 0;
+  const logoUrl = new URL('@/assets/img/logo-shoe.png', import.meta.url).href;
+  // Xử lý rowsHtml
   const rowsHtml = order.items?.map((item, index) => `
     <tr>
       <td class="text-center">${index + 1}</td>
@@ -351,7 +455,7 @@ const getOrderList = async () => {
   const htmlContent = `
     <html>
     <head>
-      <title>Hóa đơn - ${order.orderCode}</title>
+      <title>Hóa đơn - ${order.orderCode || 'Không xác định'}</title>
       <style>
         body { font-family: Arial, sans-serif; font-size: 14px; padding: 20px; }
         .text-center { text-align: center; }
@@ -368,6 +472,9 @@ const getOrderList = async () => {
     <body>
       <div class="text-center mb-4">
         <h2 class="font-bold">CỬA HÀNG BÁN GIÀY THỂ THAO SHOESHOP</h2>
+        <img src="${logoUrl}" alt="Logo công ty" class="mx-auto mb-2" width="70" />
+
+
         <p>Địa chỉ: 13 Trịnh Văn Bô, Xuân Phương, Nam Từ Liêm, Hà Nội.</p>
         <p>Hotline: 0123 456 789</p>
       </div>
@@ -376,7 +483,7 @@ const getOrderList = async () => {
 
       <div class="mb-3">
         <p><strong>Ngày in:</strong> ${new Date().toLocaleString('vi-VN')}</p>
-        <p><strong>Mã đơn:</strong> ${order.orderCode}</p>
+        <p><strong>Mã đơn:</strong> ${order.orderCode || 'N/A'}</p>
         <p><strong>Loại đơn:</strong> ${order.isPos ? 'Tại quầy' : 'Ship'}</p>
         <p><strong>Khách hàng:</strong> ${order.address?.receiverName || 'Vãng lai'}</p>
         <p><strong>SĐT:</strong> ${order.address?.receiverPhone || ''}</p>
@@ -404,8 +511,8 @@ const getOrderList = async () => {
       </table>
 
       <div class="text-right" style="margin-top: 12px;">
-        <p><strong>Tổng tiền hàng:</strong> ${formatCurrency(order.orderTotal)}</p>
-        <p><strong>Số tiền giảm:</strong> ${formatCurrency(discount)}</p>
+        <p><strong>Tổng tiền hàng:</strong> ${formatCurrency(orderTotal)}</p>
+        ${discountDisplay} <!-- Chỉ hiển thị nếu discount > 0 -->
         <p><strong>Khách thanh toán:</strong> ${formatCurrency(paymentAmount)}</p>
         <p><strong>Tiền thừa:</strong> ${formatCurrency(changeAmount)}</p>
       </div>
@@ -416,13 +523,14 @@ const getOrderList = async () => {
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 
-  // Đảm bảo in sau khi nội dung đã render xong
   printWindow.onload = () => {
     printWindow.focus();
     printWindow.print();
     printWindow.close();
   };
 };
+
+
 
 
 
