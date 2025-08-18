@@ -181,7 +181,8 @@ const openEditDialog = async (id: number) => {
 
 const validateForm = () => {
   let isValid = true;
-  
+   const nameRegex = /^[A-Za-zÀ-ỹà-ỹ\s]+$/u; // Cho phép chữ cái và khoảng trắng (bao gồm cả tiếng Việt)
+
   // Validate name
   if (!name.value.trim()) {
     nameError.value = 'Tên thuộc tính không được để trống';
@@ -189,7 +190,12 @@ const validateForm = () => {
   } else if (name.value.trim().length < 1 || name.value.trim().length > 20) {
     nameError.value = 'Tên thuộc tính phải có độ dài từ 1 đến 20 ký tự';
     isValid = false;
-  } else {
+  }
+   else if (!nameRegex.test(name.value.trim())) {
+    nameError.value = 'Tên thuộc tính chỉ được chứa chữ cái và không chứa ký tự đặc biệt';
+    isValid = false;}
+    
+    else {
     nameError.value = '';
   }
 
