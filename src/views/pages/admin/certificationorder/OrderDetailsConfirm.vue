@@ -31,12 +31,11 @@
     </div>
 
     <div class="grid grid-cols-2 gap-4 items-stretch" style="margin-left: 3px;">
-      <!-- Card Đơn Hàng -->
       <div class="card h-full" style="width: 45%;">
         <h3 class="mb-2 font-semibold text-lg">Đơn Hàng</h3>
         <div class="space-y-1 text-gray-700">
           <p><strong>Mã đơn hàng:</strong> {{ order?.orderCode }}</p>
-          <p><strong>Trạng thái:</strong> {{ order?.orderStatus }}</p>
+          <p><strong>Trạng thái:</strong> {{ getOrdersByStatus(order?.orderStatus) }}</p>
           <p><strong>Loại đơn:</strong> {{ order?.isPos ? "Tại quầy" : "Ship" }}</p>
           <p><strong>Tổng tiền:</strong> {{ order?.orderTotal?.toLocaleString("vi-VN") }} đ</p>
           <p><strong>Ngày tạo:</strong> {{ formatDate(order?.orderDate) }}</p>
@@ -44,28 +43,14 @@
         </div>
       </div>
 
-      <!-- Card Vận chuyển -->
-      <!-- <div class="card h-full" style="width: 52%;">
-        <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
-        <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
-          <p><strong>Trạng thái:</strong> {{ order?.shipments[0].shipmentStatus }}</p>
-          <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
-          <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
-          <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
-        </div>
-        <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
-      </div> -->
-
-
       <div class="card h-full" style="width: 52%;">
-
         <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
         <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
           <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
           <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
           <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
-          <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
-          <!-- <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p> -->
+          <p><strong>Phí vận chuyển:</strong> {{ order?.shipments[0].shippingCost?.toLocaleString('vi-VN') }} đ</p>
+          <p><strong>Dự kiến giao:</strong> {{ formatDate(order?.shipments[0].estimatedDeliveryDate) }}</p>
         </div>
         <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
       </div>
@@ -76,28 +61,11 @@
       <p><strong>Người đặt:</strong>
         <span v-if="order?.address?.username">{{ order.address.username }}</span>
         <span v-else>Vãng lai</span>
-
       </p>
       <p><strong>Email:</strong> {{ order?.address?.email }}</p>
       <p><strong>Người nhận:</strong> {{ order?.address?.receiverName }}</p>
       <p><strong>SĐT Người nhận:</strong> {{ order?.address?.receiverPhone }}</p>
       <p><strong>Ngày đặt:</strong> {{ formatDate(order?.orderDate) }}</p>
-
-      <!-- <strong>Địa chỉ:</strong>
-      <div class="address-list">
-        <div class="address-card">
-          <div class="address-info">
-            <p>
-              <strong>
-                <i class="pi pi-user mr-2"></i>{{ order?.address?.receiverName }}</strong> - {{
-                  order?.address?.receiverPhone }} <br>
-              <i class="pi pi-map-marker mr-2"></i>{{ order?.address?.addressStreet }}, {{ order?.address?.addressWard
-              }}, {{ order?.address?.addressDistrict }},{{ order?.address?.addressProvince }}
-            </p>
-          </div>
-        </div>
-      </div> -->
-
       <p><strong>Địa chỉ:</strong>
         {{ [
           order?.address?.addressStreet,
@@ -107,43 +75,36 @@
           order?.address?.addressProvince
         ].filter(Boolean).join(', ') || 'Chưa có thông tin' }}
       </p>
+      <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil" class="p-button-info"
+        @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
+    </div>
 
-
-      <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
-        class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" />
-
-      <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
-        class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" /> -->
-      <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Chỉnh sửa địa chỉ" icon="pi pi-pencil"
-        class="p-button-info" @click="openAddressDialog" style="margin-top: 10px;" :disabled="loading" /> -->
-
+    <div class="card mb-4">
+      <h3>Phiếu Giảm Giá</h3>
+      <div v-if="order?.couponUsages?.length">
+        <div v-for="coupon in order.couponUsages" :key="coupon.id" class="mb-2">
+          <p><strong>Mã phiếu:</strong> {{ coupon.couponCode }}</p>
+          <p><strong>Số tiền giảm:</strong> {{ coupon.discountAmount.toLocaleString('vi-VN') }} đ</p>
+          <p><strong>Ngày sử dụng:</strong> {{ formatDate(coupon.usedDate) }}</p>
+        </div>
+      </div>
+      <div v-else>
+        <p>Không có phiếu giảm giá nào được áp dụng.</p>
+      </div>
     </div>
 
     <div class="card mb-4">
       <h3>💳 Thông tin thanh toán</h3>
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
+      <p><strong>Tiền thừa:</strong> {{ order?.payment?.changeAmount.toLocaleString('vi-VN') }} đ</p>
       <p><strong>Ngày thanh toán:</strong> {{ formatDate(order?.payment?.paymentDate) }}</p>
-
-      <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill"
-        class="p-button-info" @click="openPaymentDialog" style="margin-top: 10px;" :disabled="loading" />
-
-      <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill"
-
+      <p><strong>Trạng Thái:</strong> {{ getPaymentStatusLabel(order?.payment?.paymentStatus) }}</p>
+      <p v-if="order?.payment?.paymentMethodName === 'VNPay'">
+        <strong>Mã giao dịch:</strong> {{ order?.payment?.transactionId }}
+      </p>
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Cập nhật thanh toán" icon="pi pi-money-bill" class="p-button-info" @click="openPaymentDialog"
         style="margin-top: 10px;" :disabled="loading" />
-
-         <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Cập nhật thanh toán" icon="pi pi-money-bill"
-          class="p-button-info" @click="openPaymentDialog" style="margin-top: 10px;" /> -->
-    </div>
-
-    <div class="card mb-4" v-if="order?.shipments && order.shipments.length > 0">
-      <h3>🚚 Vận chuyển</h3>
-      <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
-      <p><strong>Ngày giao:</strong> {{ order?.shipments[0].shipmentDate }}</p>
-      <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
-      <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
-      <p><strong>Dự kiến giao:</strong> {{ order?.shipments[0].estimatedDeliveryDate }}</p>
     </div>
 
     <div class="card mb-4">
@@ -158,12 +119,9 @@
         <Column header="Số lượng">
           <template #body="slotProps">
             <div class="flex align-items-center gap-2">
-
-              <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)"
-                :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
+              <Button icon="pi pi-minus" rounded text @click="decreaseQuantity(slotProps.index)" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
               <span>{{ slotProps.data.quantity }}</span>
-              <Button icon="pi pi-plus" rounded text @click="increaseQuantity(slotProps.index)"
-                :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
+              <Button icon="pi pi-plus" rounded text @click="increaseQuantity(slotProps.index)" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
             </div>
           </template>
         </Column>
@@ -179,80 +137,52 @@
         </Column>
         <Column header="Hành động">
           <template #body="slotProps">
-
-            <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;"
-              :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
-
+            <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
           </template>
         </Column>
       </DataTable>
 
       <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
-
-
-        <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Thêm sản phẩm" icon="pi pi-plus"
-          class="p-button-primary" style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;"
-          @click="showProductDialog = true" :disabled="loading" />
-
-        <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus"
-
         <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Thêm sản phẩm" icon="pi pi-plus" class="p-button-primary"
           style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;" @click="showProductDialog = true" :disabled="loading" />
-
-        <!-- <Button v-if="order?.orderStatus !== OrderStatus.SHIPPED" label="Thêm sản phẩm" icon="pi pi-plus"
-          class="p-button-primary" style="margin-top: 5px; margin-bottom: 10px; border-radius: 5px;"
-
-          @click="showProductDialog = true" /> -->
       </div>
     </div>
 
     <Dialog v-model:visible="showAddressDialog" modal header="Cập nhật địa chỉ" :style="{ width: '50vw' }">
       <div class="p-field">
-        <label for="receiverName">Tên người nhận</label>
-        <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" />
-        <small v-if="errors.receiverName" class="p-error">{{ errors.receiverName }}</small>
-
+        <label for="receiverName">Tên người nhận <span class="text-red-500">*</span></label>
+        <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full" :class="{'p-invalid': submitted && !tempAddress.receiverName}" maxlength="30" />
+        <small class="p-error" v-if="submitted && !tempAddress.receiverName">Tên người nhận là bắt buộc.</small>
       </div>
       <div class="p-field">
-        <label for="receiverPhone">Số điện thoại</label>
-        <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full" />
-        <small v-if="errors.receiverPhone" class="p-error">{{ errors.receiverPhone }}</small>
-
+        <label for="receiverPhone">Số điện thoại <span class="text-red-500">*</span></label>
+        <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full" :class="{'p-invalid': submitted && !tempAddress.receiverPhone}" maxlength="10" />
+        <small class="p-error" v-if="submitted && !tempAddress.receiverPhone">Số điện thoại là bắt buộc.</small>
+        <small class="p-error" v-if="submitted && tempAddress.receiverPhone && !isValidPhone(tempAddress.receiverPhone)">Số điện thoại không hợp lệ.</small>
       </div>
       <div class="p-field">
         <label for="email">Email</label>
         <InputText id="email" v-model="tempAddress.email" disabled class="w-full" />
       </div>
       <div class="p-field">
-        <label for="province">Tỉnh/Thành phố</label>
-        <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name"
-          option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố" />
-        <small v-if="errors.province" class="p-error">{{ errors.province }}</small>
-
+        <label for="province">Tỉnh/Thành phố <span class="text-red-500">*</span></label>
+        <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name" option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố" :class="{'p-invalid': submitted && !selectedProvince}" />
+        <small class="p-error" v-if="submitted && !selectedProvince">Tỉnh/Thành phố là bắt buộc.</small>
       </div>
       <div class="p-field">
-        <label for="district">Quận/Huyện</label>
-        <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name"
-          option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện"
-          :disabled="!selectedProvince" />
-        <small v-if="errors.district" class="p-error">{{ errors.district }}</small>
-
+        <label for="district">Quận/Huyện <span class="text-red-500">*</span></label>
+        <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name" option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện" :disabled="!selectedProvince" :class="{'p-invalid': submitted && !selectedDistrict}" />
+        <small class="p-error" v-if="submitted && !selectedDistrict">Quận/Huyện là bắt buộc.</small>
       </div>
       <div class="p-field">
-        <label for="ward">Phường/Xã</label>
-        <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name"
-          option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" />
-        <small v-if="errors.ward" class="p-error">{{ errors.ward }}</small>
-
+        <label for="ward">Phường/Xã <span class="text-red-500">*</span></label>
+        <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name" option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict" :class="{'p-invalid': submitted && !tempAddress.addressWard}" />
+        <small class="p-error" v-if="submitted && !tempAddress.addressWard">Phường/Xã là bắt buộc.</small>
       </div>
       <div class="p-field">
-        <label for="street">Đường</label>
-        <InputText id="street" v-model="tempAddress.addressStreet" class="w-full" />
-        <small v-if="errors.street" class="p-error">{{ errors.street }}</small>
-      </div>
-      <div class="p-field">
-        <label>Địa chỉ đầy đủ</label>
-        <InputText :value="fullAddress" readonly class="w-full" />
+        <label for="street">Đường <span class="text-red-500">*</span></label>
+        <InputText id="street" v-model="tempAddress.addressStreet" class="w-full" :class="{'p-invalid': submitted && !tempAddress.addressStreet}" />
+        <small class="p-error" v-if="submitted && !tempAddress.addressStreet">Đường là bắt buộc.</small>
       </div>
       <div class="p-field">
         <label for="zipcode">Mã bưu điện</label>
@@ -263,67 +193,12 @@
         <Button label="Lưu" class="p-button-primary" @click="saveAddress" :loading="loading" />
       </div>
     </Dialog>
-    <!-- <div class="p-field">
-      <label for="receiverName">Tên người nhận <span class="text-red-500">*</span></label>
-      <InputText id="receiverName" v-model="tempAddress.receiverName" class="w-full"
-        :class="{ 'p-invalid': submitted && !tempAddress.receiverName}" maxlength="30" />
-      <small class="p-error" v-if="submitted && !tempAddress.receiverName">Tên người nhận là bắt buộc.</small>
-    </div>
-    <div class="p-field">
-      <label for="receiverPhone">Số điện thoại <span class="text-red-500">*</span></label>
-      <InputText id="receiverPhone" v-model="tempAddress.receiverPhone" class="w-full"
-        :class="{ 'p-invalid': submitted && !tempAddress.receiverPhone}" maxlength="10" />
-      <small class="p-error" v-if="submitted && !tempAddress.receiverPhone">Số điện thoại là bắt buộc.</small>
-      <small class="p-error"
-        v-if="submitted && tempAddress.receiverPhone && !isValidPhone(tempAddress.receiverPhone)">Số
-        điện thoại không hợp lệ.</small>
-    </div>
-    <div class="p-field">
-      <label for="email">Email</label>
-      <InputText id="email" v-model="tempAddress.email" disabled class="w-full" />
-    </div>
-    <div class="p-field">
-      <label for="province">Tỉnh/Thành phố <span class="text-red-500">*</span></label>
-      <Dropdown id="province" v-model="selectedProvince" :options="provinceOptions" option-label="name"
-        option-value="name" @change="updateDistricts" class="w-full" placeholder="Chọn Tỉnh/Thành phố"
-        :class="{ 'p-invalid': submitted && !selectedProvince }" />
-      <small class="p-error" v-if="submitted && !selectedProvince">Tỉnh/Thành phố là bắt buộc.</small>
-    </div>
-    <div class="p-field">
-      <label for="district">Quận/Huyện <span class="text-red-500">*</span></label>
-      <Dropdown id="district" v-model="selectedDistrict" :options="districtOptions" option-label="name"
-        option-value="name" @change="updateWards" class="w-full" placeholder="Chọn Quận/Huyện"
-        :disabled="!selectedProvince" :class="{ 'p-invalid': submitted && !selectedDistrict}" />
-      <small class="p-error" v-if="submitted && !selectedDistrict">Quận/Huyện là bắt buộc.</small>
-    </div>
-    <div class="p-field">
-      <label for="ward">Phường/Xã <span class="text-red-500">*</span></label>
-      <Dropdown id="ward" v-model="tempAddress.addressWard" :options="wardOptions" option-label="name"
-        option-value="name" class="w-full" placeholder="Chọn Phường/Xã" :disabled="!selectedDistrict"
-        :class="{'p-invalid': submitted && !tempAddress.addressWard}" />
-      <small class="p-error" v-if="submitted && !tempAddress.addressWard">Phường/Xã là bắt buộc.</small>
-    </div>
-    <div class="p-field">
-      <label for="street">Đường <span class="text-red-500">*</span></label>
-      <InputText id="street" v-model="tempAddress.addressStreet" class="w-full"
-        :class="{'p-invalid': submitted && !tempAddress.addressStreet}" />
-      <small class="p-error" v-if="submitted && !tempAddress.addressStreet">Đường là bắt buộc.</small>
-    </div>
-    <div class="p-field">
-      <label for="zipcode">Mã bưu điện</label>
-      <InputText id="zipcode" v-model="tempAddress.addressZipcode" class="w-full" />
-    </div>
-    <div class="flex justify-content-end gap-2">
-      <Button label="Hủy" class="p-button-text" @click="showAddressDialog = false" />
-      <Button label="Lưu" class="p-button-primary" @click="saveAddress" :loading="loading" />
-    </div>
-    </Dialog> -->
+
     <Dialog v-model:visible="showProductDialog" modal header="Chọn sản phẩm" :style="{ width: '80vw' }">
       <ListProduct @select="handleAddProduct" />
     </Dialog>
 
-    <Dialog v-model:visible="showPaymentDialog" modal header="Cập nhật thanh toán"
-      :style="{ width: '50vw', zIndex: 1000 }">
+    <Dialog v-model:visible="showPaymentDialog" modal header="Cập nhật thanh toán" :style="{ width: '50vw', zIndex: 1000 }">
       <div v-if="loadingPaymentMethods">
         <p>Đang tải phương thức thanh toán...</p>
       </div>
@@ -387,8 +262,7 @@ import { AddressService } from '../../../../service/admin/AddressService';
 import provincesData from '../../../../assets/data/vietnam_provinces.json';
 import { useAuthStore } from '../../../../stores/auth';
 
-// Thêm renderKey để kiểm soát render
-const submitted = ref(false)
+const submitted = ref(false);
 const renderKey = ref(0);
 const authStore = useAuthStore();
 const route = useRoute();
@@ -410,7 +284,8 @@ const loadingPaymentMethods = ref(true);
 const paymentShortage = ref(0);
 const tempPayment = ref({
   paymentMethodId: 0,
-  additionalAmount: 0
+  additionalAmount: 0,
+  changeAmount: 0
 });
 
 const formatDate = (dateString: string | undefined | null): string => {
@@ -425,13 +300,33 @@ const formatDate = (dateString: string | undefined | null): string => {
   });
 };
 
-
 const shipmentStatusLabels = {
   PENDING: 'Chờ xác nhận',
   SHIPPED: 'Đang giao',
   DELIVERED: 'Đã giao hàng',
   RETURNED: 'Trả hàng',
   CANCELED: 'Hủy'
+};
+
+const OrderStatusLabels = {
+  PENDING: 'Chờ xác nhận',
+  SHIPPED: 'Đang giao',
+  COMPLETED: 'Hoàn thành',
+  DELIVERED: 'Đã giao hàng',
+  RETURNED: 'Trả hàng',
+  CANCELED: 'Hủy'
+};
+
+const paymentStatusLabels = {
+  COMPLETED: 'Hoàn thành',
+};
+
+const getPaymentStatusLabel = (status?: string): string => {
+  return paymentStatusLabels[status as keyof typeof paymentStatusLabels] || 'Không xác định';
+};
+
+const getOrdersByStatus = (status?: string): string => {
+  return OrderStatusLabels[status as keyof typeof OrderStatusLabels] || 'Không xác định';
 };
 
 const getShipmentStatusLabel = (status: string): string => {
@@ -457,6 +352,7 @@ interface OrderItemRequest {
 interface PaymentRequest {
   paymentMethodId: number;
   amount: number;
+  changeAmount?: number;
 }
 
 interface ShipmentRequest {
@@ -465,7 +361,7 @@ interface ShipmentRequest {
   estimatedDeliveryDate: string;
 }
 
-export interface AddressRequest {
+interface AddressRequest {
   street: string;
   ward: string;
   city: string;
@@ -479,7 +375,6 @@ export interface AddressRequest {
   isDefault: boolean;
 }
 
-// Biến reactive
 const showAddressDialog = ref(false);
 const tempAddress = ref<AddressResponse>({
   id: 0,
@@ -508,17 +403,6 @@ const provinceOptions = ref(provincesData.data);
 const districtOptions = ref<any[]>([]);
 const wardOptions = ref<any[]>([]);
 
-//địa chỉ đầy đủ
-const fullAddress = computed(() =>
-  [
-    tempAddress.value.addressStreet,
-    tempAddress.value.addressWard,
-    tempAddress.value.addressDistrict,
-    tempAddress.value.addressProvince,
-    tempAddress.value.addressCity,
-  ].filter(Boolean).join(', ')
-);
-
 const isValidPhone = (phone: string): boolean => {
   const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
   return phoneRegex.test(phone);
@@ -535,105 +419,47 @@ const openAddressDialog = () => {
     return;
   }
   submitted.value = false;
-  // Sao chép dữ liệu địa chỉ hiện tại vào tempAddress
   tempAddress.value = { ...order.value.address };
+  console.log('Order Address:', tempAddress.value);
 
-
-  console.log('Order Address:', tempAddress.value); // Debug: Log address data
-
-  // Normalize and set selectedProvince
   const normalizeName = (name: string) => name.replace(/^(Tỉnh|Thành phố|Quận|Huyện|Xã|Phường)\s+/i, '').trim();
   const provinceName = normalizeName(tempAddress.value.addressProvince || '');
   const province = provinceOptions.value.find(p => normalizeName(p.name) === provinceName);
   selectedProvince.value = province ? province.name : tempAddress.value.addressProvince || '';
-  console.log('Normalized Province:', provinceName, 'Found Province:', province); // Debug
+  console.log('Normalized Province:', provinceName, 'Found Province:', province);
 
-  // Populate districtOptions
   updateDistricts();
 
-  // Set selectedDistrict, use a fallback if addressDistrict is empty
   const districtName = normalizeName(tempAddress.value.addressDistrict || '');
   const district = districtOptions.value.find(d => normalizeName(d.name) === districtName);
   selectedDistrict.value = district ? district.name : '';
   if (!selectedDistrict.value && districtOptions.value.length > 0) {
-    selectedDistrict.value = districtOptions.value[0].name; // Default to first district if none found
+    selectedDistrict.value = districtOptions.value[0].name;
   }
-  console.log('Normalized District:', districtName, 'Found District:', district, 'Selected District:', selectedDistrict.value); // Debug
+  console.log('Normalized District:', districtName, 'Found District:', district, 'Selected District:', selectedDistrict.value);
 
-  // Populate wardOptions
   updateWards();
 
-  // Set ward, with fallback if not found
   const wardName = normalizeName(tempAddress.value.addressWard || '');
   const ward = wardOptions.value.find(w => normalizeName(w.name) === wardName);
   tempAddress.value.addressWard = ward ? ward.name : tempAddress.value.addressWard || '';
   if (!tempAddress.value.addressWard && wardOptions.value.length > 0) {
-    tempAddress.value.addressWard = wardOptions.value[0].name; // Default to first ward if none found
+    tempAddress.value.addressWard = wardOptions.value[0].name;
   }
-  console.log('Normalized Ward:', wardName, 'Found Ward:', ward, 'Selected Ward:', tempAddress.value.addressWard); // Debug
+  console.log('Normalized Ward:', wardName, 'Found Ward:', ward, 'Selected Ward:', tempAddress.value.addressWard);
 
   showAddressDialog.value = true;
 };
 
-// Biến lưu lỗi 
-const errors = ref<{ [key: string]: string }>({});
-
-function validateAddress(): boolean {
-  errors.value = {}; // Reset lỗi
-
-  const phoneRegex = /^0\d{9}$/;
-  let valid = true;
-
-  if (!tempAddress.value.receiverName?.trim()) {
-    errors.value.receiverName = 'Tên người nhận không được để trống';
-    valid = false;
-  }
-
-  if (!tempAddress.value.receiverPhone?.trim()) {
-    errors.value.receiverPhone = 'Số điện thoại không được để trống';
-    valid = false;
-  } else if (!phoneRegex.test(tempAddress.value.receiverPhone)) {
-    errors.value.receiverPhone = 'Số điện thoại không hợp lệ (VD: 0981234567)';
-    valid = false;
-  }
-
-  if (!selectedProvince.value) {
-    errors.value.province = 'Vui lòng chọn Tỉnh/Thành phố';
-    valid = false;
-  }
-
-  if (!selectedDistrict.value) {
-    errors.value.district = 'Vui lòng chọn Quận/Huyện';
-    valid = false;
-  }
-
-  if (!tempAddress.value.addressWard) {
-    errors.value.ward = 'Vui lòng chọn Phường/Xã';
-    valid = false;
-  }
-
-  if (!tempAddress.value.addressStreet?.trim()) {
-    errors.value.street = 'Vui lòng nhập địa chỉ chi tiết';
-    valid = false;
-  }
-
-  return valid;
-}
-watch(showAddressDialog, (visible) => {
-  if (!visible) {
-    errors.value = {}; // Xóa toàn bộ lỗi khi dialog đóng
-  }
-});
 const updateDistricts = () => {
-
   const province = provinceOptions.value.find(p => p.name === selectedProvince.value);
   if (province && province.level2s) {
     districtOptions.value = province.level2s;
-    selectedDistrict.value = ''; // Reset Quận/Huyện
-    wardOptions.value = []; // Reset Phường/Xã
+    selectedDistrict.value = '';
+    wardOptions.value = [];
     tempAddress.value.addressDistrict = '';
     tempAddress.value.addressWard = '';
-    console.log('District Options for Province', selectedProvince.value, ':', districtOptions.value); // Debug
+    console.log('District Options for Province', selectedProvince.value, ':', districtOptions.value);
   } else {
     districtOptions.value = [];
     wardOptions.value = [];
@@ -651,8 +477,8 @@ const updateWards = () => {
   const district = districtOptions.value.find(d => d.name === selectedDistrict.value);
   if (district && district.level3s) {
     wardOptions.value = district.level3s;
-    tempAddress.value.addressWard = ''; // Reset Phường/Xã
-    console.log('Ward Options for District', selectedDistrict.value, ':', wardOptions.value); // Debug
+    tempAddress.value.addressWard = '';
+    console.log('Ward Options for District', selectedDistrict.value, ':', wardOptions.value);
   } else {
     wardOptions.value = [];
     console.warn('No wards found for district:', selectedDistrict.value);
@@ -665,141 +491,8 @@ const updateWards = () => {
   }
 };
 
-// Lưu địa chỉ đã chỉnh sửa
-// const saveAddress = async () => {
-//   submitted.value = true;
-
-//   tempAddress.value.addressProvince = selectedProvince.value;
-//   tempAddress.value.addressDistrict = selectedDistrict.value;
-//   if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
-//     toast.add({
-//       severity: 'error',
-//       summary: 'Lỗi',
-//       detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
-//       life: 3000
-//     });
-//     return;
-//   }
-
-//   loading.value = true;
-//   try {
-//     const addressRequest: AddressRequest = {
-//       street: tempAddress.value.addressStreet,
-//       ward: tempAddress.value.addressWard,
-//       city: tempAddress.value.addressCity,
-//       state: tempAddress.value.addressState,
-//       country: tempAddress.value.addressCountry,
-//       zipcode: tempAddress.value.addressZipcode,
-//       district: tempAddress.value.addressDistrict,
-//       province: tempAddress.value.addressProvince,
-//       receiverName: tempAddress.value.receiverName,
-//       receiverPhone: tempAddress.value.receiverPhone,
-//       isDefault: tempAddress.value.isDefault
-//     };
-
-//     const response = await AddressService.updateAddressForCustomer(
-//       tempAddress.value.userId,
-//       tempAddress.value.id,
-//       addressRequest
-//     );
-
-//     if (response.data) {
-//       // Cập nhật lại order.address với dữ liệu mới
-//       order.value.address = { ...tempAddress.value };
-//       showAddressDialog.value = false;
-//       toast.add({
-//         severity: 'success',
-//         summary: 'Thành công',
-//         detail: 'Cập nhật địa chỉ thành công',
-//         life: 3000
-//       });
-//       renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
-//     }
-//   } catch (error: any) {
-//     console.error('Lỗi khi cập nhật địa chỉ:', error);
-//     toast.add({
-//       severity: 'error',
-//       summary: 'Lỗi',
-//       detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
-//       life: 3000
-//     });
-//   } finally {
-//     loading.value = false;
-//     submitted.value = false;
-//   }
-// };
-
 const saveAddress = async () => {
-  if (!validateAddress()) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Vui lòng kiểm tra lại thông tin địa chỉ',
-      life: 3000
-    });
-    return;
-  }
-
-  tempAddress.value.addressProvince = selectedProvince.value;
-  tempAddress.value.addressDistrict = selectedDistrict.value;
-  if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
-      life: 3000
-    });
-    return;
-  }
-
-  loading.value = true;
-  try {
-    const addressRequest: AddressRequest = {
-      street: tempAddress.value.addressStreet,
-      ward: tempAddress.value.addressWard,
-      city: tempAddress.value.addressCity,
-      state: tempAddress.value.addressState,
-      country: tempAddress.value.addressCountry,
-      zipcode: tempAddress.value.addressZipcode,
-      district: tempAddress.value.addressDistrict,
-      province: tempAddress.value.addressProvince,
-      receiverName: tempAddress.value.receiverName,
-      receiverPhone: tempAddress.value.receiverPhone,
-      isDefault: tempAddress.value.isDefault
-    };
-
-    const response = await AddressService.updateAddressForCustomer(
-      tempAddress.value.userId,
-      tempAddress.value.id,
-      addressRequest
-    );
-
-    if (response.data) {
-      // Cập nhật lại order.address với dữ liệu mới
-      order.value.address = { ...tempAddress.value };
-      showAddressDialog.value = false;
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Cập nhật địa chỉ thành công',
-        life: 3000
-      });
-      renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
-    }
-  } catch (error: any) {
-    console.error('Lỗi khi cập nhật địa chỉ:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
-
   submitted.value = true;
-  // Kiểm tra các trường bắt buộc
   if (
     !tempAddress.value.receiverName ||
     !tempAddress.value.receiverPhone ||
@@ -816,7 +509,6 @@ const saveAddress = async () => {
     });
     return;
   }
-  // Kiểm tra định dạng số điện thoại
   if (!isValidPhone(tempAddress.value.receiverPhone)) {
     toast.add({
       severity: 'error',
@@ -858,7 +550,6 @@ const saveAddress = async () => {
       addressRequest
     );
     if (response.data) {
-      // Cập nhật lại order.address với dữ liệu mới
       order.value.address = { ...tempAddress.value };
       showAddressDialog.value = false;
       toast.add({
@@ -867,91 +558,7 @@ const saveAddress = async () => {
         detail: 'Cập nhật địa chỉ thành công',
         life: 3000
       });
-      renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
-    }
-  } catch (error: any) {
-    console.error('Lỗi khi cập nhật địa chỉ:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.response?.data?.message || 'Cập nhật địa chỉ thất bại',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-    submitted.value = false;
-  }
-
-  submitted.value = true;
-  // Kiểm tra các trường bắt buộc
-  if (
-    !tempAddress.value.receiverName ||
-    !tempAddress.value.receiverPhone ||
-    !selectedProvince.value ||
-    !selectedDistrict.value ||
-    !tempAddress.value.addressWard ||
-    !tempAddress.value.addressStreet
-  ) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Vui lòng điền đầy đủ các trường bắt buộc.',
-      life: 3000
-    });
-    return;
-  }
-  // Kiểm tra định dạng số điện thoại
-  if (!isValidPhone(tempAddress.value.receiverPhone)) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Số điện thoại không hợp lệ.',
-      life: 3000
-    });
-    return;
-  }
-  tempAddress.value.addressProvince = selectedProvince.value;
-  tempAddress.value.addressDistrict = selectedDistrict.value;
-  if (!order.value || !tempAddress.value.id || !tempAddress.value.userId) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Thông tin đơn hàng hoặc địa chỉ không hợp lệ',
-      life: 3000
-    });
-    return;
-  }
-  loading.value = true;
-  try {
-    const addressRequest: AddressRequest = {
-      street: tempAddress.value.addressStreet,
-      ward: tempAddress.value.addressWard,
-      city: tempAddress.value.addressCity,
-      state: tempAddress.value.addressState,
-      country: tempAddress.value.addressCountry,
-      zipcode: tempAddress.value.addressZipcode,
-      district: tempAddress.value.addressDistrict,
-      province: tempAddress.value.addressProvince,
-      receiverName: tempAddress.value.receiverName,
-      receiverPhone: tempAddress.value.receiverPhone,
-      isDefault: tempAddress.value.isDefault
-    };
-    const response = await AddressService.updateAddressForCustomer(
-      tempAddress.value.userId,
-      tempAddress.value.id,
-      addressRequest
-    );
-    if (response.data) {
-      // Cập nhật lại order.address với dữ liệu mới
-      order.value.address = { ...tempAddress.value };
-      showAddressDialog.value = false;
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Cập nhật địa chỉ thành công',
-        life: 3000
-      });
-      renderKey.value += 1; // Tăng renderKey để cập nhật giao diện
+      renderKey.value += 1;
     }
   } catch (error: any) {
     console.error('Lỗi khi cập nhật địa chỉ:', error);
@@ -967,20 +574,34 @@ const saveAddress = async () => {
   }
 };
 
-const steps = [
-  { label: 'Chờ xác nhận', value: OrderStatus.PENDING, icon: 'pi pi-clock' },
-  { label: 'Đang giao', value: OrderStatus.SHIPPED, icon: 'pi pi-truck' },
-  { label: 'Hoàn thành', value: OrderStatus.COMPLETED, icon: 'pi pi-check-circle' },
-  { label: 'Đã huỷ', value: OrderStatus.CANCELLED, icon: 'pi pi-times-circle' },
-  { label: 'Trả hàng', value: OrderStatus.RETURNED, icon: 'pi pi-refresh' }
-];
+// Modified steps logic to prioritize CANCELLED when order is cancelled
+const steps = computed(() => {
+  const defaultSteps = [
+    { label: 'Chờ xác nhận', value: OrderStatus.PENDING, icon: 'pi pi-clock' },
+    { label: 'Đang giao', value: OrderStatus.SHIPPED, icon: 'pi pi-truck' },
+    { label: 'Hoàn thành', value: OrderStatus.COMPLETED, icon: 'pi pi-check-circle' },
+    { label: 'Trả hàng', value: OrderStatus.RETURNED, icon: 'pi pi-refresh' },
+    { label: 'Đã huỷ', value: OrderStatus.CANCELLED, icon: 'pi pi-times-circle' }
+  ];
+  
+  if (order.value?.orderStatus === OrderStatus.CANCELLED) {
+    return [
+      { label: 'Đã huỷ', value: OrderStatus.CANCELLED, icon: 'pi pi-times-circle' }
+    ];
+  }
+  
+  return defaultSteps;
+});
 
 // Lọc steps dựa trên isPos
 const filteredSteps = computed(() => {
-  if (order.value?.isPos) {
-    return steps.filter(step => step.value !== OrderStatus.SHIPPED);
+  if (order.value?.orderStatus === OrderStatus.CANCELLED) {
+    return steps.value; // Only show CANCELLED step
   }
-  return steps;
+  if (order.value?.isPos) {
+    return steps.value.filter(step => step.value !== OrderStatus.SHIPPED);
+  }
+  return steps.value;
 });
 
 const activeStepIndex = computed(() => {
@@ -1027,8 +648,6 @@ const getAllPaymentMethods = async () => {
     paymentMethods.value = response?.data || [];
     if (paymentMethods.value.length > 0 && !paymentMethods.value.some(pm => pm.id === tempPayment.value.paymentMethodId)) {
       tempPayment.value.paymentMethodId = paymentMethods.value[0].id;
-    } else {
-      tempPayment.value.paymentMethodId = paymentMethods.value[0]?.id || 0;
     }
   } catch (error) {
     console.error('Lỗi khi lấy danh sách phương thức thanh toán:', error);
@@ -1047,17 +666,23 @@ const getAllPaymentMethods = async () => {
 
 const getOrderDetails = async () => {
   const id = route.params.id;
-  const response = await OrderService.getOrderById(Number(id));
-  if (response.data) {
-    order.value = response.data;
-    tempPayment.value.paymentMethodId = order.value.payment?.paymentMethodId || 0;
-    console.log('Fetched Order Details - Status:', order.value.orderStatus);
-    console.log("order", order.value);
-    // Cập nhật renderKey khi order thay đổi
-    renderKey.value += 1;
-  } else {
-    order.value = undefined;
-    console.log('No order data fetched');
+  try {
+    const response = await OrderService.getOrderById(Number(id));
+    if (response.data) {
+      order.value = response.data;
+      tempPayment.value.paymentMethodId = order.value.payment?.paymentMethodId || 0;
+      tempPayment.value.changeAmount = order.value.payment?.changeAmount || 0;
+      console.log('Fetched Order Details - Status:', order.value.orderStatus);
+      console.log("order", order.value);
+      syncOrderItems();
+      renderKey.value += 1;
+    } else {
+      order.value = undefined;
+      console.log('No order data fetched');
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy chi tiết đơn hàng:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải chi tiết đơn hàng', life: 3000 });
   }
 };
 
@@ -1072,12 +697,30 @@ const calculateTotal = () => {
   return orderItems.value.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
 };
 
+const calculateDiscount = () => {
+  return order.value?.couponUsages?.reduce((total, coupon) => total + coupon.discountAmount, 0) || 0;
+};
+
 const checkPaymentSufficiency = () => {
-  const newTotal = calculateTotal();
+  const totalProductAmount = calculateTotal();
   const currentPayment = order.value?.payment?.amount || 0;
-  paymentShortage.value = Math.max(0, newTotal - currentPayment);
+  const additionalAmount = tempPayment.value.additionalAmount || 0;
+  const changeAmount = order.value?.payment?.changeAmount || 0;
+  const shippingCost = order.value?.shipments?.[0]?.shippingCost || 0;
+  const discountAmount = calculateDiscount();
+
+  const totalPaid = currentPayment + additionalAmount;
+  const effectiveTotal = totalPaid - changeAmount + shippingCost + discountAmount;
+  paymentShortage.value = Math.max(0, totalProductAmount - effectiveTotal);
+
   const isSufficient = paymentShortage.value === 0;
-  console.log('Payment Check - Total:', newTotal, 'Paid:', currentPayment, 'Shortage:', paymentShortage.value, 'Sufficient:', isSufficient);
+
+  console.log('Payment Check - Total Product (before discount):', totalProductAmount, 
+              'Paid:', totalPaid, 'Change:', changeAmount, 
+              'Shipping:', shippingCost, 'Discount:', discountAmount, 
+              'Effective Total:', effectiveTotal, 'Shortage:', paymentShortage.value, 
+              'Sufficient:', isSufficient);
+
   if (!isSufficient) {
     toast.add({
       severity: 'warn',
@@ -1086,6 +729,7 @@ const checkPaymentSufficiency = () => {
       life: 5000
     });
   }
+
   return isSufficient;
 };
 
@@ -1102,24 +746,17 @@ const openPaymentDialog = () => {
   showPaymentDialog.value = true;
 };
 
-const checkAndUpdateOrderItems = async () => {
-  if (!checkPaymentSufficiency()) {
-    showPaymentDialog.value = true;
-    return;
-  }
-  await updateOrderItems();
-};
-
 const savePayment = async () => {
-  if (tempPayment.value.additionalAmount < paymentShortage.value) {
+  if (!checkPaymentSufficiency()) {
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: `Số tiền thêm phải ít nhất ${paymentShortage.value.toLocaleString('vi-VN')} đ`,
+      detail: `Số tiền thiếu: ${paymentShortage.value.toLocaleString('vi-VN')} đ. Vui lòng nhập số tiền bổ sung đủ.`,
       life: 3000
     });
     return;
   }
+
   if (!paymentMethods.value.some(pm => pm.id === tempPayment.value.paymentMethodId)) {
     toast.add({
       severity: 'error',
@@ -1129,6 +766,7 @@ const savePayment = async () => {
     });
     return;
   }
+
   showPaymentDialog.value = false;
   await updateOrderItems();
 };
@@ -1138,6 +776,7 @@ const updateOrderItems = async () => {
 
   const newTotal = calculateTotal();
   const additionalAmount = tempPayment.value.additionalAmount || 0;
+
   const orderRequest: UpdateOrderRequest = {
     orderCode: order.value.orderCode,
     userId: order.value.address?.userId || 0,
@@ -1148,18 +787,21 @@ const updateOrderItems = async () => {
     })),
     payment: {
       paymentMethodId: tempPayment.value.paymentMethodId || order.value.payment?.paymentMethodId || 1,
-      amount: (order.value.payment?.amount || 0) + additionalAmount
+      amount: (order.value.payment?.amount || 0) + additionalAmount,
+      changeAmount: order.value.payment?.changeAmount || 0
     },
+    couponUsageIds: order.value.couponUsages?.map(coupon => coupon.id) || [],
     shipments: order.value?.shipments && !order.value.isPos
       ? order.value.shipments.map(s => ({
-        carrierId: s.carrierId,
-        shippingCost: s.shippingCost,
-        estimatedDeliveryDate: s.estimatedDeliveryDate
-      }))
+          carrierId: s.carrierId,
+          shippingCost: s.shippingCost,
+          estimatedDeliveryDate: s.estimatedDeliveryDate
+        }))
       : []
   };
 
   try {
+    loading.value = true;
     const response = await OrderService.updateOrder(order.value.orderCode!, orderRequest);
     if (response.data) {
       order.value = { ...response.data };
@@ -1171,8 +813,18 @@ const updateOrderItems = async () => {
     }
   } catch (error: any) {
     console.error('Lỗi cập nhật đơn hàng:', error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: error.message || 'Cập nhật đơn hàng thất bại', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: error.response?.data?.message || 'Cập nhật đơn hàng thất bại', life: 3000 });
+  } finally {
+    loading.value = false;
   }
+};
+
+const checkAndUpdateOrderItems = async () => {
+  if (!checkPaymentSufficiency()) {
+    showPaymentDialog.value = true;
+    return;
+  }
+  await updateOrderItems();
 };
 
 const increaseQuantity = async (index: number) => {
@@ -1274,7 +926,7 @@ const updateOrderStatus = async () => {
       console.log('No data in response');
     }
   } catch (error: any) {
-    console.error('Lỗi cập nhật trạng thái đơn hàng:', error.response?.data || error.message);
+    console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
@@ -1334,15 +986,12 @@ watch(order, (newOrder) => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-
 .timeline-step {
   display: flex;
-  /* align-items: center; */
   gap: 15px;
   color: #4b5e7e;
   position: relative;
   flex: 1;
-
 }
 
 .timeline-step:not(:last-child)::after {
@@ -1445,4 +1094,3 @@ watch(order, (newOrder) => {
   margin-top: 4px;
 }
 </style>
-```

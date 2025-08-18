@@ -160,45 +160,49 @@
           </div>
 
           <!-- Product Attributes -->     
-          <div class="field col-12">
-            <label for="productAttributes">Thuộc tính sản phẩm</label>
-            <div v-for="(attr, index) in product.productAttributeValues" :key="index" class="p-fluid formgrid grid">
-              <div class="field col-12 md:col-5">
-                <Dropdown
-                  v-model="attr.attributeId"
-                  :options="productAttributes"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="chọn thuộc tính"
-                  :class="{'p-invalid': submitted && !attr.attributeId}"
-                />
-                <small class="p-error" v-if="submitted && !attr.attributeId">Thuộc tính là bắt buộc.</small>
-              </div>
-              <div class="field col-12 md:col-5">
-                <InputText 
-                  v-model="attr.value" 
-                  placeholder="nhập giá trị thuộc tính"     
-                  :class="{'p-invalid': submitted && !attr.value}"
-                />
-                <small class="p-error" v-if="submitted && !attr.value">Giá trị là bắt buộc.</small>
-              </div>
-              <div class="field col-12 md:col-2">
-                <Button 
-                  icon="pi pi-trash" 
-                  severity="danger" 
-                  @click="removeAttribute(index)" 
-                />
-              </div>
-            </div>
-            <Button 
-              label="Thêm thuộc tính" 
-              icon="pi pi-plus" 
-              severity="secondary" 
-              class="add-attribute-btn"
-              @click="addAttribute" 
-              disabled
-            />
-          </div>
+          <!-- Thuộc tính sản phẩm -->
+<div class="field col-12">
+  <label for="productAttributes">Thuộc tính sản phẩm</label>
+  <div v-for="(attr, index) in product.productAttributeValues" :key="index" class="p-fluid formgrid grid">
+    <div class="field col-12 md:col-5">
+      <Dropdown
+        v-model="attr.attributeId"
+        :options="availableAttributes(index)"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="chọn thuộc tính"
+        :class="{'p-invalid': submitted && !attr.attributeId}"
+        :disabled="true"
+        @change="onAttributeChange(index)"
+      />
+      <small class="p-error" v-if="submitted && !attr.attributeId">Thuộc tính là bắt buộc.</small>
+    </div>
+    <div class="field col-12 md:col-5">
+      <InputText 
+        v-model="attr.value" 
+        placeholder="nhập giá trị thuộc tính"   
+        maxlength="10"  
+        :class="{'p-invalid': submitted && !attr.value}"
+      />
+      <small class="p-error" v-if="submitted && !attr.value">Giá trị là bắt buộc.</small>
+    </div>
+    <div class="field col-12 md:col-2">
+      <Button 
+        icon="pi pi-trash" 
+        severity="danger" 
+        @click="removeAttribute(index)" 
+      />
+    </div>
+  </div>
+  <Button 
+    label="Thêm thuộc tính" 
+    icon="pi pi-plus" 
+    severity="secondary" 
+    class="add-attribute-btn"
+    @click="addAttribute" 
+    :disabled="product.productAttributeValues.length >= productAttributes.length"
+  />
+</div>
         </div>
 
         <div class="flex justify-content-end mt-4">
@@ -325,6 +329,22 @@ const loadProductData = async () => {
       });
     }
   }
+};
+
+const availableAttributes = (currentIndex: number) => {
+  const selectedAttributeIds = product.productAttributeValues
+    .filter((_, index) => index !== currentIndex) // Loại trừ thuộc tính của dropdown hiện tại
+    .map(attr => attr.attributeId)
+    .filter(id => id !== 0); // Chỉ bao gồm các ID thuộc tính hợp lệ (khác 0)
+
+  return productAttributes.value.filter(
+    attr => !selectedAttributeIds.includes(attr.id)
+  );
+};
+
+const onAttributeChange = (index: number) => {
+  // Buộc render lại bằng cách cập nhật mảng reactive
+  product.productAttributeValues = [...product.productAttributeValues];
 };
 
 const onImageUpload = (event: any) => {

@@ -111,8 +111,12 @@ watch(() => customer.value.receiverPhone, (newPhone) => {
 
 const handleSubmit = async () => {
     errors.value = {};
+    const usernameRegex = /^[a-zA-Z0-9_.]+$/;
+
     if (!customer.value.username.trim()) {
         errors.value.username = "Tên khách hàng không được để trống";
+    } else if (!usernameRegex.test(customer.value.username)) {
+        errors.value.username = "Tên khách hàng không được chứa ký tự đặc biệt";
     }
     if (customer.value.username.length > 100) {
         errors.value.username = "Tên khách hàng quá dài (tối đa 100 ký tự)";

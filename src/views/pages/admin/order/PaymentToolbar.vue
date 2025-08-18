@@ -6,11 +6,21 @@
 
       <!-- Chọn khách hàng -->
       <div class="mb-4">
-        <label class="block mb-1 font-medium">Khách hàng</label>
+        <label class="block mb-1 font-medium">Khách hàng <span class="text-red-600">*</span></label>
         <div class="flex items-center gap-2">
           <InputText v-model="selectedCustomerName" placeholder="Chọn khách hàng" class="flex-1" :disabled="true"
-            @click="showDialog = true" />
+            @click="showDialog = true" :class="{ 'p-invalid': !selectedCustomer && showCustomerError }" />
           <Button icon="pi pi-plus" text severity="secondary" @click="showDialog = true" />
+          <Button 
+            icon="pi pi-user-minus" 
+            text 
+            severity="warning" 
+            @click="handleCustomerSelect(null)" 
+            v-if="selectedCustomer"
+          />
+        </div>
+        <div v-if="!selectedCustomer && showCustomerError" class="text-red-600 text-sm mt-1">
+          Vui lòng chọn khách hàng cho đơn ship.
         </div>
       </div>
 
@@ -19,7 +29,6 @@
       <!-- Thông tin khách hàng -->
       <div v-if="selectedCustomer" class="mb-4 bg-gray-50 rounded-lg p-5 shadow-sm">
         <div class="space-y-4">
-          <!-- Họ tên & SĐT -->
           <label class="block text-sm text-gray-600 mb-3">Thông Tin Khách Hàng</label>
           <div class="flex gap-4">
             <div class="flex-1">
@@ -34,7 +43,6 @@
             </div>
           </div>
 
-          <!-- Địa chỉ giao hàng -->
           <AddressSelectDialog v-model:visible="showAddressDialog" :addresses="selectedCustomer?.addresses || []"
             :customer-id="selectedCustomer.id" @select="handleAddressSelect" @submitAddress="handleAddressSubmit"
             :key="addressDialogKey" @cancel="showAddressDialog = false" @deleteAddress="refreshSelectedCustomer" />
@@ -67,15 +75,47 @@
         <Dropdown v-model="invoice.carrierId" :options="carriers" optionLabel="name" optionValue="id"
           placeholder="Chọn nhà vận chuyển" class="w-full" />
       </div>
+
       <div v-if="!invoice.isPos" class="mb-4">
-        <label class="block mb-1 font-medium">Phí vận chuyển</label>
-        <InputNumber v-model="invoice.shippingCost" @input="handleShippingCostChange" class="w-full" :min="0"
-          :useGrouping="true" placeholder="Nhập phí vận chuyển" />
+        <label class="block mb-1 font-medium">Phí vận chuyển <span class="text-red-600">*</span></label>
+        <InputNumber 
+          v-model="invoice.shippingCost" 
+          @input="handleShippingCostChange" 
+          class="w-full" 
+          :min="0" 
+          :max="50000"
+          :useGrouping="true" 
+          placeholder="Nhập phí vận chuyển" 
+          :class="{ 'p-invalid': showShippingCostError && (invoice.shippingCost === null || invoice.shippingCost < 0) }"
+        />
+        <div v-if="!invoice.isPos && showShippingCostError && (invoice.shippingCost === null || invoice.shippingCost < 0)" 
+          class="text-red-600 text-sm mt-1">
+          Vui lòng nhập phí vận chuyển hợp lệ.
+        </div>
+        <div v-if="!invoice.isPos && invoice.shippingCost !== null && invoice.shippingCost > 50000" 
+          class="text-red-600 text-sm mt-1">
+          Phí vận chuyển không được vượt quá 50,000đ.
+        </div>
       </div>
+
       <div v-if="!invoice.isPos" class="mb-4">
         <label class="block mb-1 font-medium">Ngày giao dự kiến</label>
-        <Calendar v-model="invoice.estimatedDeliveryDate" showTime hourFormat="24" class="w-full" />
+        <Calendar
+          v-model="invoice.estimatedDeliveryDate"
+          showTime
+          hourFormat="24"
+          :minDate="minDeliveryDate"
+          :class="{ 'p-invalid': showDeliveryDateError && (!invoice.estimatedDeliveryDate || invoice.estimatedDeliveryDate < minDeliveryDate) }"
+          class="w-full"
+        />
+        <div
+          v-if="showDeliveryDateError && (!invoice.estimatedDeliveryDate || invoice.estimatedDeliveryDate < minDeliveryDate)"
+          class="text-red-600 text-sm mt-1"
+        >
+          Ngày giao dự kiến không được để trống hoặc là ngày trong quá khứ.
+        </div>
       </div>
+
 
       <!-- Tính tiền -->
       <div class="mb-4">
@@ -115,23 +155,27 @@
             placeholder="Chọn phương thức" class="w-full" @change="updatePaymentMethod" />
         </div>
 
-        <!-- <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
-          <span class="label">Khách thanh toán:</span>
-          <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
-            :min="0" :useGrouping="true" placeholder="Nhập số tiền" />
-        </div> -->
-
-
         <div v-if="invoice.paymentMethodId === 1" class="flex justify-between mb-2 items-center">
           <span class="label">Khách thanh toán:</span>
-          <InputNumber v-model="invoice.paidAmount" @input="handlePaidAmountChange" class="value w-full md:w-80"
-            :min="0" :max="100000000" :useGrouping="true" placeholder="Nhập số tiền" />
+          <InputNumber 
+            v-model="invoice.paidAmount" 
+            @input="handlePaidAmountChange" 
+            class="value w-full md:w-80"
+            :min="0" 
+            :max="50000000" 
+            :useGrouping="true" 
+            placeholder="Nhập số tiền" 
+            :class="{ 'p-invalid': showPaidAmountError && (invoice.paidAmount === null || invoice.paidAmount < calculateFinalTotal()) }"
+          />
         </div>
-        <div v-if="invoice.paymentMethodId === 1 && invoice.paidAmount !== null && invoice.paidAmount > 100000000"
+        <div v-if="invoice.paymentMethodId === 1 && showPaidAmountError && (invoice.paidAmount === null || invoice.paidAmount < calculateFinalTotal())" 
           class="text-red-600 text-sm mt-1">
-          Số tiền khách thanh toán không được vượt quá 100,000,000đ.
+          Vui lòng nhập số tiền thanh toán đủ hoặc lớn hơn số tiền cần trả.
         </div>
-
+        <div v-if="invoice.paymentMethodId === 1 && invoice.paidAmount !== null && invoice.paidAmount > 50000000" 
+          class="text-red-600 text-sm mt-1">
+          Số tiền khách thanh toán không được vượt quá 50,000,000đ.
+        </div>
 
         <div v-if="invoice.paymentMethodId === 1 && changeAmount !== null && changeAmount >= 0"
           class="flex justify-between mb-2 items-center text-green-600">
@@ -150,12 +194,6 @@
         </div>
       </div>
 
-      <!-- Phương thức thanh toán -->
-
-
-      <!-- Ghi chú -->
-
-
       <!-- Nút điều khiển -->
       <div v-if="invoice.paymentMethodId === 1" class="flex justify-end gap-2">
         <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="$emit('close')" />
@@ -169,7 +207,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router'; // Thêm import useRouter
+import { useRouter } from 'vue-router';
 import Sidebar from 'primevue/sidebar';
 import Button from 'primevue/button';
 import MultiSelect from 'primevue/multiselect';
@@ -197,12 +235,16 @@ import type { OrderRequest } from '../../../../model/admin/order';
 
 const confirm = useConfirm();
 const toast = useToast();
-const router = useRouter(); // Khởi tạo router
+const router = useRouter();
 const isVisible = ref(true);
 const showDialog = ref(false);
 const showPrintPreview = ref(false);
 const isPaymentProcessing = ref(false);
 const localCouponUsage = ref<CouponUsageResponse[]>([]);
+const showCustomerError = ref(false);
+const showShippingCostError = ref(false);
+const showPaidAmountError = ref(false);
+const showDeliveryDateError = ref(false);
 
 const props = defineProps<{
   invoice: {
@@ -258,18 +300,37 @@ const getCouponById = (id: number) => {
   return props.couponUsage.find(c => c.id === id) || null;
 };
 
+const minDeliveryDate = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+});
+
+const isPastDate = computed(() => {
+  if (!props.invoice.estimatedDeliveryDate) return false;
+  const selectedDate = new Date(props.invoice.estimatedDeliveryDate);
+  return selectedDate < minDeliveryDate.value;
+});
+
 const validateBeforeComplete = () => {
-  const required = calculateFinalTotal();
-  const paid = props.invoice.paidAmount || 0;
+  showCustomerError.value = false;
+  showShippingCostError.value = false;
+  showPaidAmountError.value = false;
+  showDeliveryDateError.value = false;
+
+  let isValid = true;
+
   if (!props.invoice.isPos && !selectedCustomer.value) {
+    showCustomerError.value = true;
     toast.add({
       severity: 'error',
       summary: 'Thiếu khách hàng',
       detail: 'Đơn hàng giao hàng cần chọn khách hàng',
       life: 3000
     });
-    return false;
+    isValid = false;
   }
+
   if (!props.invoice.isPos && !props.invoice.carrierId) {
     toast.add({
       severity: 'error',
@@ -277,17 +338,44 @@ const validateBeforeComplete = () => {
       detail: 'Vui lòng chọn nhà vận chuyển',
       life: 3000
     });
-    return false;
+    isValid = false;
   }
+
   if (!props.invoice.isPos && (props.invoice.shippingCost === null || props.invoice.shippingCost < 0)) {
+    showShippingCostError.value = true;
     toast.add({
       severity: 'error',
       summary: 'Phí vận chuyển không hợp lệ',
       detail: 'Vui lòng nhập phí vận chuyển hợp lệ',
       life: 3000
     });
-    return false;
+    isValid = false;
   }
+
+  if (!props.invoice.isPos && (props.invoice.shippingCost || 0) > 50000) {
+    showShippingCostError.value = true;
+    toast.add({
+      severity: 'error',
+      summary: 'Phí vận chuyển không hợp lệ',
+      detail: 'Phí vận chuyển không được vượt quá 50,000đ',
+      life: 3000
+    });
+    isValid = false;
+  }
+
+if (!props.invoice.isPos && 
+    (!props.invoice.estimatedDeliveryDate || props.invoice.estimatedDeliveryDate < minDeliveryDate.value)) {
+  showDeliveryDateError.value = true;
+  toast.add({
+    severity: 'error',
+    summary: 'Ngày giao không hợp lệ',
+    detail: 'Ngày giao dự kiến không được để trống hoặc là ngày trong quá khứ',
+    life: 3000
+  });
+  isValid = false;
+}
+
+
   if (!props.invoice.paymentMethodId) {
     toast.add({
       severity: 'error',
@@ -295,18 +383,44 @@ const validateBeforeComplete = () => {
       detail: 'Vui lòng chọn phương thức thanh toán',
       life: 3000
     });
-    return false;
+    isValid = false;
   }
+
+  // if (!props.invoice.estimatedDeliveryDate) {
+  //   toast.add({
+  //     severity: 'error',
+  //     summary: 'Ngày giao dự kiến không được trống',
+  //     detail: 'Vui thêm ngày  giao dự kiến',
+  //     life: 3000
+  //   });
+  //   isValid = false;
+  // }
+
+  const required = calculateFinalTotal();
+  const paid = props.invoice.paidAmount || 0;
   if (props.invoice.paymentMethodId === 1 && paid < required) {
+    showPaidAmountError.value = true;
     toast.add({
       severity: 'error',
       summary: 'Chưa thanh toán đủ',
       detail: 'Số tiền khách thanh toán phải lớn hơn hoặc bằng số tiền cần trả',
       life: 3000
     });
-    return false;
+    isValid = false;
   }
-  return true;
+
+  if (props.invoice.paymentMethodId === 1 && (props.invoice.paidAmount || 0) > 50000000) {
+    showPaidAmountError.value = true;
+    toast.add({
+      severity: 'error',
+      summary: 'Số tiền không hợp lệ',
+      detail: 'Khách chỉ được thanh toán tối đa 50,000,000đ',
+      life: 3000
+    });
+    isValid = false;
+  }
+
+  return isValid;
 };
 
 const initiateVNPayPayment = async () => {
@@ -315,7 +429,7 @@ const initiateVNPayPayment = async () => {
 
   try {
     const finalTotal = calculateFinalTotal();
-
+    props.invoice.paidAmount = finalTotal;
     const payload: OrderRequest = {
       orderCode: props.invoice.orderCode,
       userId: selectedCustomerId.value || undefined,
@@ -327,27 +441,26 @@ const initiateVNPayPayment = async () => {
       shipments: props.invoice.isPos
         ? undefined
         : [
-          {
-            carrierId: props.invoice.carrierId!,
-            shippingCost: props.invoice.shippingCost ?? 0,
-            estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
-            orderItemIds: props.invoice.items.map(item => item.id),
-          },
-        ],
+            {
+              carrierId: props.invoice.carrierId!,
+              shippingCost: props.invoice.shippingCost ?? 0,
+              estimatedDeliveryDate: props.invoice.estimatedDeliveryDate!.toISOString(),
+              orderItemIds: props.invoice.items.map(item => item.id),
+            },
+          ],
       couponUsageIds: props.invoice.couponUsageIds?.length
         ? props.invoice.couponUsageIds
         : undefined,
       payment: {
         paymentMethodId: props.invoice.paymentMethodId!,
         amount: finalTotal,
-        returnUrl: `${window.location.origin}/callback`, // Cập nhật để tương thích với createWebHistory
+        returnUrl: `${window.location.origin}/callback`,
       },
       notes: props.invoice.notes || undefined,
     };
 
     const response = await OrderService.addProductToOrder(props.invoice.orderCode, payload);
 
-    // Nếu gọi API thành công, lưu thông tin hóa đơn để callback dùng
     if (response && response.data && response.data.paymentUrl) {
       let invoiceTabs = JSON.parse(localStorage.getItem('invoiceTabs') || '[]');
 
@@ -366,7 +479,6 @@ const initiateVNPayPayment = async () => {
       invoiceTabs.push(fullInvoice);
       localStorage.setItem('invoiceTabs', JSON.stringify(invoiceTabs));
 
-      // Điều hướng đến VNPay
       window.location.href = response.data.paymentUrl;
     } else {
       throw new Error('Không nhận được URL thanh toán từ server');
@@ -465,6 +577,9 @@ const fetchCouponUsage = async () => {
   } else {
     localCouponUsage.value = [];
     props.couponUsage.splice(0, props.couponUsage.length);
+    props.invoice.couponUsageIds = [];
+    props.invoice.discount = 0;
+    emit('update-total');
   }
 };
 
@@ -481,31 +596,16 @@ const fullAddress = computed(() => {
   ].filter(Boolean).join(', ');
 });
 
-const handleCustomerSelect = (customer: CustomerResponse) => {
-  selectedCustomerId.value = customer.id;
-  selectedCustomerName.value = customer.username;
+const handleCustomerSelect = (customer: CustomerResponse | null) => {
   showDialog.value = false;
-
-  props.invoice.userId = customer.id;
-  props.invoice.customerName = customer.username;
-  props.invoice.phoneNumber = customer.phoneNumber;
-  props.invoice.email = customer.email;
-
-  const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
-
-  if (defaultAddress) {
-    selectedAddressId.value = defaultAddress.id;
-    props.invoice.addressId = defaultAddress.id;
-    props.invoice.addressStreet = defaultAddress.street;
-    props.invoice.addressWard = defaultAddress.ward;
-    props.invoice.addressDistrict = defaultAddress.district;
-    props.invoice.addressProvince = defaultAddress.province;
-    props.invoice.addressCity = defaultAddress.city || '';
-    props.invoice.addressZipcode = defaultAddress.zipcode || '';
-    props.invoice.receiverName = defaultAddress.receiverName;
-    props.invoice.receiverPhone = defaultAddress.receiverPhone;
-  } else {
-    selectedAddressId.value = null;
+  showCustomerError.value = false;
+  if (!customer) {
+    selectedCustomerId.value = null;
+    selectedCustomerName.value = 'khách vãng lai';
+    props.invoice.userId = null;
+    props.invoice.customerName = 'khách vãng lai';
+    props.invoice.phoneNumber = '';
+    props.invoice.email = '';
     props.invoice.addressId = null;
     props.invoice.addressStreet = '';
     props.invoice.addressWard = '';
@@ -515,15 +615,55 @@ const handleCustomerSelect = (customer: CustomerResponse) => {
     props.invoice.addressZipcode = '';
     props.invoice.receiverName = '';
     props.invoice.receiverPhone = '';
+    selectedAddressId.value = null;
+    fetchCouponUsage();
     toast.add({
-      severity: 'warn',
-      summary: 'Chưa có địa chỉ',
-      detail: 'Khách hàng chưa có địa chỉ giao hàng',
+      severity: 'info',
+      summary: 'Hủy chọn',
+      detail: 'Đã hủy chọn khách hàng.',
       life: 3000
     });
-  }
+  } else {
+    selectedCustomerId.value = customer.id;
+    selectedCustomerName.value = customer.username;
+    props.invoice.userId = customer.id;
+    props.invoice.customerName = customer.username;
+    props.invoice.phoneNumber = customer.phoneNumber;
+    props.invoice.email = customer.email;
 
-  fetchCouponUsage();
+    const defaultAddress = customer.addresses?.find(a => a.isDefault) || customer.addresses?.[0];
+
+    if (defaultAddress) {
+      selectedAddressId.value = defaultAddress.id;
+      props.invoice.addressId = defaultAddress.id;
+      props.invoice.addressStreet = defaultAddress.street;
+      props.invoice.addressWard = defaultAddress.ward;
+      props.invoice.addressDistrict = defaultAddress.district;
+      props.invoice.addressProvince = defaultAddress.province;
+      props.invoice.addressCity = defaultAddress.city || '';
+      props.invoice.addressZipcode = defaultAddress.zipcode || '';
+      props.invoice.receiverName = defaultAddress.receiverName;
+      props.invoice.receiverPhone = defaultAddress.receiverPhone;
+    } else {
+      selectedAddressId.value = null;
+      props.invoice.addressId = null;
+      props.invoice.addressStreet = '';
+      props.invoice.addressWard = '';
+      props.invoice.addressDistrict = '';
+      props.invoice.addressProvince = '';
+      props.invoice.addressCity = '';
+      props.invoice.addressZipcode = '';
+      props.invoice.receiverName = '';
+      props.invoice.receiverPhone = '';
+      toast.add({
+        severity: 'warn',
+        summary: 'Chưa có địa chỉ',
+        detail: 'Khách hàng chưa có địa chỉ giao hàng',
+        life: 3000
+      });
+    }
+    fetchCouponUsage();
+  }
 };
 
 const handleAddressSelect = (address: AddressResponse) => {
@@ -581,7 +721,6 @@ const handleAddressSubmit = async (submittedData: any) => {
         detail: 'Đã thêm địa chỉ mới cho khách hàng.',
         life: 3000
       });
-      const newAddressId = resAdd.data?.id;
       if (resAdd.data?.id) {
         selectedAddressId.value = resAdd.data.id;
         await refreshSelectedCustomer();
@@ -633,10 +772,12 @@ const formatCurrency = (value: number) => {
 };
 
 const handlePaidAmountChange = () => {
+  showPaidAmountError.value = false;
   emit('update-change');
 };
 
 const handleShippingCostChange = () => {
+  showShippingCostError.value = false;
   emit('update-total');
   emit('update-change');
 };
@@ -678,6 +819,10 @@ watch(() => props.invoice.paidAmount, () => {
 
 watch(() => props.invoice.shippingCost, () => {
   handleShippingCostChange();
+}, { immediate: true });
+
+watch(() => props.invoice.estimatedDeliveryDate, () => {
+  showDeliveryDateError.value = false;
 }, { immediate: true });
 </script>
 
@@ -722,5 +867,17 @@ watch(() => props.invoice.shippingCost, () => {
 :deep(.p-inputtext:focus) {
   border-color: #4dabf7;
   box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+}
+
+:deep(.p-inputtext.p-invalid) {
+  border-color: #dc3545;
+}
+
+:deep(.p-inputnumber.p-invalid) .p-inputtext {
+  border-color: #dc3545;
+}
+
+:deep(.p-calendar.p-invalid) .p-inputtext {
+  border-color: #dc3545;
 }
 </style>

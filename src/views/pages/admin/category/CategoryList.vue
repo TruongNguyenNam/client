@@ -207,6 +207,8 @@ const submitted = ref(false);
 const saveCategory = async () => {
     submitted.value = true;
 
+    const nameRegex = /^[\p{L}\d\s]+$/u; 
+
     const trimmedName = category.value.name.trim();
     const trimmedDescription = category.value.description.trim();
 
@@ -216,13 +218,17 @@ const saveCategory = async () => {
     }
 
     if (trimmedName.length > 30) {
-        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được vượt quá 3 ký tự', life: 3000 });
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được vượt quá 30 ký tự', life: 3000 });
         return;
     }
 
     const isDuplicate = isDuplicateCategoryName(trimmedName, category.value.id);
     if (isDuplicate) {
         toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục đã tồn tại. Vui lòng chọn tên khác.', life: 3000 });
+        return;
+    }
+    if (!nameRegex.test(trimmedName)) {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Tên danh mục không được chứa ký tự đặc biệt', life: 3000 });
         return;
     }
 

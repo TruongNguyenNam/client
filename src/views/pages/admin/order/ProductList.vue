@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue';
 import InputText from 'primevue/inputtext';
 import ProductCard from './ProductCard.vue';
 import type { ProductResponse } from '../../../../model/admin/product';
-import { onBeforeUnmount } from 'vue';
 import { Html5Qrcode } from 'html5-qrcode';
-import { nextTick } from 'vue';
 import { useToast } from 'primevue/usetoast';
-
 
 const toast = useToast();
 
@@ -24,19 +21,22 @@ const props = defineProps({
 
 const emit = defineEmits(['add-product']);
 
-// Sử dụng ref để theo dõi products cục bộ
+// State lưu products cục bộ
 const localProducts = ref([...props.products]);
-
-watch(() => props.products, (newProducts) => {
-  localProducts.value = [...newProducts]; // Cập nhật khi props thay đổi
-}, { deep: true });
+watch(
+  () => props.products,
+  (newProducts) => {
+    localProducts.value = [...newProducts];
+  },
+  { deep: true }
+);
 
 const searchQuery = ref('');
 
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return localProducts.value;
   const query = searchQuery.value.toLowerCase();
-  return localProducts.value.filter(product => {
+  return localProducts.value.filter((product) => {
     const name = product.name.toLowerCase();
     const sku = product.sku?.toLowerCase() || '';
     return name.includes(query) || sku.includes(query);
@@ -44,62 +44,72 @@ const filteredProducts = computed(() => {
 });
 
 const handleAddProduct = (product: ProductResponse) => {
-  // console.log('Emitting add-product for:', product.id, 'at', new Date().toISOString());
   emit('add-product', product);
 };
 
+// ====== QR SCANNER ======
 const showQrScanner = ref(false);
 let qrScanner: Html5Qrcode | null = null;
 
 const startQrScan = async () => {
   showQrScanner.value = true;
-  nextTick(() => {
-    if (!qrScanner) {
-      qrScanner = new Html5Qrcode('qr-reader');
-    }
-    qrScanner
-      .start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          searchQuery.value = decodedText;
-          stopQrScan();
-          const lowerText = decodedText.toLowerCase();
-          let matchedProduct = localProducts.value.find((p) => p.sku?.toLowerCase() === lowerText);
-          if (!matchedProduct) {
-            matchedProduct = localProducts.value.find((p) => p.name.toLowerCase().includes(lowerText));
-          }
-          if (matchedProduct) {
-            console.log('Found and adding to cart:', matchedProduct.name);
-            handleAddProduct(matchedProduct);
-          } else {
-            console.warn('No product found with code:', decodedText);
-            toast.add({
-              severity: 'warn',
-              summary: 'Không tìm thấy sản phẩm',
-              detail: `Mã: ${decodedText}`,
-              life: 3000
-            });
-          }
-        },
-        (errorMessage) => {
-          console.warn('Scan error:', errorMessage);
+  await nextTick();
+
+  if (!qrScanner) {
+    qrScanner = new Html5Qrcode('qr-reader');
+  }
+
+  qrScanner
+    .start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: 250 },
+      (decodedText) => {
+        searchQuery.value = decodedText;
+        stopQrScan();
+
+        const lowerText = decodedText.toLowerCase();
+        let matchedProduct = localProducts.value.find(
+          (p) => p.sku?.toLowerCase() === lowerText
+        );
+        if (!matchedProduct) {
+          matchedProduct = localProducts.value.find((p) =>
+            p.name.toLowerCase().includes(lowerText)
+          );
         }
-      )
-      .catch((error) => {
-        console.error('QR Scanner startup error:', error);
-      });
-  });
+
+        if (matchedProduct) {
+          console.log('Found and adding to cart:', matchedProduct.name);
+          handleAddProduct(matchedProduct);
+        } else {
+          console.warn('No product found with code:', decodedText);
+          toast.add({
+            severity: 'warn',
+            summary: 'Không tìm thấy sản phẩm',
+            detail: `Mã: ${decodedText}`,
+            life: 3000
+          });
+        }
+      },
+      (errorMessage) => {
+        console.warn('Scan error:', errorMessage);
+      }
+    )
+    .catch((error) => {
+      console.error('QR Scanner startup error:', error);
+    });
 };
 
 const stopQrScan = () => {
   if (qrScanner) {
-    qrScanner.stop().then(() => {
-      showQrScanner.value = false;
-    }).catch(err => {
-      console.error('QR stop error:', err);
-      showQrScanner.value = false;
-    });
+    qrScanner
+      .stop()
+      .then(() => {
+        showQrScanner.value = false;
+      })
+      .catch((err) => {
+        console.error('QR stop error:', err);
+        showQrScanner.value = false;
+      });
   } else {
     showQrScanner.value = false;
   }
@@ -114,21 +124,40 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="product-section">
+    <!-- Ô tìm kiếm -->
     <div class="search-box mb-4" v-if="!selectedInvoice">
       <div class="flex gap-2">
         <InputText v-model="searchQuery" placeholder="Tìm kiếm sản phẩm..." class="w-full" />
-        <button @click="startQrScan" class="bg-blue-500 text-white px-3 rounded hover:bg-blue-600">
+        <button
+          @click="startQrScan"
+          class="bg-blue-500 text-white px-3 rounded hover:bg-blue-600"
+        >
           Quét QR
         </button>
       </div>
     </div>
+
+    <!-- Camera QR -->
     <div v-if="showQrScanner" class="mt-4">
       <div id="qr-reader" style="width: 100%"></div>
-      <button @click="stopQrScan" class="mt-2 text-sm text-red-600 underline">Đóng camera</button>
+      <button
+        @click="stopQrScan"
+        class="mt-2 text-sm text-red-600 underline"
+      >
+        Đóng camera
+      </button>
     </div>
+
+    <!-- Danh sách sản phẩm -->
     <div class="products-grid" :class="{ 'products-grid-hidden': selectedInvoice }">
-      <ProductCard v-for="product in filteredProducts" :key="product.id" :product="product" @add-product="handleAddProduct" />
+      <ProductCard
+        v-for="product in filteredProducts"
+        :key="product.id"
+        :product="product"
+        @click="handleAddProduct(product)"
+      />
     </div>
+
     <slot></slot>
   </div>
 </template>

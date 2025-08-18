@@ -4,13 +4,40 @@ import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { DiscountService } from '../../../../service/admin/DiscountService';
 import type { DiscountResponse } from '../../../../model/admin/discount';
-
+import { exportToExcel,importFromExcel } from "../../../../utils/excel";
 const ListDiscount = ref<DiscountResponse[]>([]);
 const loading = ref(false);
 const first = ref(0);
 const searchTerm = ref('');
 const filterStatus = ref<string | null>(null);
 const toast = useToast();
+
+const exportDiscounts = (): void => {
+    if (!ListDiscount.value.length) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Không có dữ liệu',
+            detail: 'Không có phiếu giảm giá nào để xuất.',
+            life: 3000
+        });
+        return;
+    }
+
+    // Chuẩn bị dữ liệu export
+    const exportData = ListDiscount.value.map((c, index) => ({
+        STT: index + 1,
+        // "Mã phiếu": c.name,
+        "Tên phiếu": c.name,
+        "Phần trăm giảm": c.discountPercentage,
+        // "Số lượng sản phẩm giảm giá": c.productResponses.le
+        // "Trạng Thái": c.status,
+        "Ngày bắt đầu": c.startDate,
+        "Ngày hết hạn": c.endDate
+    }));
+
+    exportToExcel(exportData, 'danh sách đợt giảm giá');
+};
+
 
 // Lấy toàn bộ danh sách khuyến mãi
 const fetchProducts = async () => {
@@ -124,6 +151,12 @@ watch(filterStatus, async (newStatus) => {
   }
 });
 
+const clearFilter = () => {
+  searchTerm.value = '';
+  filterStatus.value = '';
+};
+
+
 onMounted(fetchProducts);
 </script>
 
@@ -136,15 +169,19 @@ onMounted(fetchProducts);
     <RouterLink to="/discountadd">
       <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" />
     </RouterLink>
-    <!-- <div class="imandex">
-      <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" />
-      <Button label="Export" icon="pi pi-upload" class="p-button-help" />
-    </div> -->
+    <div class="imandex">
+      <!-- <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import" class="mr-2 inline-block" /> -->
+      <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportDiscounts" />
+    </div>
+    
   </div>
 
-  <div class="search-wrapper" style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem; align-items:center;">
-    <InputText v-model="searchTerm" placeholder="Tìm kiếm khuyến mãi" class="p-inputtext-sm" />
+ 
 
+  <div class="search-wrapper" style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem; align-items:center;">
+    <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-5"
+                                @click="clearFilter()"  style="margin-right: 600px; margin-top: 25px;"/>
+    <InputText v-model="searchTerm" placeholder="Tìm kiếm khuyến mãi" class="p-inputtext-sm" />
     <Dropdown
       v-model="filterStatus"
       :options="[
@@ -179,6 +216,7 @@ onMounted(fetchProducts);
       <div class="flex justify-content-between align-items-center">
         <span class="text-xl font-semibold">Danh sách khuyến mãi</span>
       </div>
+     
     </template>
 
     <Column header="STT" style="width: 80px">
@@ -213,7 +251,6 @@ onMounted(fetchProducts);
 </template>
 
 <style scoped>
-
 .menuat {
   background-color: rgb(234, 232, 232);
   border-radius: 5px;
@@ -245,12 +282,12 @@ onMounted(fetchProducts);
 }
 
 .p-dropdown {
-  height: 2.5rem; /* chỉnh lại chiều cao */
+  height: 2.5rem;
   display: flex;
-  align-items: center; /* giúp chữ canh giữa chiều dọc */
-  font-size: 14px; /* tùy chỉnh font */
-  line-height: 1.5; /* tránh bị thụt */
-  padding: 0 0.5rem; /* tránh chữ sát mép */
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 0 0.5rem;
   box-sizing: border-box;
 }
 
@@ -270,4 +307,33 @@ onMounted(fetchProducts);
   line-height: 1.5;
 }
 
+/* ====================== Bảng có gạch mờ ====================== */
+:deep(.p-datatable-table) {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+
+/* Gạch ngang và dọc MỜ */
+:deep(.p-datatable-thead > tr > th),
+:deep(.p-datatable-tbody > tr > td) {
+  border: 1px solid #eee !important; /* màu gạch rất nhẹ */
+  padding: 0.75rem;
+  background: #fff;
+  vertical-align: middle;
+}
+
+/* Header có viền dưới rõ hơn chút */
+:deep(.p-datatable-thead > tr > th) {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #ddd !important; /* đậm hơn body 1 chút */
+}
+
+/* Hover nhẹ nhàng */
+:deep(.p-datatable-tbody > tr:hover) {
+  background-color: #f6f6f6;
+  transition: background-color 0.2s ease-in-out;
+}
 </style>
+

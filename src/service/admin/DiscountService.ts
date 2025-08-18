@@ -44,10 +44,14 @@ export const DiscountService = {
         discount
       );
       return response.data;
-    } catch (error) {
-      console.error('Error saving discount:', error);
-      throw new Error('Failed to save discount. Please try again later.');
-    }
+
+    } // ✅ Giữ nguyên lỗi từ axios để xử lý bên ngoài
+catch (err) {
+  console.error('Error saving discount:', err)
+  throw err 
+}
+
+
   },
 
   // ✅ Cập nhật trạng thái khuyến mãi

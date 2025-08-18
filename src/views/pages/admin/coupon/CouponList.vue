@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import type { CouponRequest } from "../../../../model/admin/coupon";
 import { ar } from "date-fns/locale";
 import { useToast } from 'primevue/usetoast';
-
+import { exportToExcel,importFromExcel } from "../../../../utils/excel";
 const errors = ref<{ [key: string]: string }>({});
 
 const toast = useToast();
@@ -48,6 +48,7 @@ const coupon = ref<Coupon>({
     couponStatus: '', // status mặc định backend tự sinh
     deleted: false
 });
+
 const newCoupon = ref<Coupon>({
     id: null,
     codeCoupon: '',
@@ -234,6 +235,47 @@ function validateCoupon(data: any, isNew: boolean): boolean {
     return Object.keys(errors.value).length === 0;
 }
 
+function validateUpdateCoupon(): boolean {
+    errors.value = {}; // reset lỗi
+    const nameRegex = /^[\p{L}\d\s]+$/u; 
+
+    if (coupon.value.couponName?.length > 100) {
+        errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
+    }
+    if (!coupon.value.couponName?.trim()) {
+        errors.value.couponName = "Tên phiếu giảm giá không được để trống";
+    }
+
+    else if (!nameRegex.test(coupon.value.couponName.trim())) {
+        errors.value.couponName = "Tên phiếu giảm giá không được chứa ký tự đặc biệt";
+    }
+
+    if (!coupon.value.discountAmount || coupon.value.discountAmount <= 0) {
+        errors.value.discountAmount = "Giá trị giảm phải lớn hơn 0";
+    }
+
+    if (!coupon.value.expirationDate) {
+        errors.value.expirationDate = "Ngày hết hạn không được để trống";
+    }
+    if (
+        coupon.value.startDate &&
+        coupon.value.expirationDate &&
+        new Date(coupon.value.startDate) > new Date(coupon.value.expirationDate)
+    ) {
+        errors.value.startDate = "Ngày bắt đầu không được sau ngày kết thúc";
+        errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+    }
+    if (Object.keys(errors.value).length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Dữ liệu không hợp lệ',
+            detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
+            life: 3000
+        });
+    }
+    return Object.keys(errors.value).length === 0;
+}
+
 
 watch(
     () => [newCoupon.value.startDate, newCoupon.value.expirationDate],
@@ -261,6 +303,7 @@ watch(
         }
     }
 );
+
 const addCoupon = async (): Promise<void> => {
     if (validateCoupon(newCoupon.value, true)) {
         try {
@@ -351,8 +394,40 @@ const saveCoupon = async (): Promise<void> => {
     }
 };
 
-const importCoupons = (): void => { };
-const exportCoupons = (): void => { };
+const importCoupons = (): void => {
+
+
+
+ };
+
+
+
+const exportCoupons = (): void => {
+    if (!coupons.value.length) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Không có dữ liệu',
+            detail: 'Không có phiếu giảm giá nào để xuất.',
+            life: 3000
+        });
+        return;
+    }
+
+    // Chuẩn bị dữ liệu export
+    const exportData = coupons.value.map((c, index) => ({
+        STT: index + 1,
+        "Mã phiếu": c.codeCoupon,
+        "Tên phiếu": c.couponName,
+        "Đã tặng": c.usedCount ?? 0,
+        "Giá trị giảm": c.discountAmount,
+        "Ngày bắt đầu": c.startDate ? formatDate(c.startDate) : '',
+        "Ngày hết hạn": c.expirationDate ? formatDate(c.expirationDate) : '',
+        "Trạng thái": getCouponStatus(c).text
+    }));
+
+    exportToExcel(exportData, 'Danh_sach_coupon');
+};
+
 
 onMounted(loadCoupons);
 
@@ -448,10 +523,10 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2"
                             @click="openAddDialog" />
                     </template>
-                    <!-- <template v-slot:end>
-                        <Button label="Nhập" icon="pi pi-upload" class="p-button-help mr-2" @click="importCoupons" />
-                        <Button label="Xuất" icon="pi pi-download" class="p-button-info" @click="exportCoupons" />
-                    </template> -->
+                    <template v-slot:end> 
+                        <!-- <Button label="Nhập Excel" icon="pi pi-upload" class=" p-button-info mr-2" @click="importCoupons" /> -->
+                        <Button label="Xuất Excel" icon="pi pi-download" class="p-button-help " @click="exportCoupons" />
+                    </template>
                 </Toolbar>
                 <!-- Phần tìm kiếm -->
                 <div class="flex align-items-center justify-content-between mb-4" style="margin-right: 50px;">

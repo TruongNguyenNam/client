@@ -86,7 +86,6 @@ const importAttributes = async (event: any) => {
   }
 };
 
-
 const listProduct = ref<ProductAttributeResponse[]>([]);
 const loading = ref(false);
 const dialogVisible = ref(false);
@@ -95,7 +94,9 @@ const editingAttribute = ref<ProductAttributeResponse | null>(null);
 const first = ref(0);
 
 const name = ref('');
+const nameError = ref('');
 const description = ref('');
+const descriptionError = ref('');
 const toast = useToast();
 
 // Tìm kiếm
@@ -117,13 +118,13 @@ const fetchProducts = async () => {
 // Tìm kiếm
 const searchByName = async () => {
   if (!searchTerm.value) {
-    fetchProducts(); // Nếu không có từ khóa, gọi lại hàm lấy toàn bộ danh sách
+    fetchProducts();
     return;
   }
   loading.value = true;
   try {
     const data = await ProductAttributeService.searchProductAttribute(searchTerm.value);
-    listProduct.value = data ?? []; // Cập nhật danh sách sản phẩm từ API
+    listProduct.value = data ?? [];
   } catch (error: unknown) {
     if (error instanceof Error) {
       toast.add({ severity: 'error', summary: 'Lỗi', detail: `Đã xảy ra lỗi khi tìm kiếm: ${error.message}`, life: 3000 });
@@ -135,22 +136,23 @@ const searchByName = async () => {
   }
 };
 
-
 // Lọc danh sách thuộc tính theo tên
 const filteredListProduct = computed(() => {
   if (!searchTerm.value) {
     return listProduct.value;
   }
   return listProduct.value.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.value.toLowerCase())
-  );
+  product.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+)
 });
 
 // Mở dialog thêm mới
 const openAddDialog = () => {
   isEditMode.value = false;
   name.value = '';
+  nameError.value = '';
   description.value = '';
+  descriptionError.value = '';
   dialogVisible.value = true;
 };
 
@@ -158,7 +160,7 @@ const openAddDialog = () => {
 const openEditDialog = async (id: number) => {
   if (!id) {
     console.error('ID không hợp lệ:', id);
-    return; // Không thực hiện tiếp nếu ID không hợp lệ
+    return;
   }
 
   try {
@@ -167,7 +169,9 @@ const openEditDialog = async (id: number) => {
       isEditMode.value = true;
       editingAttribute.value = response.data;
       name.value = response.data.name;
+      nameError.value = '';
       description.value = response.data.description;
+      descriptionError.value = '';
       dialogVisible.value = true;
     }
   } catch (error) {
@@ -175,30 +179,49 @@ const openEditDialog = async (id: number) => {
   }
 };
 
+
+const validateForm = () => {
+  let isValid = true;
+  
+  const nameRegex = /^[A-Za-zÀ-ỹà-ỹ\s]+$/u; // Cho phép chữ cái và khoảng trắng (bao gồm cả tiếng Việt)
+  if (!nameRegex.test(name.value.trim())) {
+    nameError.value = 'Tên thuộc tính chỉ được chứa chữ cái và không chứa ký tự đặc biệt';
+    isValid = false;
+  }
+  // Validate name
+ else if (!name.value.trim()) {
+    nameError.value = 'Tên thuộc tính không được để trống';
+    isValid = false;
+  } else if (name.value.trim().length < 1 || name.value.trim().length > 20) {
+    nameError.value = 'Tên thuộc tính phải có độ dài từ 1 đến 20 ký tự';
+    isValid = false;
+  } else {
+    nameError.value = '';
+  }
+
+ 
+
+  // Check duplicate name
+  if (name.value.trim() && !nameError.value) {
+    const isDuplicate = listProduct.value.some(product =>
+      product.name.toLowerCase() === name.value.trim().toLowerCase() &&
+      (isEditMode.value ? product.id !== editingAttribute.value?.id : true)
+    );
+
+    if (isDuplicate) {
+      nameError.value = 'Tên thuộc tính đã tồn tại';
+      isValid = false;
+    }
+  }
+
+  return isValid;
+};
+
 const saveAttribute = async () => {
-  // Kiểm tra nếu name hoặc description trống
-  if (!name.value.trim()) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Tên thuộc tính không được để trống', life: 3000 });
-    return; // Dừng lại không gửi yêu cầu
+  if (!validateForm()) {
+    return;
   }
 
-  if (!description.value.trim()) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Mô tả không được để trống', life: 3000 });
-    return; // Dừng lại không gửi yêu cầu
-  }
-
-  // Kiểm tra trùng tên trong danh sách thuộc tính
-  const isDuplicate = listProduct.value.some(product =>
-    product.name.toLowerCase() === name.value.trim().toLowerCase() &&
-    (isEditMode.value ? product.id !== editingAttribute.value?.id : true) // Bỏ qua ID hiện tại khi cập nhật
-  );
-
-  if (isDuplicate) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Tên thuộc tính đã tồn tại', life: 3000 });
-    return; // Dừng lại không gửi yêu cầu nếu trùng tên
-  }
-
-  // Tạo payload và tiếp tục lưu hoặc cập nhật
   const payload: ProductAttributeRequest = {
     name: name.value.trim(),
     description: description.value.trim(),
@@ -206,27 +229,20 @@ const saveAttribute = async () => {
 
   try {
     if (isEditMode.value && editingAttribute.value) {
-      // Cập nhật thuộc tính
       await ProductAttributeService.updateProductAttribute(editingAttribute.value.id, payload);
-      toast.add({ severity: 'success', summary: 'Cập nhật thành công', life: 3000 });
+      toast.add({ severity: 'success', summary: 'Thành công', detail: 'Cập nhật thuộc tính thành công', life: 3000 });
     } else {
-      // Lưu thuộc tính mới
       await ProductAttributeService.saveProductAttribute(payload);
-      toast.add({ severity: 'success', summary: 'Thêm mới thành công', life: 3000 });
+      toast.add({ severity: 'success', summary: 'Thành công', detail: 'Thêm thuộc tính mới thành công', life: 3000 });
     }
 
     dialogVisible.value = false;
-    fetchProducts(); // Lấy lại danh sách thuộc tính
+    fetchProducts();
   } catch (error: any) {
     if (error.response) {
       const { status, data } = error.response;
       if (status === 400) {
-        toast.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: data.message || 'Dữ liệu không hợp lệ',
-          life: 3000
-        });
+        nameError.value = data.message || 'Dữ liệu không hợp lệ';
       } else if (status === 401) {
         toast.add({
           severity: 'error',
@@ -239,13 +255,6 @@ const saveAttribute = async () => {
           severity: 'error',
           summary: 'Lỗi',
           detail: 'Lỗi hệ thống, vui lòng thử lại sau',
-          life: 3000
-        });
-      } else {
-        toast.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: 'Đã xảy ra lỗi khi xử lý yêu cầu',
           life: 3000
         });
       }
@@ -261,14 +270,17 @@ const saveAttribute = async () => {
   }
 };
 
+const clearFilter = () => {
+  searchTerm.value = '';
+  fetchProducts();
+}
+
 onMounted(fetchProducts);
 </script>
 
 <template>
   <div class="card">
     <h2 class="mb-3">Danh sách Thuộc tính sản phẩm</h2>
-
-
 
     <div class="menuat">
       <Button label="Thêm Mới" icon="pi pi-plus" class="p-button-success mr-2 mb-3 mt-3 ml-4" @click="openAddDialog" />
@@ -279,28 +291,41 @@ onMounted(fetchProducts);
           class="mr-2 inline-block" @select="importAttributes" :auto="true" />
 
         <Button label="Xuất Excel" icon="pi pi-upload" class="p-button-help" @click="exportAttributes" />
-
       </div>
     </div>
 
     <!-- Tìm kiếm riêng, căn phải -->
     <div class="search-wrapper">
-      <InputText v-model="searchTerm" placeholder="Tìm kiếm thuộc tính" class="p-inputtext-sm" @input="searchByName" />
+      <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-5"
+                                @click="clearFilter()" style="margin-right: 750px; margin-top: 20px;"  />
+      <InputText v-model="searchTerm" placeholder="Tìm kiếm thuộc tính" class="p-inputtext-sm" @input="searchByName" style="margin-top: 20px;"/>
+    
     </div>
-    <DataTable :value="listProduct" :loading="loading" dataKey="id" :paginator="true" :rows="5"
-      :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" :first="first" @page="e => first = e.first"
-      currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} thuộc tính">
+    
+    <DataTable 
+      :value="listProduct" 
+      :loading="loading" 
+      dataKey="id" 
+      :paginator="true" 
+      :rows="5"
+      :rowsPerPageOptions="[5, 10, 20]" 
+      responsiveLayout="scroll" 
+      :first="first" 
+      @page="e => first = e.first"
+      currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} thuộc tính"
+      showGridlines
+    >
       <template #header>
         <div class="flex justify-content-between align-items-center">
           <span class="text-xl font-semibold">Thuộc tính</span>
         </div>
       </template>
+      
       <Column header="STT" style="width: 80px">
         <template #body="slotProps">
           {{ first + slotProps.index + 1 }}
         </template>
       </Column>
-
       <Column field="name" header="Tên thuộc tính" sortable />
       <Column field="description" header="Mô tả" sortable />
       <Column header="Thao Tác" style="width: 120px">
@@ -317,12 +342,14 @@ onMounted(fetchProducts);
       <div class="p-fluid">
         <div class="field mb-3">
           <label for="name">Tên thuộc tính</label>
-          <InputText id="name" v-model="name" />
+          <InputText id="name" v-model="name" :class="{ 'p-invalid': nameError }" />
+          <small class="p-error">{{ nameError }}</small>
         </div>
 
         <div class="field mb-3">
           <label for="description">Mô tả</label>
-          <Textarea id="description" v-model="description" rows="3" />
+          <Textarea id="description" v-model="description" rows="3" :class="{ 'p-invalid': descriptionError }" />
+          <small class="p-error">{{ descriptionError }}</small>
         </div>
       </div>
 
@@ -341,6 +368,7 @@ onMounted(fetchProducts);
   padding: 1rem;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
 }
 
 .menuat {
@@ -360,7 +388,6 @@ onMounted(fetchProducts);
   gap: 0.5rem;
 }
 
-
 .search-wrapper {
   display: flex;
   justify-content: flex-end;
@@ -372,5 +399,10 @@ onMounted(fetchProducts);
   height: 2.5rem;
   padding: 0.5rem;
   box-sizing: border-box;
+}
+
+.p-error {
+  color: #f44336;
+  font-size: 0.875rem;
 }
 </style>

@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="p-4 max-w-4xl mx-auto bg-white rounded shadow">
     <h2 class="text-xl font-semibold mb-4">Tạo khuyến mãi</h2>
@@ -6,92 +8,76 @@
       <div class="flex gap-6">
         <!-- Cột trái -->
         <div class="flex-1 space-y-4">
-    <!-- Tên khuyến mãi -->
-    <div>
-      <label class="block font-medium">Tên khuyến mãi</label>
-      <InputText
-        v-model="discount.name"
-        placeholder="Nhập tên"
-        class="w-full"
-        maxlength="40"
-        :class="{ 'p-invalid': !!errors.name }"
-      />
-      <small v-if="errors.name" class="p-error block mt-1">{{ errors.name }}</small>
-    </div>
+          <div>
+            <label class="block font-medium">Tên khuyến mãi</label>
+            <input
+              v-model="discount.name"
+              :class="{'border-red-500': errors.name}"
+              class="w-full border px-2 py-1 rounded"
+              placeholder="Nhập tên"
+            />
+            <small v-if="errors.name" class="text-red-600 mt-1 block text-sm">{{ errors.name }}</small>
+          </div>
 
-    <!-- Phần trăm giảm -->
-    <div>
-      <label class="block font-medium">Phần trăm giảm (%)</label>
-      <InputNumber
-          v-model="discount.percentValue"
-          :min="0"
-          :max="100"
-          mode="decimal"
-          suffix="%"
-          class="w-full"
-          :class="{ 'p-invalid': !!errors.percentValue }"
-        />
-      <small v-if="errors.percentValue" class="p-error block mt-1">{{ errors.percentValue }}</small>
-    </div>
+          <div>
+            <label class="block font-medium">Phần trăm giảm (%)</label>
+            <input
+              v-model.number="discount.percentValue"
+              type="number"
+              :class="{'border-red-500': errors.percentValue}"
+              class="w-full border px-2 py-1 rounded"
+            
+            />
+            <small v-if="errors.percentValue" class="text-red-600 mt-1 block text-sm">{{ errors.percentValue }}</small>
+          </div>
 
-    <!-- Ngày bắt đầu -->
-    <div>
-      <label class="block font-medium">Ngày bắt đầu</label>
-      <Calendar
-        v-model="discount.startDate"
-        showTime
-        hourFormat="24"
-        dateFormat="dd/mm/yy"
-        class="w-full"
-        :class="{ 'p-invalid': !!errors.startDate }"
-      />
-      <small v-if="errors.startDate" class="p-error block mt-1">{{ errors.startDate }}</small>
-    </div>
+          <div>
+            <label class="block font-medium">Ngày bắt đầu</label>
+            <input
+              v-model="discount.startDate"
+              type="datetime-local"
+              :class="{'border-red-500': errors.startDate}"
+              class="w-full border px-2 py-1 rounded"
+            />
+            <small v-if="errors.startDate" class="text-red-600 mt-1 block text-sm">{{ errors.startDate }}</small>
+          </div>
 
-    <!-- Ngày kết thúc -->
-    <div>
-      <label class="block font-medium">Ngày kết thúc</label>
-      <Calendar
-          v-model="discount.endDate"
-          showTime
-          hourFormat="24"
-          dateFormat="dd/mm/yy"
-          class="w-full"
-          :class="{ 'p-invalid': !!errors.endDate }"
-        />
-      <small v-if="errors.endDate" class="p-error block mt-1">{{ errors.endDate }}</small>
-    </div>
+          <div>
+            <label class="block font-medium">Ngày kết thúc</label>
+            <input
+              v-model="discount.endDate"
+              type="datetime-local"
+              :class="{'border-red-500': errors.endDate}"
+              class="w-full border px-2 py-1 rounded"
+            />
+            <small v-if="errors.endDate" class="text-red-600 mt-1 block text-sm">{{ errors.endDate }}</small>
+          </div>
 
-    <!-- Ngưỡng giá áp dụng -->
-    <div>
-      <label class="block font-medium">Ngưỡng giá áp dụng</label>
-      <InputNumber
-        v-model="discount.priceThreshold"
-        :min="0"
-        mode="currency"
-        currency="VND"
-        locale="vi-VN"
-        class="w-full"
-      />
-    </div>
-  </div>
+          <div>
+            <label class="block font-medium">Ngưỡng giá áp dụng</label>
+            <input
+              v-model.number="discount.priceThreshold"
+              type="number"
+              class="w-full border px-2 py-1 rounded"
+              min="0"
+            />
+          </div>
+        </div>
 
         <!-- Cột phải -->
         <div class="flex-1 space-y-4">
-          <div>
-            <label class="block font-medium mb-2">Danh mục áp dụng</label>
-            <Dropdown
-              v-model="selectedCategoryId"
-              :options="categories"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Chọn danh mục"
-              class="w-full"
-              @change="fetchProductsByCategory"
-              clearable
-            />
-          </div>
-
+        <div>
+  <label class="block font-medium mb-2">Danh mục áp dụng</label>
+  <Dropdown
+    v-model="selectedCategoryId"
+    :options="categories"
+    optionLabel="name"
+    optionValue="id"
+    placeholder="Chọn danh mục"
+    class="w-full"
+    @change="fetchProductsByCategory"
+  />
+</div>
           <div>
             <label class="block font-medium mb-2">Sản phẩm áp dụng</label>
               <InputText
@@ -113,24 +99,27 @@
               <Column selectionMode="multiple" style="width: 3em" />
               <Column field="id" header="ID" sortable />
               <Column field="name" header="Tên sản phẩm" sortable />
-              <Column field="price" header="Giá" :body="formatPrice" sortable />
+          <Column field="price" header="Giá" sortable>
+  <template #body="{ data }">
+    {{ formatPrice(data.price) }}
+  </template>
+</Column>
             </DataTable>
           </div>
         </div>
       </div>
+      
 
-      <!-- <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4">
-        Lưu khuyến mãi
-      </button> -->
+    <div class="flex justify-start mt-4">
+  <Button 
+    type="submit"
+    label="Lưu khuyến mãi" 
+    icon="pi pi-save" 
+    severity="primary"
+    class="px-4 py-2"
+  />
+</div>
 
-      <div class="p-d-flex p-jc-end mt-4" style="margin-left: 925px; width: 180px; height: 100px;">
-          <Button
-            type="submit"
-            label="Lưu khuyến mãi"
-            icon="pi pi-save"
-            class="p-button-primary"
-          />
-        </div>
     </form>
 
     <Toast ref="toast" />
@@ -173,7 +162,7 @@ interface DiscountRequest {
 const categories = ref<Category[]>([])
 const products = ref<Product[]>([])
 const selectedProducts = ref<Product[]>([])
-const selectedCategoryId = ref<number | null>(null)
+const selectedCategoryId = ref<number | null>(0) // Mặc định chọn "Tất cả sản phẩm"
 const searchKeyword = ref('')
 const discount = ref<DiscountRequest>({
   name: '',
@@ -193,6 +182,7 @@ onMounted(async () => {
   try {
     const res = await CategoryService.getAllCategories()
     categories.value = res.data || []
+      categories.value = [{ id: 0, name: 'Tất cả sản phẩm' }, ...(res.data || [])]
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Lỗi tải danh mục', detail: 'Không thể tải danh mục.', life: 4000 })
   }
@@ -225,35 +215,44 @@ const loadAllChildProducts = async () => {
 
 // Hàm load sản phẩm theo danh mục khi chọn dropdown
 const fetchProductsByCategory = async () => {
-  console.log('Selected category id:', selectedCategoryId.value) // Log category id
-
-  if (selectedCategoryId.value === null) {
-    console.log('No category selected, loading all child products')
+  if (selectedCategoryId.value === 0 || selectedCategoryId.value === null) {
     await loadAllChildProducts()
-   
   } else {
     try {
       const res = await ProductService.getChildProductsByCategoryId(selectedCategoryId.value)
-      console.log('API response products:', res) // Log data trả về
-     products.value = res
-
-
-     
+      products.value = res
     } catch (err) {
       console.error('Fetch products by category error:', err)
-      toast.add({ severity: 'error', summary: 'Lỗi tải sản phẩm', detail: 'Không thể tải sản phẩm từ danh mục.', life: 4000 })
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Lỗi tải sản phẩm', 
+        detail: 'Không thể tải sản phẩm từ danh mục.', 
+        life: 4000 
+      })
     }
   }
 }
-
 // Cập nhật danh sách productIds mỗi khi chọn sản phẩm thay đổi
 watch(selectedProducts, (val) => {
   discount.value.productIds = val.map(p => p.id)
 })
 
-const formatPrice = (product: Product) => {
-  if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
-  return product.price.toLocaleString('vi-VN', {
+// const formatPrice = (product: Product) => {
+//   if (product.price === null) return '0 ₫'; // hoặc bạn có thể trả về 'Chưa có giá'
+//   return product.price.toLocaleString('vi-VN', {
+//     style: 'currency',
+//     currency: 'VND'
+//   });
+// }
+const formatPrice = (price: number | string | null): string => {
+  if (price === null || price === undefined || price === '') return '0 ₫';
+  
+  // Convert string to number nếu cần
+  const numericPrice = typeof price === 'string' 
+    ? parseFloat(price.replace(/[^\d.]/g, '')) 
+    : price;
+
+  return numericPrice.toLocaleString('vi-VN', {
     style: 'currency',
     currency: 'VND'
   });
@@ -262,15 +261,23 @@ const formatPrice = (product: Product) => {
 
 const validate = () => {
   errors.value = {}
-  if (!discount.value.name.trim()) errors.value.name = 'Tên khuyến mãi không được để trống.'
+  const nameRegex = /^[\p{L}\d\s]+$/u 
+  // \p{L} = chữ cái Unicode, \d = số, \s = khoảng trắng
+
+  // ✅ Check tên khuyến mãi
+  if (!discount.value.name?.trim()) {
+    errors.value.name = 'Tên khuyến mãi không được để trống.'
+  } else if (discount.value.name.length > 50) {
+    errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
+  } else if (!nameRegex.test(discount.value.name.trim())) {
+    errors.value.name = 'Tên khuyến mãi không được chứa ký tự đặc biệt.'
+  }
   if (!discount.value.percentValue || discount.value.percentValue < 1 || discount.value.percentValue > 100) {
     errors.value.percentValue = 'Phần trăm giảm phải từ 1 đến 100.'
   }
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'
-  else if (discount.value.endDate < discount.value.startDate) {
-    errors.value.endDate = 'Ngày kết thúc phải sau ngày bắt đầu.'
-  }
+ 
 
   return Object.keys(errors.value).length === 0
 }
@@ -309,8 +316,13 @@ const handleSubmit = async () => {
     
     // Load lại toàn bộ sản phẩm con sau khi reset form
     await loadAllChildProducts()
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể lưu khuyến mãi.', life: 4000 })
+  } catch (err: any) {
+    let msg = 'Đã xảy ra lỗi khi gửi dữ liệu.'
+    if (err.response?.status === 400 && err.response.data?.message) msg = err.response.data.message
+    else if (err.response?.status === 405) msg = 'Phương thức không được hỗ trợ (405).'
+    else if (err.response?.data?.error) msg = err.response.data.error
+
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 5000 })
   }
 }
 const doSearch = async (keyword: string) => {
@@ -342,23 +354,6 @@ const onSearchInput = () => {
 </script>
 
 <style scoped>
-/* Style cho báo lỗi */
-.p-error {
-  color: #ef4444; /* Đỏ */
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-/* Khi có lỗi thì Input, Calendar, InputNumber đều viền đỏ */
-:deep(.p-inputtext.p-invalid),
-:deep(.p-inputnumber.p-invalid > .p-inputtext),
-:deep(.p-calendar.p-invalid > .p-inputtext) {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 5px #ef4444aa;
-}
-
-
-
 form > div.flex {
   border: 1px solid #ddd;
   border-radius: 0.5rem;
@@ -400,14 +395,8 @@ input:focus {
 .p-datatable-tbody > tr > td {
   padding: 0.9rem 1.2rem;
 }
-
-
-/* Style cho báo lỗi */
-.p-error {
-  color: #ef4444; /* Đỏ */
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+.p-dropdown-items-wrapper .p-dropdown-item:first-child {
+  font-weight: bold;
+  color: #3b82f6;
 }
-
-
 </style>

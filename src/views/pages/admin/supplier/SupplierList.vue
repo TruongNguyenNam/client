@@ -218,12 +218,22 @@ const saveSupplier = async () => {
     submitted.value = true;
     const trimmedName = supplier.value.name.trim();
     const trimmedDescription = supplier.value.description.trim();
-
+    const nameRegex = /^[\p{L}\d\s]+$/u; 
     if (!trimmedName) {
         toast.add({
             severity: 'warn',
             summary: 'Cảnh báo',
             detail: 'Tên nhà cung cấp không được để trống.',
+            life: 3000
+        });
+        return;
+    }
+
+    if (!nameRegex.test(trimmedName)) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cảnh báo',
+            detail: 'Tên nhà cung cấp không được chứa ký tự đặc biệt.',
             life: 3000
         });
         return;

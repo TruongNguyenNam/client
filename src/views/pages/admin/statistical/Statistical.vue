@@ -115,21 +115,85 @@ const loadMonthlyOrderChart = async () => {
   try {
     const res = await Statistical.getChart();
     const chartData = res.data;
+
+    // Danh sách 12 tháng
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+
+    // Chuẩn hoá dữ liệu đủ 12 tháng
+    const normalizedData = months.map(m => {
+      const found = chartData.find(d => d.month === m);
+      return {
+        month: m,
+        posOrders: found ? found.posOrders : 0,
+        shipOrders: found ? found.shipOrders : 0
+      };
+    });
+
     lineData.value = {
-      labels: chartData.map(i => `Tháng ${i.month}`),
+      labels: normalizedData.map(i => {
+        const monthNames = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return monthNames[i.month - 1];
+      }),
       datasets: [
-        { label: 'Tại Quầy', data: chartData.map(i => i.posOrders), fill: false, borderColor: '#42A5F5', tension: 0.4 },
-        { label: 'SHIP', data: chartData.map(i => i.shipOrders), fill: false, borderColor: '#66BB6A', tension: 0.4 }
+        {
+          label: 'Tại Quầy',
+          data: normalizedData.map(i => i.posOrders),
+          fill: false,
+          borderColor: '#42A5F5',
+          backgroundColor: '#42A5F5',
+          tension: 0.4
+        },
+        {
+          label: 'SHIP',
+          data: normalizedData.map(i => i.shipOrders),
+          fill: false,
+          borderColor: '#66BB6A',
+          backgroundColor: '#66BB6A',
+          tension: 0.4
+        }
       ]
     };
+
     lineOptions.value = {
       responsive: true,
-      plugins: { legend: { position: 'top' }, title: { display: true, text: '' } }
+      plugins: {
+        legend: {
+          position: 'top'
+        },
+        title: {
+          display: true,
+          text: 'Sales Overview'
+        }
+      }
     };
   } catch (err) {
     console.error('Lỗi biểu đồ:', err);
   }
 };
+
+
+// const loadMonthlyOrderChart = async () => {
+//   try {
+//     const res = await Statistical.getChart();
+//     const chartData = res.data;
+//     lineData.value = {
+//       labels: chartData.map(i => `Tháng ${i.month}`),
+//       datasets: [
+//         { label: 'Tại Quầy', data: chartData.map(i => i.posOrders), fill: false, borderColor: '#42A5F5', tension: 0.4 },
+//         { label: 'SHIP', data: chartData.map(i => i.shipOrders), fill: false, borderColor: '#66BB6A', tension: 0.4 }
+//       ]
+//     };
+//     lineOptions.value = {
+//       responsive: true,
+//       plugins: { legend: { position: 'top' }, title: { display: true, text: '' } }
+//     };
+//   } catch (err) {
+//     console.error('Lỗi biểu đồ:', err);
+//   }
+// };
 
 onMounted(async () => {
   try {

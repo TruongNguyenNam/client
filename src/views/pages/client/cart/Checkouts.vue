@@ -833,15 +833,15 @@ const submitOrder = async () => {
     return;
   }
 
-  if (!isFormValid.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
-      life: 3000
-    });
-    return;
-  }
+  // if (!isFormValid.value) {
+  //   toast.add({
+  //     severity: 'warn',
+  //     summary: 'Cảnh báo',
+  //     detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
+  //     life: 3000
+  //   });
+  //   return;
+  // }
 
   if (authStore.cart.length === 0) {
     toast.add({

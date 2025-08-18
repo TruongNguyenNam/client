@@ -131,6 +131,23 @@
       <Button label="Làm mới" icon="pi pi-check" class="p-button-primary" @click="lamMoi"
         v-if="currentTab === 'form'" />
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
+
+      <Button 
+        label="Hủy chọn khách hàng" 
+        icon="pi pi-user-minus" 
+        class="p-button-warning" 
+        @click="clearSelectedCustomer" 
+        v-if="selectedCustomer"
+      />
+      <Button 
+        label="Chọn" 
+        icon="pi pi-check" 
+        class="p-button-primary" 
+        :disabled="!selectedCustomer" 
+        @click="selectCustomer" 
+        v-if="currentTab === 'list'" 
+      />
+
       <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" />
 
@@ -141,8 +158,9 @@
 
       <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
         @click="clearSelectedCustomer" v-if="selectedCustomer" />
-      <!-- <!-- <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+      <!--  <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" /> -->
+
     </template>
   </Dialog>
 </template>
@@ -244,6 +262,7 @@ function validatePhone(phone: string) {
 }
 
 
+
 // Theo dõi email
 watch(() => customer.value.email, (newEmail) => {
   if (!validateEmail(newEmail)) {
@@ -295,6 +314,7 @@ watch(() => customer.value.username, (username) => {
     delete errors.value.username;
   }
 });
+
 
 const submitCustomer = async () => {
   errors.value = {};
@@ -368,8 +388,11 @@ const submitCustomer = async () => {
     });
     return;
   }
+
+
   // Nếu có lỗi thì return
   if (Object.keys(errors.value).length > 0) return;
+
 
   const address = {
     street: customer.value.street,
@@ -430,6 +453,7 @@ const submitCustomer = async () => {
   }
 };
 
+
 const lamMoi = () => {
   customer.value = {
     username: "",
@@ -449,6 +473,7 @@ const lamMoi = () => {
 
   currentTab.value = 'form';
 };
+
 
 const selectCustomer = () => {
   emit('selected', selectedCustomer.value);

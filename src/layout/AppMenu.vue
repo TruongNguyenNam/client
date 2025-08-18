@@ -63,9 +63,12 @@ const model = ref([
     },
     {
         label: 'Đơn Hàng',
-        items:  [{ label: 'Đơn Hàng', icon: 'pi pi-fw pi-tags', to: '/findByShip', class: 'rotated-icon' },]
+        items:  [{ label: 'Đơn Hàng', icon: 'pi pi-fw pi-tags', to: '/findByShip', class: 'rotated-icon' },
+            { label: 'Đơn Hoàn', icon: 'pi pi-fw pi-tags', to: '/adReturnOder', class: 'rotated-icon' },
+        ]
     
     },
+
     // {
     //     label: 'Prime Blocks',
     //     items: [
@@ -116,6 +119,7 @@ const model = ref([
     //             icon: 'pi pi-fw pi-pencil',
     //             to: '/pages/crud'
     //         },
+
             
     //         {
     //             label: 'Test',
@@ -204,33 +208,33 @@ const model = ref([
     //         }
     //     ]
     // },
-    {
-        label: 'Get Started',
-        items: [
-            {
-                label: 'Documentation',
-                icon: 'pi pi-fw pi-question',
-                to: '/documentation'
-            },
-            {
-                label: 'Figma',
-                url: 'https://www.dropbox.com/scl/fi/bhfwymnk8wu0g5530ceas/sakai-2023.fig?rlkey=u0c8n6xgn44db9t4zkd1brr3l&dl=0',
-                icon: 'pi pi-fw pi-pencil',
-                target: '_blank'
-            },
-            {
-                label: 'View Source',
-                icon: 'pi pi-fw pi-search',
-                url: 'https://github.com/primefaces/sakai-vue',
-                target: '_blank'
-            },
-            {
-                label: 'Nuxt Version',
-                url: 'https://github.com/primefaces/sakai-nuxt',
-                icon: 'pi pi-fw pi-star'
-            }
-        ]
-    }
+    // {
+    //     label: 'Get Started',
+    //     items: [
+    //         {
+    //             label: 'Documentation',
+    //             icon: 'pi pi-fw pi-question',
+    //             to: '/documentation'
+    //         },
+    //         {
+    //             label: 'Figma',
+    //             url: 'https://www.dropbox.com/scl/fi/bhfwymnk8wu0g5530ceas/sakai-2023.fig?rlkey=u0c8n6xgn44db9t4zkd1brr3l&dl=0',
+    //             icon: 'pi pi-fw pi-pencil',
+    //             target: '_blank'
+    //         },
+    //         {
+    //             label: 'View Source',
+    //             icon: 'pi pi-fw pi-search',
+    //             url: 'https://github.com/primefaces/sakai-vue',
+    //             target: '_blank'
+    //         },
+    //         {
+    //             label: 'Nuxt Version',
+    //             url: 'https://github.com/primefaces/sakai-nuxt',
+    //             icon: 'pi pi-fw pi-star'
+    //         }
+    //     ]
+    // }
 ]);
 </script>
 

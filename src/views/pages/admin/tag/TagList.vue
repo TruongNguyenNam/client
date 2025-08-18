@@ -191,6 +191,7 @@ const errorName = ref('');
 
 const validateName = () => {
     const name = tag.value.name?.trim();
+    const nameRegex = /^[\p{L}\d\s]+$/u; 
     if (!name) {
         errorName.value = 'Tên tag không được để trống';
         return false;
@@ -199,6 +200,11 @@ const validateName = () => {
         errorName.value = 'Tên tag đã tồn tại';
         return false;
     }
+    if (!nameRegex.test(name)) {
+        errorName.value = 'Tên tag không được chứa ký tự đặc biệt';
+        return false;
+    }
+
     errorName.value = '';
     return true;
 };
@@ -260,7 +266,7 @@ watch(() => tag.value.name, () => {
         <Toast ref="toast" />
         <div class="col-12">
             <div class="card">
-                <h5>Danh Sách Tag</h5>
+                <h5>Danh Sách Nhãn</h5>
                 <Toolbar class="mb-4">
                     <template v-slot:start>
                         <div class="my-2">
@@ -277,7 +283,8 @@ watch(() => tag.value.name, () => {
                 </Toolbar>
 
                 <!-- Modal thêm/sửa tag -->
-                <Dialog v-model:visible="tagDialog" :style="{ width: '450px' }" header="Chi tiết Tag" :modal="true"
+                <Dialog v-model:visible="tagDialog" :style="{ width: '450px' }"  :header="tag.id ? 'Chi tiết nhãn' : 'Thêm nhãn mới'" 
+    :modal="true" 
                     class="p-fluid">
                     <div class="field">
                         <label for="name">Tên của tag</label>

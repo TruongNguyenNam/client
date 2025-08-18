@@ -22,9 +22,9 @@
           {{ data.userName || 'Chưa cập nhật' }}
         </template>
       </Column>
-      <Column field="createdAt" header="Ngày tạo" style="min-width: 130px;">
+      <Column field="createdDate" header="Ngày tạo" style="min-width: 130px;">
         <template #body="{ data }">
-          {{ formatDate(data.createdAt) }}
+          {{ formatDate(data.createdDate) }}
         </template>
       </Column>
       <Column field="orderTotal" header="Tổng tiền" style="min-width: 120px; text-align: right;">
@@ -102,7 +102,9 @@ const formatShippingStatus = (status: string) => {
   const map: Record<string, string> = {
     PENDING: 'Đang chờ',
     SHIPPED: 'Đang giao',
-    DELIVERED: 'Đã giao'
+    DELIVERED: 'Đã giao',
+    RETURNED:'Trả Hàng',
+    CANCELED:'Huỷ'
   };
   return map[status] || status;
 };
@@ -128,6 +130,7 @@ const fetchOrders = async () => {
         userName: order.address?.receiverName || 'Chưa cập nhật',
         shippingStatus: order.shipments?.[0]?.shipmentStatus || 'PENDING'
       }));
+      console.log(orders)
     } else {
       error.value = response.message || 'Không thể tải danh sách đơn hàng.';
     }

@@ -9,6 +9,15 @@
         />
       </template>
       <template #end>
+        
+         <div class="relative inline-block">
+    <Button
+      icon="pi pi-box"
+      class="p-button-rounded p-button-text"
+      @click="toggleMenu"
+    />
+    <Menu ref="returnMenuRef" :model="menuItems" popup />
+  </div>
         <RouterLink v-if="userId" :to="{ name: 'client-wishlist-details', params: { userId: userId } }">
           <Button
             icon="pi pi-heart"
@@ -215,11 +224,12 @@ const items = computed(() => {
         { label: 'ÁO', command: () => router.push({ path: '/client/product/collection', query: { category: 'Áo' } }) },
         { label: 'Quần', command: () => router.push({ path: '/client/product/collection', query: { category: 'Quần' } }) },
         { label: 'Khác', command: () => router.push({ path: '/client/product/collection', query: { category: 'Khác' } }) },
-        { label: 'Addidass', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Addidass' } }) },
+        { label: 'Adidas', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Adidas' } }) },
         { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
+        { label: 'Puma', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Puma' } }) },
       ],
     },
-    { label: 'NEW ARRIVAL', icon: 'pi pi-star', command: () => router.push('/client/about') },
+    { label: 'Tin Tức', icon: 'pi pi-star', command: () => router.push('/client/about') },
     { label: 'UP TO 50%', icon: 'pi pi-fire', command: () => router.push('/client/sale') },
   ];
 
@@ -235,6 +245,23 @@ const items = computed(() => {
   }
   return baseItems;
 });
+const returnMenuRef = ref();
+const toggleMenu = (event: Event) => {
+  returnMenuRef.value?.toggle(event);
+};
+
+const menuItems = [
+  {
+    label: 'Đã Mua',
+    icon: 'pi pi-list',
+    command: () => router.push('/client/returnoder')
+  },
+  {
+    label: 'Yêu cầu hoàn hàng của tôi',
+    icon: 'pi pi-refresh',
+    command: () => router.push('/client/return')
+  }
+];
 </script>
 
 <style scoped>
