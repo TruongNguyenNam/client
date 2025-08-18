@@ -166,31 +166,62 @@ watch(() => coupon.value.couponName, (couponName) => {
     }
 });
 
+function trimToMinute(date: Date): Date {
+    const d = new Date(date);
+    d.setSeconds(0, 0);
+    return d;
+}
 
-function validateNewCoupon(): boolean {
+function validateCoupon(data: any, isNew: boolean): boolean {
     errors.value = {}; // reset lỗi
-    if (newCoupon.value.couponName?.length > 100) {
+    const now = trimToMinute(new Date());
+
+    // 1. Validate tên
+    if (data.couponName?.length > 100) {
         errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
     }
-    if (!newCoupon.value.couponName?.trim()) {
+    if (!data.couponName?.trim()) {
         errors.value.couponName = "Tên phiếu giảm giá không được để trống";
     }
 
-    if (!newCoupon.value.discountAmount || newCoupon.value.discountAmount <= 0) {
+    // 2. Validate giá trị giảm
+    if (!data.discountAmount || data.discountAmount <= 0) {
         errors.value.discountAmount = "Giá trị giảm phải lớn hơn 0";
     }
 
-    if (!newCoupon.value.expirationDate) {
+    // 3. Validate ngày bắt đầu
+    if (isNew) {
+        if (!data.startDate) {
+            errors.value.startDate = "Ngày bắt đầu không được để trống";
+        } else {
+            const start = trimToMinute(new Date(data.startDate));
+            if (start < now) {
+                errors.value.startDate = "Ngày bắt đầu không được ở quá khứ";
+            }
+        }
+    }
+
+    // 4. Validate ngày hết hạn
+    if (!data.expirationDate) {
         errors.value.expirationDate = "Ngày hết hạn không được để trống";
+    } else {
+        const end = trimToMinute(new Date(data.expirationDate));
+        if (end < now) {
+            errors.value.expirationDate = "Ngày hết hạn không được ở quá khứ";
+        }
     }
-    if (
-        newCoupon.value.startDate &&
-        newCoupon.value.expirationDate &&
-        new Date(newCoupon.value.startDate) > new Date(newCoupon.value.expirationDate)
-    ) {
-        errors.value.startDate = "Ngày bắt đầu không được sau ngày kết thúc";
-        errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+
+    // 5. So sánh startDate và expirationDate
+    if (data.startDate && data.expirationDate) {
+        const start = trimToMinute(new Date(data.startDate));
+        const end = trimToMinute(new Date(data.expirationDate));
+        if (start > end) {
+            errors.value.startDate = "Ngày bắt đầu không được sau ngày kết thúc";
+            errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
+        }
     }
+
+    // 6. Thông báo lỗi
     if (Object.keys(errors.value).length > 0) {
         toast.add({
             severity: 'warn',
@@ -199,43 +230,10 @@ function validateNewCoupon(): boolean {
             life: 3000
         });
     }
+
     return Object.keys(errors.value).length === 0;
 }
 
-function validateUpdateCoupon(): boolean {
-    errors.value = {}; // reset lỗi
-    if (coupon.value.couponName?.length > 100) {
-        errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
-    }
-    if (!coupon.value.couponName?.trim()) {
-        errors.value.couponName = "Tên phiếu giảm giá không được để trống";
-    }
-
-    if (!coupon.value.discountAmount || coupon.value.discountAmount <= 0) {
-        errors.value.discountAmount = "Giá trị giảm phải lớn hơn 0";
-    }
-
-    if (!coupon.value.expirationDate) {
-        errors.value.expirationDate = "Ngày hết hạn không được để trống";
-    }
-    if (
-        coupon.value.startDate &&
-        coupon.value.expirationDate &&
-        new Date(coupon.value.startDate) > new Date(coupon.value.expirationDate)
-    ) {
-        errors.value.startDate = "Ngày bắt đầu không được sau ngày kết thúc";
-        errors.value.expirationDate = "Ngày hết hạn không được trước ngày bắt đầu";
-    }
-    if (Object.keys(errors.value).length > 0) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Dữ liệu không hợp lệ',
-            detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
-            life: 3000
-        });
-    }
-    return Object.keys(errors.value).length === 0;
-}
 
 watch(
     () => [newCoupon.value.startDate, newCoupon.value.expirationDate],
@@ -264,13 +262,14 @@ watch(
     }
 );
 const addCoupon = async (): Promise<void> => {
-    if (!validateNewCoupon()) return;
-    try {
-        await CouponService.saveCoupon(toCouponRequest(newCoupon.value));
-        addCouponDialog.value = false;
-        await loadCoupons();
-    } catch (error) {
+    if (validateCoupon(newCoupon.value, true)) {
+        try {
+            await CouponService.saveCoupon(toCouponRequest(newCoupon.value));
+            addCouponDialog.value = false;
+            await loadCoupons();
+        } catch (error) {
 
+        }
     }
 };
 
@@ -319,20 +318,37 @@ watch(() => couponUpdateDialog.value, (visible) => {
     }
 });
 
+// Chặn chọn nếu ngày bắt đầu đã qua
+const isStartDatePast = computed(() => {
+    if (!coupon.value.startDate) return false;
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const start = new Date(coupon.value.startDate);
+    start.setSeconds(0, 0);
+    return start.getTime() <= now.getTime(); 
+});
+
+// Giới hạn ngày nhỏ nhất để chọn
+const minStartDate = computed(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    return now; // Không cho chọn trước thời điểm hiện tại
+});
+
 
 //cập nhật
 const saveCoupon = async (): Promise<void> => {
-    if (!validateUpdateCoupon()) return;
-    try {
-        if (coupon.value.id) {
-            await CouponService.updateCoupon(coupon.value.id, toCouponRequestUpdate(coupon.value));
-        } else {
-            await CouponService.saveCoupon(toCouponRequest(coupon.value));
-        }
-        couponUpdateDialog.value = false;
-        await loadCoupons();
-    } catch (error) { }
-
+    if (validateCoupon(coupon.value, false)) {
+        try {
+            if (coupon.value.id) {
+                await CouponService.updateCoupon(coupon.value.id, toCouponRequestUpdate(coupon.value));
+            } else {
+                await CouponService.saveCoupon(toCouponRequest(coupon.value));
+            }
+            couponUpdateDialog.value = false;
+            await loadCoupons();
+        } catch (error) { }
+    }
 };
 
 const importCoupons = (): void => { };
@@ -444,7 +460,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                     <div class="search-bar-vertical">
                         <div class="search-bar-row">
                             <InputNumber v-model="minDiscount" :min="0" placeholder="Giá trị giảm từ"
-                                class="filter-input"/>
+                                class="filter-input" />
 
                             <span class="filter-separator">-</span>
 
@@ -539,8 +555,10 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <div class="field">
                             <label for="edit-startDate" class="field-label">Ngày bắt đầu</label>
                             <Calendar id="edit-startDate" v-model="coupon.startDate" dateFormat="dd/mm/yy" showTime
-                                class="field-input" :class="{ 'border-red-500': errors.startDate }" />
-                            <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
+                                class="field-input" :class="{ 'border-red-500': errors.startDate }"
+                                :disabled="isStartDatePast"
+                                :minDate="minStartDate"/>
+                                <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
                         </div>
 
                         <!-- Ngày hết hạn -->
