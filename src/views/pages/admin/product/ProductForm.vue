@@ -662,9 +662,11 @@ const submitProduct = async () => {
   isSubmitting.value = true;
 
   const nameRegex = /^[\p{L}\s]+$/u;
-
+  product.name = product.name ? product.name.trim() : "";
+  product.description = product.description ? product.description.trim() : "";
+  product.sportType = product.sportType ? product.sportType.trim():"";
   // Validate tên sản phẩm
-  if (!product.name || !product.name.trim()) {
+  if (!product.name) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
