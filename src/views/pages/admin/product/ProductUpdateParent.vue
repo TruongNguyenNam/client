@@ -441,7 +441,7 @@ const submitProduct = async () => {
       life: 3000 
     });
     
-    router.push('/documentation');
+    router.push('/products');
   } catch (error: any) {
     console.error('Error submitting product:', error);
     toast.add({ 

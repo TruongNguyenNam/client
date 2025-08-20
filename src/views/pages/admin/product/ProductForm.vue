@@ -746,7 +746,7 @@ const submitProduct = async () => {
   try {
     const message = await ProductService.addProduct(requestData, parentUploadedFiles, variantUploadedFiles);
     toast.add({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
-    router.push('/documentation');
+    router.push('/products');
   } catch (error: any) {
     const errorMessage = error.message || 'Lỗi khi thêm sản phẩm';
     toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });
