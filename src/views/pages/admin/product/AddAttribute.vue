@@ -67,11 +67,25 @@
   // Biến lưu dữ liệu thuộc tính mới
   const newAttribute = ref<ProductAttributeRequest>({ name: '', description: '' });
   
-  // Mở dialog
-  const openAddAttributeDialog = () => {
-    newAttribute.value = { name: '', description: '' };
-    addAttributeDialogVisible.value = true;
-  };
+  // Đồng bộ trạng thái visible từ props
+  watch(
+    () => props.visible,
+    (newValue) => {
+      addAttributeDialogVisible.value = newValue;
+      if (newValue) {
+        // Reset newAttribute mỗi khi mở dialog
+        newAttribute.value = { name: '', description: '' };
+      }
+    }
+  );
+  
+  // Đồng bộ trạng thái addAttributeDialogVisible về prop visible
+  watch(
+    () => addAttributeDialogVisible.value,
+    (newValue) => {
+      emit('update:visible', newValue);
+    }
+  );
   
   // Đóng dialog
   const closeAddAttributeDialog = () => {
@@ -82,58 +96,60 @@
   
   // Gọi API lưu thuộc tính mới
   const saveNewAttribute = async () => {
-  const name = newAttribute.value.name?.trim().toLowerCase();
-  const description = newAttribute.value.description?.trim();
-
-  if (!name || !description) return;
-
-  // Kiểm tra trùng tên thuộc tính (không phân biệt hoa thường, bỏ khoảng trắng)
-  const isDuplicate = props.productAttributes.some(attr =>
-    attr.name.trim().toLowerCase() === name
-  );
-
-  if (isDuplicate) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Trùng tên',
-      detail: 'Thuộc tính với tên này đã tồn tại.',
-      life: 3000
-    });
-    return;
-  }
-
-  try {
-    const response = await ProductAttributeService.saveProductAttribute({
-      name: newAttribute.value.name.trim(),
-      description: description
-    });
-
-    if (response.data) {
-      emit('attribute-added', response.data); // Gửi sự kiện khi thêm thành công
-      closeAddAttributeDialog();
-    }
-
-    toast.add({
-      severity: 'success',
-      summary: 'Thành công',
-      detail: 'Thuộc tính đã được thêm',
-      life: 3000
-    });
-  } catch (error: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.message || 'Không thể thêm thuộc tính',
-      life: 3000
-    });
-  }
-};
-
+    const name = newAttribute.value.name?.trim().toLowerCase();
+    const description = newAttribute.value.description?.trim();
   
-  // Đồng bộ trạng thái visible từ props
-  watch(() => props.visible, (newValue) => {
-    addAttributeDialogVisible.value = newValue;
-  });
+    if (!name) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Vui lòng nhập tên và mô tả thuộc tính.',
+        life: 3000,
+      });
+      return;
+    }
+  
+    // Kiểm tra trùng tên thuộc tính
+    const isDuplicate = props.productAttributes.some(
+      (attr) => attr.name.trim().toLowerCase() === name
+    );
+  
+    if (isDuplicate) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Trùng tên',
+        detail: 'Thuộc tính với tên này đã tồn tại.',
+        life: 3000,
+      });
+      return;
+    }
+  
+    try {
+      const response = await ProductAttributeService.saveProductAttribute({
+        name: newAttribute.value.name.trim(),
+        description: description,
+      });
+  
+      if (response.data) {
+        emit('attribute-added', response.data);
+        closeAddAttributeDialog();
+      }
+  
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Thuộc tính đã được thêm',
+        life: 3000,
+      });
+    } catch (error: any) {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: error.message || 'Không thể thêm thuộc tính',
+        life: 3000,
+      });
+    }
+  };
   </script>
   
   <style scoped>

@@ -369,9 +369,11 @@ const submitProduct = async () => {
   submitted.value = true;
 
   // const nameRegex = /^[\p{L}\s]+$/u;
-  
+  product.name = product.name ? product.name.trim() : "";
+  product.description = product.description ? product.description.trim() : "";
+  product.sportType = product.sportType ? product.sportType.trim():"";
   // Validate tên sản phẩm
-  if (!product.name || !product.name.trim()) {
+  if (!product.name) {
     toast.add({ severity: 'warn', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
@@ -439,7 +441,7 @@ const submitProduct = async () => {
       life: 3000 
     });
     
-    router.push('/documentation');
+    router.push('/products');
   } catch (error: any) {
     console.error('Error submitting product:', error);
     toast.add({ 

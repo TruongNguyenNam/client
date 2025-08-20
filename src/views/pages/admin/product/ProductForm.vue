@@ -662,9 +662,11 @@ const submitProduct = async () => {
   isSubmitting.value = true;
 
   const nameRegex = /^[\p{L}\s]+$/u;
-
+  product.name = product.name ? product.name.trim() : "";
+  product.description = product.description ? product.description.trim() : "";
+  product.sportType = product.sportType ? product.sportType.trim():"";
   // Validate tên sản phẩm
-  if (!product.name || !product.name.trim()) {
+  if (!product.name) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
@@ -744,7 +746,7 @@ const submitProduct = async () => {
   try {
     const message = await ProductService.addProduct(requestData, parentUploadedFiles, variantUploadedFiles);
     toast.add({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
-    router.push('/documentation');
+    router.push('/products');
   } catch (error: any) {
     const errorMessage = error.message || 'Lỗi khi thêm sản phẩm';
     toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });

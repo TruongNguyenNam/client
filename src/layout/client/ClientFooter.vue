@@ -3,7 +3,7 @@
     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
       <div class="space-y-2">
         <p class="font-semibold">CÔNG TY TNHH SHOESPORTS VIỆT NAM</p>
-        <p>Địa chỉ: 6, Tòa Friendship, Số 3, Đường Lê Duẩn, Phường Bến Nghé, Quận 1, Hồ Chí Minh, Việt Nam</p>
+        <p>Địa chỉ: 6, Tòa Friendship, 13 Trịnh Văn Bô, Xuân Phương, Nam Từ Liêm, Hà Nội, Việt Nam</p>
         <p><span class="pi pi-phone"></span> Số điện thoại: 0974945488</p>
         <p><span class="pi pi-envelope"></span> Email: saleonline@shoesports.com</p>
         <p>© Bản quyền thuộc về ShoeSports Việt Nam | Cục cấp bộ Haravan</p>

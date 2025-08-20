@@ -17,7 +17,7 @@ const model = ref([
         items: [
             // { label: 'productForm', icon: 'pi pi-fw pi-id-card', to: '/prodductadd' },
             // { label: 'Doanh Thu', icon: 'pi pi-fw pi-home', to: '/home',class:'rotated-icon' },
-            { label: 'Sản Phẩm', icon: 'pi pi-fw pi-box', to: '/documentation' },
+            { label: 'Sản Phẩm', icon: 'pi pi-fw pi-box', to: '/products' },
             { label: 'Danh mục', icon: 'pi pi-fw pi-check-square', to: '/category' },
             { label: 'Khách Hàng', icon: 'pi pi-fw pi-users', to: '/customers' },
             { label: 'Nhà Sản Xuất', icon: 'pi pi-fw pi-bookmark', to: '/supplier' },

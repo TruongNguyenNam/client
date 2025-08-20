@@ -7,12 +7,74 @@
 
     <div v-else-if="order" class="order-content">
       <!-- Khối thông tin đơn hàng -->
-      <div class="card">
-        <h2>📦 Thông tin đơn hàng</h2>
-        <p><strong>Mã đơn hàng:</strong> {{ order.orderCode }}</p>
-        <p><strong>Ngày đặt:</strong> {{ order.orderDate }}</p>
-        <p><strong>Trạng thái:</strong> {{ order.orderStatus }}</p>
-        <p><strong>Tổng tiền:</strong> {{ order.orderTotal.toLocaleString() }} VNĐ</p>
+      
+        <div class="grid grid-cols-2 gap-4" style="margin-top: 10px; margin-left: 3px;">
+          <div class="card" style="width: 50%;">
+            <h2>📦 Thông tin đơn hàng</h2>
+            <p><strong>Mã đơn hàng:</strong> {{ order.orderCode }}</p>
+            <p><strong>Ngày đặt:</strong> {{ order.orderDate }}</p>
+            <p><strong>Trạng thái:</strong> {{ order.orderStatus }}</p>
+            <p><strong>Tổng tiền:</strong> {{ order.orderTotal.toLocaleString() }} VNĐ</p>
+          </div>
+
+          <div class="card" style="width: 48%;">
+              <h3>👤 Thông tin khách hàng</h3>
+              <p><strong>Người đặt:</strong>
+                <span v-if="order?.address?.username">{{ order.address.username }}</span>
+                <span v-else>Vãng lai</span>
+              </p>
+              <p><strong>Email:</strong> {{ order?.address?.email }}</p>
+              <p><strong>Người nhận:</strong> {{ order?.address?.receiverName }}</p>
+              <p><strong>SĐT Người nhận:</strong> {{ order?.address?.receiverPhone }}</p>
+              <p><strong>Ngày đặt:</strong> {{ formatDate(order?.orderDate) }}</p>
+              <p><strong>Địa chỉ:</strong>
+                {{ [
+                  order?.address?.addressStreet,
+                  order?.address?.addressWard,
+                  order?.address?.addressDistrict,
+                  order?.address?.addressCity,
+                  order?.address?.addressProvince
+                ].filter(Boolean).join(', ') || 'Chưa có thông tin' }}
+              </p>
+          </div>
+
+          <div class="card" style="width: 50%;">
+            <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
+            <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
+              <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
+              <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
+              <p><strong>Mã theo dõi:</strong> {{ order?.shipments[0].trackingNumber }}</p>
+              <p><strong>Phí vận chuyển:</strong> {{ order?.shipments[0].shippingCost?.toLocaleString('vi-VN') }} đ</p>
+              <p><strong>Dự kiến giao:</strong> {{ formatDate(order?.shipments[0].estimatedDeliveryDate) }}</p>
+            </div>
+            <div v-else class="text-gray-500 italic">Không có thông tin vận chuyển</div>
+          </div>
+
+          <div class="card" style="width: 48%;">
+            <h3>💳 Thông tin thanh toán</h3>
+            <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
+            <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
+            <p><strong>Tiền thừa:</strong> {{ order?.payment?.changeAmount.toLocaleString('vi-VN') }} đ</p>
+            <p><strong>Ngày thanh toán:</strong> {{ formatDate(order?.payment?.paymentDate) }}</p>
+            <p><strong>Trạng Thái:</strong> {{ getPaymentStatusLabel(order?.payment?.paymentStatus) }}</p>
+            <p v-if="order?.payment?.paymentMethodName === 'VNPay'">
+              <strong>Mã giao dịch:</strong> {{ order?.payment?.transactionId }}
+            </p>
+          </div>
+
+        </div>
+      <div class="card mb-4">
+        <h3>Phiếu Giảm Giá</h3>
+        <div v-if="order?.couponUsages?.length">
+          <div v-for="coupon in order.couponUsages" :key="coupon.id" class="mb-2">
+            <p><strong>Mã phiếu:</strong> {{ coupon.couponCode }}</p>
+            <p><strong>Số tiền giảm:</strong> {{ coupon.discountAmount.toLocaleString('vi-VN') }} đ</p>
+            <p><strong>Ngày sử dụng:</strong> {{ formatDate(coupon.usedDate) }}</p>
+          </div>
+        </div>
+        <div v-else>
+          <p>Không có phiếu giảm giá nào được áp dụng.</p>
+        </div>
       </div>
 
       <!-- Khối địa chỉ giao hàng -->
@@ -79,6 +141,51 @@ const order = ref<OrderResponseClient | null>(null);
 const loading = ref(true);
 const error = ref('');
 
+const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const shipmentStatusLabels = {
+  PENDING: 'Chờ xác nhận',
+  SHIPPED: 'Đang giao',
+  DELIVERED: 'Đã giao hàng',
+  RETURNED: 'Trả hàng',
+  CANCELED: 'Hủy'
+};
+
+const OrderStatusLabels = {
+  PENDING: 'Chờ xác nhận',
+  SHIPPED: 'Đang giao',
+  COMPLETED: 'Hoàn thành',
+  DELIVERED: 'Đã giao hàng',
+  RETURNED: 'Trả hàng',
+  CANCELED: 'Hủy'
+};
+
+const paymentStatusLabels = {
+  COMPLETED: 'Hoàn thành',
+};
+
+const getPaymentStatusLabel = (status?: string): string => {
+  return paymentStatusLabels[status as keyof typeof paymentStatusLabels] || 'Không xác định';
+};
+
+const getOrdersByStatus = (status?: string): string => {
+  return OrderStatusLabels[status as keyof typeof OrderStatusLabels] || 'Không xác định';
+};
+
+const getShipmentStatusLabel = (status: string): string => {
+  return shipmentStatusLabels[status as keyof typeof shipmentStatusLabels] || 'Không xác định';
+};
+
 const fetchOrderDetail = async () => {
   try {
     const response = await CartClientService.getOrderByCode(orderCode);
@@ -141,6 +248,7 @@ h1 {
 
 .order-content {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   gap: 20px;
 }
