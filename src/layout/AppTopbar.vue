@@ -127,9 +127,10 @@ const isOutsideClicked = (event: Event) => {
 <template>
   <div class="layout-topbar">
     <router-link to="/" class="layout-topbar-logo">
-      <img :src="logoUrl" alt="logo" width="80" height="100"/>
+      <img :src="logoUrl" alt="logo" />
       <span>ShoeSports</span>
     </router-link>
+
 
     <button class="p-link layout-menu-button layout-topbar-button" @click="onMenuToggle()">
       <i class="pi pi-bars"></i>
@@ -158,12 +159,8 @@ const isOutsideClicked = (event: Event) => {
             <Button label="Đăng ký" icon="pi pi-user-plus" text @click="navigate('/auth/register')" />
           </template>
           <template v-else>
-            <Button
-              label="Thông tin cá nhân"
-              icon="pi pi-user"
-              text
-              @click="navigate(`/auth/userdetails/${userInfo?.userId}`)"
-            />
+            <Button label="Thông tin cá nhân" icon="pi pi-user" text
+              @click="navigate(`/auth/userdetails/${userInfo?.userId}`)" />
             <Button label="Đăng xuất" icon="pi pi-sign-out" text severity="danger" @click="logout" />
           </template>
         </div>
@@ -177,6 +174,26 @@ const isOutsideClicked = (event: Event) => {
 </template>
 
 <style lang="scss" scoped>
+.layout-topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto !important; /* bắt buộc auto, ghi đè theme */
+  flex: none !important;  /* không chiếm không gian dư */
+  padding: 0 8px;
+  margin-right: 90px;
+}
+
+.layout-topbar-logo img {
+  width: 36px;
+  height: auto;
+}
+
+.layout-topbar-logo span {
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
 .profile-menu {
   display: flex;
   flex-direction: column;
