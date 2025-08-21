@@ -3,7 +3,17 @@
       
       
       <br>
-    <h2 class="text-xl font-semibold mb-4">Cập nhật khuyến mãi</h2>
+  
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold mb-4">Cập nhật khuyến mãi</h2>
+      <Button 
+        label="Quay lại" 
+        icon="pi pi-arrow-left" 
+        class="p-button-secondary" 
+        style="margin-left: 800px;"
+        @click="$router.back()" 
+      />
+    </div>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <div class="flex gap-6">
@@ -283,7 +293,7 @@ const fetchProductsByCategory = async () => {
 // Validation form
 const validate = () => {
   errors.value = {}
-  const nameRegex = /^[\p{L}\d\s]+$/u 
+  // const nameRegex = /^[\p{L}\d\s]+$/u 
   // \p{L} = chữ cái Unicode, \d = số, \s = khoảng trắng
 
   // ✅ Check tên khuyến mãi
@@ -291,9 +301,9 @@ const validate = () => {
     errors.value.name = 'Tên khuyến mãi không được để trống.'
   } else if (discount.value.name.length > 50) {
     errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
-  } else if (!nameRegex.test(discount.value.name.trim())) {
-    errors.value.name = 'Tên khuyến mãi không được chứa ký tự đặc biệt.'
-  }
+  // } else if (!nameRegex.test(discount.value.name.trim())) {
+  //   errors.value.name = 'Tên khuyến mãi không được chứa ký tự đặc biệt.'
+   }
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'
 

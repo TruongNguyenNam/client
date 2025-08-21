@@ -2,8 +2,10 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Thêm Sản Phẩm Cùng Loại</h5>
-
+        <div class="card-header">
+          <h5>Thêm Sản Phẩm Cùng Loại</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+       </div>
         <!-- Thông tin sản phẩm cha -->
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
@@ -416,10 +418,10 @@ if (
   variant.price === undefined ||
   typeof variant.price !== 'number' ||
   variant.price < 20000 ||
-  variant.price > 100000000
+  variant.price > 30000000
 ) {
   hasPriceError.value = true;
-  priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 đến 100,000,000.';
+  priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 đến 30,000,000';
   errors.push(priceErrorMessage.value);
 }
 
@@ -630,4 +632,12 @@ onMounted(async () => {
   background: var(--primary-color);
   border-color: var(--primary-color);
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between; /* cách xa 2 bên */
+  align-items: center;            /* canh giữa theo chiều cao */
+  margin-bottom: 1rem;            /* cách form bên dưới */
+}
+
 </style>

@@ -2,7 +2,10 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Thêm sản phẩm</h5>
+        <div class="card-header">
+          <h5>Thêm sản phẩm</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+       </div>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
@@ -257,7 +260,7 @@
                   mode="currency"
                   currency="VND"
                   :min="20000"
-                  :max="100000000"
+                  :max="30000000"
                   :step="1000"
                   :minFractionDigits="0"
                   :maxFractionDigits="0"
@@ -316,7 +319,7 @@
               v-model="slotProps.data.price"
               mode="currency"
               currency="VND"
-              :max="100000000"
+              :max="30000000"
               :step="1000"
               :minFractionDigits="0"
               :maxFractionDigits="0"
@@ -324,7 +327,7 @@
                 'p-invalid': submitted &&
                   (slotProps.data.price === undefined || 
                   slotProps.data.price < 20000 || 
-                  slotProps.data.price > 100000000)
+                  slotProps.data.price > 30000000)
               }"
             />
           </template>
@@ -359,7 +362,7 @@
         </div>
 
         <div class="flex justify-content-end mt-4">
-          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/documentation')" />
+          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/products')" />
           <Button
             label="Thêm Sản Phẩm"
             icon="pi pi-check"
@@ -693,7 +696,7 @@ const submitProduct = async () => {
         v.price === null ||
         isNaN(price) ||
         price < 20000 ||
-        price > 100000000 ||
+        price > 30000000 ||
         v.stockQuantity === null ||
         isNaN(stock) ||
         stock < 1 ||
@@ -704,7 +707,7 @@ const submitProduct = async () => {
     toast.add({
       severity: 'warn',
       summary: 'Lỗi',
-      detail: 'Vui lòng nhập giá từ 20.000đ đến 100.000.000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
+      detail: 'Vui lòng nhập giá từ 20.000đ đến 30,000,000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
       life: 3000
     });
     isSubmitting.value = false;
@@ -898,6 +901,14 @@ onMounted(async () => {
 :deep(.p-fileupload .p-button) {
   margin-top: 0.5rem;
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between; /* cách xa 2 bên */
+  align-items: center;            /* canh giữa theo chiều cao */
+  margin-bottom: 1rem;            /* cách form bên dưới */
+}
+
 
 
 </style>

@@ -2,7 +2,10 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Cập nhật sản phẩm</h5>
+        <div class="card-header">
+          <h5>Cập nhật sản phẩm</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+       </div>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
@@ -177,7 +180,7 @@
             icon="pi pi-times" 
             severity="secondary" 
             class="mr-2" 
-            @click="router.push('/documentation')" 
+            @click="router.push('/products')" 
           />
           <Button 
             label="Cập Nhật Sản Phẩm" 
@@ -513,4 +516,12 @@ onMounted(async () => {
   width: 24px;
   height: 24px;
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between; /* cách xa 2 bên */
+  align-items: center;            /* canh giữa theo chiều cao */
+  margin-bottom: 1rem;            /* cách form bên dưới */
+}
+
 </style>
