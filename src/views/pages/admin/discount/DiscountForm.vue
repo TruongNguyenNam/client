@@ -269,8 +269,6 @@ const validate = () => {
     errors.value.name = 'Tên khuyến mãi không được để trống.'
   } else if (discount.value.name.length > 50) {
     errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
-  } else if (!nameRegex.test(discount.value.name.trim())) {
-    errors.value.name = 'Tên khuyến mãi không được chứa ký tự đặc biệt.'
   }
   if (!discount.value.percentValue || discount.value.percentValue < 1 || discount.value.percentValue > 100) {
     errors.value.percentValue = 'Phần trăm giảm phải từ 1 đến 100.'
