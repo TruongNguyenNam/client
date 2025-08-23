@@ -16,7 +16,7 @@ const router = createRouter({
             meta: { requiresAuth: true, role: 'ADMIN' },
             children: [
                 { path: '/', name: 'dashboard', component: () => import('@/views/Dashboard.vue') },
-                { path: '/documentation', name: 'documentation', component: () => import('@/views/pages/admin/product/ProductList.vue') },
+                { path: '/products', name: 'documentation', component: () => import('@/views/pages/admin/product/ProductList.vue') },
                 { path: '/productadd', name: 'productadd', component: () => import('@/views/pages/admin/product/ProductForm.vue') },
                 { path: '/productupdateparent/:id', name: 'ProductUpdateParent', component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue') },
                 { path: '/product/delete/:id', name: 'productupdatetrue', component: () => import('@/views/pages/admin/product/ProductUpdateParent.vue') },

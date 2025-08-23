@@ -60,7 +60,7 @@ const onTopBarMenuButton = () => {
 
 const onSettingsClick = () => {
   topbarMenuActive.value = false;
-  router.push('/documentation');
+  router.push('/products');
 };
 
 const toggleProfileMenu = (event: Event) => {
