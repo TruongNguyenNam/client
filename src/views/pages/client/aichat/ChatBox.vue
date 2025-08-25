@@ -119,7 +119,7 @@ export default {
           parts: [{ text: 'Xin chào 👋Tôi có thể giúp gì cho bạn hôm nay?' }],
         },
       ],
-      API_KEY: 'AIzaSyBlIwepArAPdPGhJmcq7UkQCzCUbhLpal8',
+      API_KEY: 'AIzaSyAKUwoWx4_fA28nhwufChsqB4PIPKCtPL8',
       API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=',
       initialInputHeight: 0,
     };

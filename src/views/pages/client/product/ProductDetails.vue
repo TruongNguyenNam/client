@@ -4,12 +4,12 @@
   
       <div v-if="products.length > 0" class="flex flex-col md:flex-row gap-6">
         <!-- Product Image -->
-        <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg overflow-hidden" style="border: 1px solid red;">
+        <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg overflow-hidden">
           <img :src="selectedProduct.imageUrl[0]" alt="product image" class="w-full h-96 object-cover" style="border-radius: 20px;" />
         </div>
   
         <!-- Product Info -->
-        <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-6" style="border: 1px solid red;">
+        <div class="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-6">
           <h1 class="text-xl font-semibold text-gray-800 mb-2">{{ getBrandName(products[0].name) }}</h1>
           <p class="text-gray-600 text-sm mb-2">Thương hiệu: {{ getBrandName(products[0].name) }} New Arrival | Mã sản phẩm: {{ products[0].sku }}</p>
           <span class="text-red-600 font-bold">Số Lượng: {{ selectedProduct.stockQuantity ?? 0}}</span>

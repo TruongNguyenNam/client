@@ -184,18 +184,18 @@
               <InputText 
                 v-model="attr.value" 
                 placeholder="nhập giá trị thuộc tính"   
-                maxlength="10"  
+                maxlength="20"  
                 :class="{'p-invalid': submitted && !attr.value}"
               />
               <small class="p-error" v-if="submitted && !attr.value">Giá trị là bắt buộc.</small>
             </div>
-            <div class="field col-12 md:col-2">
+            <!-- <div class="field col-12 md:col-2">
               <Button 
                 icon="pi pi-trash" 
                 severity="danger" 
                 @click="removeAttribute(index)" 
               />
-            </div>
+            </div> -->
           </div>
           <Button 
             label="Thêm thuộc tính" 

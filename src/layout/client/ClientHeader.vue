@@ -223,7 +223,7 @@ const items = computed(() => {
         { label: 'Giày', command: () => router.push({ path: '/client/product/collection', query: { category: 'Giày' } }) },
         { label: 'ÁO', command: () => router.push({ path: '/client/product/collection', query: { category: 'Áo' } }) },
         { label: 'Quần', command: () => router.push({ path: '/client/product/collection', query: { category: 'Quần' } }) },
-        { label: 'Khác', command: () => router.push({ path: '/client/product/collection', query: { category: 'Khác' } }) },
+        { label: 'Vans', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Vans' } }) },
         { label: 'Adidas', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Adidas' } }) },
         { label: 'Nike', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Nike' } }) },
         { label: 'Puma', command: () => router.push({ path: '/client/product/collection', query: { supplier: 'Puma' } }) },
