@@ -26,8 +26,8 @@
               <p class="text-xs text-gray-500 mt-1">{{ formatDate(order.orderDate) }}</p>
             </div>
           <span class="status-badge" :class="statusClasses(order.status)">
-  {{ order.status }}
-</span>
+            {{ order.status }}
+          </span>
 
           </div>
 

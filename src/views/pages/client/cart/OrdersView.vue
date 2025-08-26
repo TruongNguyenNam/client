@@ -78,7 +78,8 @@ enum OrderStatus {
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
   SHIPPED = 'SHIPPED',
-  RETURNED = 'RETURNED'
+  RETURNED = 'RETURNED',
+  CONFIRMED = 'CONFIRMED'
 }
 
 const authStore = useAuthStore();
@@ -91,6 +92,7 @@ const formatOrderStatus = (status: string) => {
   const map: Record<string, string> = {
     PENDING: 'Đang chờ xác nhận',
     COMPLETED: 'Hoàn thành',
+    CONFIRMED: 'xác nhận',
     CANCELLED: 'Huỷ bỏ',
     SHIPPED: 'Đang giao',
     RETURNED: 'Trả hàng'

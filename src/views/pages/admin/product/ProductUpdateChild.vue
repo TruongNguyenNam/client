@@ -203,7 +203,7 @@
             severity="secondary" 
             class="add-attribute-btn"
             @click="addAttribute" 
-            :disabled="product.productAttributeValues.length >= productAttributes.length"
+            disabled
           />
         </div>
         

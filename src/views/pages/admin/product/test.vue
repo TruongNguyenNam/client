@@ -216,6 +216,7 @@ const parentProduct = ref<ProductResponse>({
   price: null,
   stockQuantity: null,
   sportType: '',
+  parentProductId:0,
   originalPrice: null,
   sku: '',
   supplierName: '',

@@ -220,6 +220,7 @@
     description: '',
     price: null,
     stockQuantity: null,
+    parentProductId:0,
     sportType: '',
     originalPrice: null,
     sku: '',

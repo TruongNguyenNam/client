@@ -131,6 +131,7 @@
                   class="w-full"
                   :class="{ 'p-invalid': hasAttributeIdError[index] }"
                   @change="updateSelections"
+                  :disabled="true" 
                 >
                   <template #option="slotProps">
                     <div :class="{ 'text-color-secondary': isAttributeDisabled(slotProps.option.id, index) }">
@@ -223,6 +224,7 @@ const parentProduct = ref<ProductResponse>({
   stockQuantity: null,
   sportType: '',
   originalPrice: null,
+  parentProductId:0,
   sku: '',
   supplierName: '',
   categoryName: '',

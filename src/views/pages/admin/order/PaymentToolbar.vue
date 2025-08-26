@@ -51,10 +51,11 @@
             <label class="block text-sm text-gray-600 mb-2">Địa chỉ giao hàng</label>
             <div class="bg-white p-3 rounded border mb-3">
               <div class="mb-2">
-                <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
+               người nhận: <strong>{{ selectedAddress?.receiverName }}</strong> 
+                - sđt: {{ selectedAddress?.receiverPhone }}
               </div>
               <div class="text-sm text-gray-700 leading-relaxed">
-                {{ fullAddress }}
+              địa chỉ:  {{ fullAddress }}
               </div>
               <div v-if="!invoice.isPos && selectedCustomer?.addresses?.length > 1" class="mt-3">
                 <Button label="Chọn địa chỉ giao hàng khác" icon="pi pi-map-marker" outlined class="w-full"

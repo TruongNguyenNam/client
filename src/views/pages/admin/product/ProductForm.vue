@@ -349,14 +349,14 @@
           </template>
     </Column>
     <Column>
-      <template #body="slotProps">
+      <!-- <template #body="slotProps">
         <Button 
           icon="pi pi-trash" 
           severity="danger" 
           @click="variantCombinations.splice(slotProps.index, 1)"
           :class="{'p-button-sm': true}"
         />
-      </template>
+      </template> -->
     </Column>
   </DataTable>
         </div>
