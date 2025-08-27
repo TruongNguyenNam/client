@@ -20,7 +20,7 @@
         class="p-button-text p-button-sm"
         @click="$emit('decrement')"
       />
-      <input type="text" v-model="quantity" class="quantity-input" />
+      <input type="text" v-model="quantity" class="quantity-input" disabled />
       <Button
         icon="pi pi-plus"
         class="p-button-text p-button-sm"

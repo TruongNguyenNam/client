@@ -199,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed,watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
@@ -576,6 +576,43 @@ const submitVariant = async () => {
     isSubmitting.value = false;
   }
 };
+
+watch(() => variant.price, (newVal) => {
+  if (typeof newVal === 'number' && newVal >= 20000 && newVal <= 30000000) {
+    hasPriceError.value = false
+    priceErrorMessage.value = ''
+  }
+})
+
+// Watch số lượng
+watch(() => variant.stockQuantity, (newVal) => {
+  if (typeof newVal === 'number' && newVal > 0 && newVal <= 1000) {
+    hasStockError.value = false
+    stockErrorMessage.value = ''
+  }
+})
+
+// Watch hình ảnh
+watch(() => variant.images.length, (len) => {
+  if (len > 0) {
+    hasImageError.value = false
+    imageErrorMessage.value = ''
+  }
+})
+
+// Watch thuộc tính
+watch(attributes, (newAttrs) => {
+  newAttrs.forEach((attr, i) => {
+    if (attr.attributeId) {
+      hasAttributeIdError.value[i] = false
+      attributeIdErrorMessages.value[i] = ''
+    }
+    if (attr.value.trim()) {
+      hasAttributeValueError.value[i] = false
+      attributeValueErrorMessages.value[i] = ''
+    }
+  })
+}, { deep: true })
 
 // Chạy khi trang tải
 onMounted(async () => {

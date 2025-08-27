@@ -498,7 +498,7 @@ const submitChildProduct = async () => {
       errorDetail += ' Mô tả không được để trống.';
     }
     if (!isPriceValid) {
-      errorDetail += ' Giá phải từ 20.000đ đến 100.000.000đ.';
+      errorDetail += ' Giá phải từ 20.000đ đến 30.000.000đ.';
     }
     if (!isStockValid) {
       errorDetail += ' Số lượng phải từ 1 đến 1000.';

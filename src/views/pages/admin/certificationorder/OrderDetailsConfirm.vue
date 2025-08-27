@@ -168,11 +168,11 @@
             {{ (slotProps.data.quantity * slotProps.data.unitPrice).toLocaleString('vi-VN') }} đ
           </template>
         </Column>
-        <Column header="Hành động">
+        <!-- <Column header="Hành động">
           <template #body="slotProps">
             <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
           </template>
-        </Column>
+        </Column> -->
       </DataTable>
 
       <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
