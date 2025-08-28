@@ -583,7 +583,10 @@ const getImagePreview = (files: File[]): string[] => {
   return files.map(file => URL.createObjectURL(file));
 };
 const generateCombinations = () => {
-  const validVariants = variants.value.filter(v => v.attributeId !== 0 && v.values.length > 0);
+  const validVariants = variants.value.filter(
+    v => v.attributeId !== 0 && v.values.length > 0
+  );
+
   if (validVariants.length === 0) {
     variantCombinations.value = [];
     return;
@@ -607,17 +610,22 @@ const generateCombinations = () => {
       value: combination[idx]
     }));
 
-    const key = attributes.map(a => `${a.attributeId}:${a.value}`).join('|');
-
     let existing = variantCombinations.value.find(v =>
       v.attributes.length === attributes.length &&
-      v.attributes.every((a, i) => a.attributeId === attributes[i].attributeId && a.value === attributes[i].value)
+      v.attributes.every(
+        (a, i) =>
+          a.attributeId === attributes[i].attributeId &&
+          a.value === attributes[i].value
+      )
     );
 
     if (!existing) {
       existing = variantCombinations.value.find(v =>
-        v.attributes.every(old =>
-          attributes.some(a => a.attributeId === old.attributeId && a.value === old.value)
+        attributes.every(a =>
+          v.attributes.some(
+            old =>
+              old.attributeId === a.attributeId && old.value === a.value
+          )
         )
       );
     }
@@ -625,6 +633,7 @@ const generateCombinations = () => {
     const variantName = product.name
       ? `${product.name} - ${combination.join(' - ')}`
       : `Biến thể - ${combination.join(' - ')}`;
+
     const sku = product.sku
       ? `${product.sku}-${combination.join('-')}`
       : `SKU-${combination.join('-')}`;
@@ -635,12 +644,16 @@ const generateCombinations = () => {
       price: existing ? existing.price : defaultPrice.value,
       stockQuantity: existing ? existing.stockQuantity : defaultStock.value,
       attributes,
-      images: existing ? existing.images : [new File([''], 'default.png', { type: 'image/png' })]
+      images:
+        existing && existing.images && existing.images.length > 0
+          ? existing.images
+          : [new File([''], 'default.png', { type: 'image/png' })]
     };
   });
 
   variantCombinations.value.splice(0, variantCombinations.value.length, ...newCombinations);
 };
+
 
 
 
