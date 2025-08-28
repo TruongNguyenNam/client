@@ -16,7 +16,7 @@
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sku" >Mã Sản Phẩm</label>
+            <label for="sku"  class="required">Mã Sản Phẩm</label>
             <InputText id="sku" v-model="product.sku" placeholder="Tự động sinh" disabled />
           </div>
           <div class="field col-12 md:col-6" >
@@ -240,28 +240,42 @@
             <Column header="Giá">
               <template #body="slotProps">
                 <div>
-                  <InputNumber 
-                    v-model="slotProps.data.price"
-                    mode="currency"
-                    currency="VND"
-                    :max="30000000"
-                    :step="1000"
-                    :minFractionDigits="0"
-                    :maxFractionDigits="0"
-                    :class="{
-                      'p-invalid': submitted &&
-                        (slotProps.data.price === undefined || 
-                        slotProps.data.price < 20000 || 
-                        slotProps.data.price > 30000000)
-                    }"
+                 <InputNumber 
+                  v-model="slotProps.data.price"
+                  mode="currency"
+                  currency="VND"
+                  :max="30000000"
+                  :step="1000"
+                  :defaultPrice="20000"
+                  :min="20000"
+                  :maxFractionDigits="0"
+                 :style="submitted && (
+                  slotProps.data.price === undefined || 
+                  slotProps.data.price < 20000 || 
+                  slotProps.data.price > 30000000
+                ) ? { marginTop: '18px' } : {}"
+                  :minFractionDigits="0"
+                  :class="[
+                    submitted && (
+                      slotProps.data.price === undefined || 
+                      slotProps.data.price < 20000 || 
+                      slotProps.data.price > 30000000
+                    ) ? 'p-invalid ' : ''
+                  ]"
+                  
                   />
-                  <small class="p-error" v-if="submitted && (
+                <p 
+                  class="p-error" 
+                  style="font-size: 10px;" 
+                  v-show="submitted && (
                     slotProps.data.price === undefined || 
                     slotProps.data.price < 20000 || 
                     slotProps.data.price > 30000000
-                  )">
-                    Giá phải từ 20.000đ đến 30.000.000đ.
-                  </small>
+                  )"
+                >
+                  Giá phải từ 20.000đ đến 30.000.000đ.
+                </p>
+
                 </div>
               </template>
             </Column>
@@ -275,20 +289,27 @@
                     :max="1000"
                     :minFractionDigits="0"
                     :maxFractionDigits="0"
-                    :class="{
-                      'p-invalid': submitted &&
-                        (slotProps.data.stockQuantity === undefined || 
-                        slotProps.data.stockQuantity < 1 || 
-                        slotProps.data.stockQuantity > 1000)
-                    }"
+                   :style="submitted && (
+                  slotProps.data.stockQuantity === undefined || 
+                  slotProps.data.stockQuantity < 1 || 
+                  slotProps.data.stockQuantity > 1000
+                ) ? { marginTop: '18px' } : {}"
+                  :class="[
+                    submitted && (
+                      slotProps.data.stockQuantity === undefined || 
+                      slotProps.data.stockQuantity < 1 || 
+                      slotProps.data.stockQuantity > 1000
+                    ) ? 'p-invalid ' : ''
+                  ]"
+                    
                   />
-                  <small class="p-error" v-if="submitted && (
+                  <p class="p-error" style="font-size: 10px;" v-if="submitted && (
                     slotProps.data.stockQuantity === undefined || 
                     slotProps.data.stockQuantity < 1 || 
                     slotProps.data.stockQuantity > 1000
                   )">
                     Số lượng phải từ 1 đến 1.000.
-                  </small>
+                  </p>
                 </div>
               </template>
             </Column>
@@ -775,6 +796,13 @@ const validateProduct = () => {
 
   return null; 
 };
+
+const handlePriceBlur = (data: { price: number; stockQuantity: number; }) => {
+  if (!data.price || data.price === 0) {
+    data.price = 20000;
+    data.stockQuantity = 10;
+  }
+};
 </script>
 
 <style scoped>
@@ -895,5 +923,6 @@ label.required::after {
   align-items: center;
   margin-bottom: 1rem;
 }
+
 </style>
 ```
