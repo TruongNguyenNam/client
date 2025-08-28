@@ -9,18 +9,18 @@
         </div>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label for="productName">Tên sản phẩm</label>
+            <label for="productName" class="required">Tên sản phẩm</label>
             <InputText id="productName" v-model="product.name" 
             placeholder="Nhập tên sản phẩm" :class="{'p-invalid': submitted && !product.name}" 
             maxlength="50"/>
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sku">Mã Sản Phẩm</label>
+            <label for="sku" >Mã Sản Phẩm</label>
             <InputText id="sku" v-model="product.sku" placeholder="Tự động sinh" disabled />
           </div>
-          <div class="field col-12 md:col-6">
-            <label for="productCategory">Danh mục</label>
+          <div class="field col-12 md:col-6" >
+            <label for="productCategory" class="required">Danh mục</label>
             <Dropdown
               id="productCategory"
               v-model="product.categoryId"
@@ -33,7 +33,7 @@
             <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sportType">Loại thể thao</label>
+            <label for="sportType" class="required">Loại thể thao</label>
             <InputText id="sportType" v-model="product.sportType" 
             placeholder="Nhập loại thể thao" 
             maxlength="50"
@@ -42,7 +42,7 @@
             <small class="p-error" v-if="submitted && !product.sportType">Loại thể thao là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="productTag">Nhãn</label>
+            <label for="productTag" class="required">Nhãn</label>
             <MultiSelect
               id="productTag"
               v-model="product.tagId"
@@ -56,7 +56,7 @@
             <small class="p-error" v-if="submitted && product.tagId.length === 0">Nhãn là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="supplier">Nhà cung cấp</label>
+            <label for="supplier" class="required">Nhà cung cấp</label>
             <Dropdown
               id="supplier"
               v-model="product.supplierId"
@@ -69,7 +69,7 @@
             <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
           </div>
           <div class="field col-12">
-            <label for="productDescription">Mô tả</label>
+            <label for="productDescription" class="required">Mô tả</label>
             <Textarea 
               id="productDescription" 
               v-model="product.description" 
@@ -81,7 +81,7 @@
             <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
           <div class="field col-12">
-            <label for="parentImages">Hình ảnh sản phẩm</label>
+            <label for="parentImages" class="required">Hình ảnh sản phẩm</label>
             <FileUpload
               name="parentImages"
               :multiple="true"
@@ -449,7 +449,7 @@ const onParentImageUpload = (event: any) => {
   }
 
   parentImages.value = selectedFiles;
-  generateCombinations();
+  // generateCombinations();
   toast.add({
     severity: 'success',
     summary: 'Hình ảnh hợp lệ',
@@ -497,6 +497,15 @@ const removeVariant = (index: number) => {
 
 const addVariantValue = (index: number) => {
   const variant = variants.value[index];
+   if (!variant.attributeId) {
+    toast.add({
+      severity: "warn",
+      summary: "Thiếu thuộc tính",
+      detail: "Vui lòng chọn thuộc tính trước khi nhập giá trị.",
+      life: 3000
+    });
+    return;
+  }
   const value = variant.currentValue.trim();
   
   if (value && !variant.values.includes(value)) {
@@ -552,7 +561,6 @@ const onVariantImageUpload = (index: number, event: any) => {
 const getImagePreview = (files: File[]): string[] => {
   return files.map(file => URL.createObjectURL(file));
 };
-
 const generateCombinations = () => {
   const validVariants = variants.value.filter(v => v.attributeId !== 0 && v.values.length > 0);
   if (validVariants.length === 0) {
@@ -572,11 +580,27 @@ const generateCombinations = () => {
     combinations = temp;
   }
 
-  variantCombinations.value = combinations.map(combination => {
+  const newCombinations = combinations.map(combination => {
     const attributes = validVariants.map((variant, idx) => ({
       attributeId: variant.attributeId,
       value: combination[idx]
     }));
+
+    const key = attributes.map(a => `${a.attributeId}:${a.value}`).join('|');
+
+    let existing = variantCombinations.value.find(v =>
+      v.attributes.length === attributes.length &&
+      v.attributes.every((a, i) => a.attributeId === attributes[i].attributeId && a.value === attributes[i].value)
+    );
+
+    if (!existing) {
+      existing = variantCombinations.value.find(v =>
+        v.attributes.every(old =>
+          attributes.some(a => a.attributeId === old.attributeId && a.value === old.value)
+        )
+      );
+    }
+
     const variantName = product.name
       ? `${product.name} - ${combination.join(' - ')}`
       : `Biến thể - ${combination.join(' - ')}`;
@@ -584,27 +608,26 @@ const generateCombinations = () => {
       ? `${product.sku}-${combination.join('-')}`
       : `SKU-${combination.join('-')}`;
 
-    // Sử dụng ảnh mặc định nếu không có ảnh được tải lên
-    const images = variantCombinations.value.find(v => 
-      v.attributes.every((a, i) => a.attributeId === attributes[i].attributeId && a.value === attributes[i].value)
-    )?.images || [];
-
     return {
       name: variantName,
-      sku: sku,
-      price: defaultPrice.value,
-      stockQuantity: defaultStock.value,
+      sku,
+      price: existing ? existing.price : defaultPrice.value,
+      stockQuantity: existing ? existing.stockQuantity : defaultStock.value,
       attributes,
-      images: images.length > 0 ? images : [new File([''], 'default.png', { type: 'image/png' })] // Ảnh mặc định
+      images: existing ? existing.images : [new File([''], 'default.png', { type: 'image/png' })]
     };
   });
+
+  variantCombinations.value.splice(0, variantCombinations.value.length, ...newCombinations);
 };
+
+
 
 watch(
   () => variants.value,
   () => {
     updateAvailableAttributes();
-    generateCombinations();
+    // generateCombinations();
   },
   { deep: true }
 );
@@ -624,79 +647,27 @@ watch(
   }
 );
 
-watch(
-  () => parentImages.value,
-  () => {
-    generateCombinations();
-  },
-  { deep: true }
-);
+// watch(
+//   () => parentImages.value,
+//   () => {
+//     generateCombinations();
+//   },
+//   { deep: true }
+// );
+
 
 const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
 
-  const nameRegex = /^[\p{L}\s]+$/u;
-  product.name = product.name ? product.name.trim() : "";
-  product.description = product.description ? product.description.trim() : "";
-  product.sportType = product.sportType ? product.sportType.trim() : "";
-  if (!product.name) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
-    isSubmitting.value = false;
-    return;
-  } 
-
-  if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType || !product.tagId.length) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
+  const errorMessage = validateProduct();
+  if (errorMessage) {
+    // toast.add({ severity: "error", summary: "Lỗi", detail: errorMessage, life: 3000 });
     isSubmitting.value = false;
     return;
   }
 
-  if (variantCombinations.value.length > 0 && variantCombinations.value.some(v => v.price === undefined || v.stockQuantity === undefined)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền giá và số lượng cho tất cả biến thể.', life: 3000 });
-    isSubmitting.value = false;
-    return;
-  }
-
-  if (
-    variantCombinations.value.length > 0 &&
-    variantCombinations.value.some(v => {
-      const price = Number(v.price);
-      const stock = Number(v.stockQuantity);
-      return (
-        v.price === null ||
-        isNaN(price) ||
-        price < 20000 ||
-        price > 30000000 ||
-        v.stockQuantity === null ||
-        isNaN(stock) ||
-        stock < 1 ||
-        stock > 1000
-      );
-    })
-  ) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Lỗi',
-      detail: 'Vui lòng nhập giá từ 20.000đ đến 30,000,000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
-      life: 3000
-    });
-    isSubmitting.value = false;
-    return;
-  }
-
-  if (variantCombinations.value.length > 0 && variantCombinations.value.some(v => !v.images || v.images.length === 0)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng tải lên ít nhất một hình ảnh cho mỗi biến thể.', life: 3000 });
-    isSubmitting.value = false;
-    return;
-  }
-
-  if (!parentImages.value || parentImages.value.length === 0) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng tải lên ít nhất một hình ảnh cho sản phẩm cha.', life: 3000 });
-    isSubmitting.value = false;
-    return;
-  }
-
+  // build payload
   const requestData: ProductRequest = {
     ...product,
     productAttributeValues: Array.from(
@@ -719,15 +690,15 @@ const submitProduct = async () => {
 
   try {
     const message = await ProductService.addProduct(requestData, parentUploadedFiles, variantUploadedFiles);
-    toast.add({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
-    router.push('/products');
+    toast.add({ severity: "success", summary: "Thành công", detail: message, life: 3000 });
+    router.push("/products");
   } catch (error: any) {
-    const errorMessage = error.message || 'Lỗi khi thêm sản phẩm';
-    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });
+    toast.add({ severity: "error", summary: "Lỗi", detail: error.message || "Lỗi khi thêm sản phẩm", life: 3000 });
   } finally {
     isSubmitting.value = false;
   }
 };
+
 
 const openAddAttributeDialog = () => {
   addAttributeDialogVisible.value = true;
@@ -764,9 +735,53 @@ onMounted(async () => {
     });
   }
 });
+
+const validateProduct = () => {
+  product.name = product.name?.trim() || "";
+  product.description = product.description?.trim() || "";
+  product.sportType = product.sportType?.trim() || "";
+
+  const requiredFields = [
+    { field: product.name, message: "Tên sản phẩm là bắt buộc." },
+    { field: product.categoryId, message: "Danh mục là bắt buộc." },
+    { field: product.supplierId, message: "Nhà cung cấp là bắt buộc." },
+    { field: product.description, message: "Mô tả là bắt buộc." },
+    { field: product.sportType, message: "Loại thể thao là bắt buộc." },
+    { field: product.tagId?.length, message: "Nhãn là bắt buộc." }
+  ];
+
+  for (const rule of requiredFields) {
+    if (!rule.field) return rule.message;
+  }
+
+  for (const v of variantCombinations.value) {
+    const price = Number(v.price);
+    const stock = Number(v.stockQuantity);
+
+    if (!v.images || v.images.length === 0) {
+      return "Mỗi biến thể cần ít nhất một hình ảnh.";
+    }
+    if (!price || isNaN(price) || price < 20000 || price > 30000000) {
+      return "Giá phải từ 20.000đ đến 30.000.000đ.";
+    }
+    if (!stock || isNaN(stock) || stock < 1 || stock > 1000) {
+      return "Số lượng phải từ 1 đến 1.000.";
+    }
+  }
+
+  if (!parentImages.value || parentImages.value.length === 0) {
+    return "Vui lòng tải lên ít nhất một hình ảnh cho sản phẩm.";
+  }
+
+  return null; 
+};
 </script>
 
 <style scoped>
+label.required::after {
+  content: " *";
+  color: red;
+}
 .variants {
   margin-top: 2rem;
   padding: 1rem;

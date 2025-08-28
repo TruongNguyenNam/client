@@ -9,11 +9,11 @@
         <!-- Thông tin sản phẩm cha -->
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label>Tên Sản Phẩm</label>
+            <label  class="required">Tên Sản Phẩm</label>
             <InputText v-model="parentProduct.name" disabled />
           </div>
           <div class="field col-12 md:col-6">
-            <label>Mã Sản Phẩm</label>
+            <label  class="required">Mã Sản Phẩm</label>
             <InputText v-model="parentProduct.sku" disabled />
           </div>
         </div>
@@ -23,7 +23,7 @@
           <h6>Thông tin sản phẩm chi tiết</h6>
           <div class="p-fluid formgrid grid">
             <div class="field col-12">
-              <label for="variant-images">Hình ảnh sản phẩm con *</label>
+              <label for="variant-images"  class="required">Hình ảnh sản phẩm con *</label>
               <FileUpload
                 name="variant-images"
                 :multiple="true"
@@ -62,7 +62,7 @@
             </div>
 
             <div class="field col-12 md:col-6">
-              <label for="variant-price">Giá (VND) *</label>
+              <label for="variant-price"  class="required">Giá (VND)</label>
               <InputNumber
                 id="variant-price"
                 v-model="variant.price"
@@ -77,10 +77,15 @@
             </div>
 
             <div class="field col-12 md:col-6">
-              <label for="variant-stock">Số lượng tồn kho *</label>
-              <InputNumber
+              <label for="variant-stock"  class="required">Số lượng tồn kho </label>
+             <InputNumber
                 id="variant-stock"
                 v-model="variant.stockQuantity"
+                :min="1"
+                :max="1000"
+                :step="1"
+                :minFractionDigits="0"
+                :maxFractionDigits="0"
                 :class="{ 'p-invalid': hasStockError }"
                 class="w-full"
               />
@@ -88,7 +93,7 @@
             </div>
 
             <div class="field col-12">
-              <label for="variant-sku">Mã Sản Phẩm</label>
+              <label for="variant-sku"  class="required">Mã Sản Phẩm</label>
               <InputText 
                 id="variant-sku"
                 v-model="variant.sku" 
@@ -121,7 +126,7 @@
           <div v-for="(attribute, index) in attributes" :key="index" class="attribute-row mb-3 p-3 border-round surface-ground">
             <div class="grid">
               <div class="field col-12 md:col-5">
-                <label>Tên thuộc tính *</label>
+                <label  class="required">Tên thuộc tính</label>
                 <Dropdown
                   v-model="attribute.attributeId"
                   :options="getAvailableAttributes(index)"
@@ -144,7 +149,7 @@
               </div>
 
               <div class="field col-12 md:col-5">
-                <label>Giá trị *</label>
+                <label  class="required">Giá trị</label>
                 <InputText
                   v-model="attribute.value"
                   placeholder="Nhập giá trị"
@@ -471,12 +476,12 @@ const validateForm = () => {
   // Hiển thị thông báo lỗi tổng hợp
   if (errors.length > 0) {
     const errorMessage = errors.join(' | ');
-    toast.add({
-      severity: 'warn',
-      summary: 'Lỗi dữ liệu',
-      detail: errorMessage,
-      life: 5000,
-    });
+    // toast.add({
+    //   severity: 'warn',
+    //   summary: 'Lỗi dữ liệu',
+    //   detail: errorMessage,
+    //   life: 5000,
+    // });
     return false;
   }
 
@@ -621,6 +626,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+label.required::after {
+  content: " *";
+  color: red;
+}
 .card {
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
