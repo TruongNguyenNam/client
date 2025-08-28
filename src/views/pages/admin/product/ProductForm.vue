@@ -1,8 +1,12 @@
+```vue
 <template>
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Thêm sản phẩm</h5>
+        <div class="card-header">
+          <h5>Thêm sản phẩm</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+        </div>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
@@ -72,7 +76,7 @@
               rows="4" 
               placeholder="Nhập mô tả"
               :class="{'p-invalid': submitted && !product.description}"
-              maxlength="100"
+              maxlength="255"
             />
             <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
@@ -125,9 +129,9 @@
               <div class="p-inputgroup">
                 <InputText
                   v-model="variant.currentValue"
-                  placeholder="nhập giá trị và nhấn Enter"
+                  placeholder="Nhập giá trị và nhấn Enter"
                   class="variant-input"
-                  maxlength="10"
+                  maxlength="30"
                   @keydown.enter="addVariantValue(index)"
                 />
                 <Button 
@@ -165,86 +169,6 @@
           />
         </div>
 
-        <!-- <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
-          <h3>Danh sách biến thể</h3>
-          <DataTable :value="variantCombinations" responsiveLayout="scroll">
-            <Column header="Hình ảnh">
-              <template #body="slotProps">
-                <div class="variant-image-upload">
-                  <FileUpload
-                    :name="'variantImages' + slotProps.index"
-                    :multiple="true"
-                    accept="image/*"
-                    :auto="false"
-                    chooseLabel="chọn hình ảnh"
-                    @select="onVariantImageUpload(slotProps.index, $event)"
-                    :maxFileSize="1000000"
-                    @error="onError"
-                    :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
-                  />
-                </div>
-              </template>
-            </Column>
-            <Column header="Tên">
-              <template #body="slotProps">
-                {{ slotProps.data.name }}
-              </template>
-            </Column>
-            <Column header="Giá">
-                <template #body="slotProps">
-                  <InputNumber 
-                    v-model="slotProps.data.price"
-                    mode="currency"
-                    currency="VND"
-                
-                    :max="100000000"
-                    :step="1000"
-                    :minFractionDigits="0"
-                    :maxFractionDigits="0"
-                    :class="{
-                      'p-invalid': submitted &&
-                        (slotProps.data.price === undefined || 
-                        slotProps.data.price < 20000 || 
-                        slotProps.data.price > 100000000)
-                    }"
-                  />
-                </template>
-            </Column>
-
-            <Column header="Số lượng">
-              <template #body="slotProps">
-                <InputNumber 
-                  v-model="slotProps.data.stockQuantity"
-                  :min="1"
-                  
-                  :step="1"
-                  :maxFractionDigits="0"
-                  :class="{
-                    'p-invalid': submitted &&
-                      (slotProps.data.stockQuantity === undefined || 
-                      slotProps.data.stockQuantity < 1 || 
-                      slotProps.data.stockQuantity > 1000)
-                  }"
-                />
-              </template>
-            </Column>
-
-
-
-            <Column>
-              <template #body="slotProps">
-                <Button 
-                  icon="pi pi-trash" 
-                  severity="danger" 
-                  @click="variantCombinations.splice(slotProps.index, 1)"
-                  :class="{'p-button-sm': true}"
-                />
-              </template>
-            </Column>
-          </DataTable>
-        </div> -->
-   
-
         <div class="variant-combinations mt-4" v-if="variantCombinations.length > 0">
           <h3>Danh sách biến thể</h3>
           <div class="flex justify-content-between mb-3 align-items-end">
@@ -257,7 +181,7 @@
                   mode="currency"
                   currency="VND"
                   :min="20000"
-                  :max="100000000"
+                  :max="30000000"
                   :step="1000"
                   :minFractionDigits="0"
                   :maxFractionDigits="0"
@@ -287,79 +211,102 @@
               />
             </div>
           </div>
-      <DataTable :value="variantCombinations" responsiveLayout="scroll">
-        <Column header="Hình ảnh">
-          <template #body="slotProps">
-            <div class="variant-image-upload">
-              <FileUpload
-                :name="'variantImages' + slotProps.index"
-                :multiple="true"
-                accept="image/*"
-                :auto="false"
-                chooseLabel="chọn hình ảnh"
-                @select="onVariantImageUpload(slotProps.index, $event)"
-                :maxFileSize="1000000"
-                @error="onError"
-                :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
-              />
-            </div>
-          </template>
-        </Column>
-        <Column header="Tên">
-          <template #body="slotProps">
-            {{ slotProps.data.name }}
-          </template>
-        </Column>
-        <Column header="Giá">
-          <template #body="slotProps">
-            <InputNumber 
-              v-model="slotProps.data.price"
-              mode="currency"
-              currency="VND"
-              :max="100000000"
-              :step="1000"
-              :minFractionDigits="0"
-              :maxFractionDigits="0"
-              :class="{
-                'p-invalid': submitted &&
-                  (slotProps.data.price === undefined || 
-                  slotProps.data.price < 20000 || 
-                  slotProps.data.price > 100000000)
-              }"
-            />
-          </template>
-        </Column>
-        <Column header="Số lượng">
-          <template #body="slotProps">
-            <InputNumber 
-              v-model="slotProps.data.stockQuantity"
-              :min="1"
-              :step="1"
-              :maxFractionDigits="0"
-              :class="{
-                'p-invalid': submitted &&
-                  (slotProps.data.stockQuantity === undefined || 
-                  slotProps.data.stockQuantity < 1 || 
-                  slotProps.data.stockQuantity > 1000)
-              }"
-            />
-          </template>
-    </Column>
-    <Column>
-      <template #body="slotProps">
-        <Button 
-          icon="pi pi-trash" 
-          severity="danger" 
-          @click="variantCombinations.splice(slotProps.index, 1)"
-          :class="{'p-button-sm': true}"
-        />
-      </template>
-    </Column>
-  </DataTable>
+          <DataTable :value="variantCombinations" responsiveLayout="scroll">
+            <Column header="Hình ảnh">
+              <template #body="slotProps">
+                <div class="variant-image-upload">
+                  <FileUpload
+                    :name="'variantImages' + slotProps.index"
+                    :multiple="true"
+                    accept="image/*"
+                    :auto="false"
+                    chooseLabel="chọn hình ảnh"
+                    @select="onVariantImageUpload(slotProps.index, $event)"
+                    :maxFileSize="1000000"
+                    @error="onError"
+                    :class="{'p-invalid': submitted && (!slotProps.data.images || slotProps.data.images.length === 0)}"
+                  />
+                  <small class="p-error" v-if="submitted && (!slotProps.data.images || slotProps.data.images.length === 0)">
+                    Ít nhất một hình ảnh sản phẩm là bắt buộc.
+                  </small>
+                </div>
+              </template>
+            </Column>
+            <Column header="Tên">
+              <template #body="slotProps">
+                {{ slotProps.data.name }}
+              </template>
+            </Column>
+            <Column header="Giá">
+              <template #body="slotProps">
+                <div>
+                  <InputNumber 
+                    v-model="slotProps.data.price"
+                    mode="currency"
+                    currency="VND"
+                    :max="30000000"
+                    :step="1000"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="0"
+                    :class="{
+                      'p-invalid': submitted &&
+                        (slotProps.data.price === undefined || 
+                        slotProps.data.price < 20000 || 
+                        slotProps.data.price > 30000000)
+                    }"
+                  />
+                  <small class="p-error" v-if="submitted && (
+                    slotProps.data.price === undefined || 
+                    slotProps.data.price < 20000 || 
+                    slotProps.data.price > 30000000
+                  )">
+                    Giá phải từ 20.000đ đến 30.000.000đ.
+                  </small>
+                </div>
+              </template>
+            </Column>
+            <Column header="Số lượng">
+              <template #body="slotProps">
+                <div>
+                  <InputNumber 
+                    v-model="slotProps.data.stockQuantity"
+                    :min="1"
+                    :step="1"
+                    :max="1000"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="0"
+                    :class="{
+                      'p-invalid': submitted &&
+                        (slotProps.data.stockQuantity === undefined || 
+                        slotProps.data.stockQuantity < 1 || 
+                        slotProps.data.stockQuantity > 1000)
+                    }"
+                  />
+                  <small class="p-error" v-if="submitted && (
+                    slotProps.data.stockQuantity === undefined || 
+                    slotProps.data.stockQuantity < 1 || 
+                    slotProps.data.stockQuantity > 1000
+                  )">
+                    Số lượng phải từ 1 đến 1.000.
+                  </small>
+                </div>
+              </template>
+            </Column>
+            <Column>
+              <!-- <template #body="slotProps">
+                <Button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  @click="variantCombinations.splice(slotProps.index, 1)"
+                  :class="{'p-button-sm': true}"
+                />
+              </template> -->
+            </Column>
+          </DataTable>
         </div>
 
         <div class="flex justify-content-end mt-4">
-          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/documentation')" />
+          <Button label="Hủy" icon="pi pi-times" severity="secondary" class="mr-2" @click="router.push('/products')" />
           <Button
             label="Thêm Sản Phẩm"
             icon="pi pi-check"
@@ -398,6 +345,9 @@ import type { ProductRequest, ProductAttributeValue } from '../../../../model/ad
 import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
 import AddAttribute from './AddAttribute.vue';
 
+
+const defaultImageUrl = new URL('@/assets/img/airforce2.png', import.meta.url).href;
+// Placeholder mặc định
 const toast = useToast();
 const submitted = ref(false);
 const isSubmitting = ref(false);
@@ -408,9 +358,8 @@ const parentImages = ref<File[]>([]);
 const productAttributes = ref<ProductAttributeResponse[]>([]);
 const availableAttributes = ref<ProductAttributeResponse[]>([]);
 
-const defaultPrice = ref(500000)
-const defaultStock = ref(100)
-
+const defaultPrice = ref(500000);
+const defaultStock = ref(100);
 
 const product = reactive<ProductRequest>({
   name: '',
@@ -443,7 +392,6 @@ const getAttributeName = (attributeId: number) => {
   return attribute ? attribute.name : '';
 };
 
-
 const applyDefaultValues = () => {
   if (!defaultPrice.value || !defaultStock.value) {
     toast.add({
@@ -457,14 +405,14 @@ const applyDefaultValues = () => {
 
   if (
     defaultPrice.value < 20000 ||
-    defaultPrice.value > 100000000 ||
+    defaultPrice.value > 30000000 ||
     defaultStock.value < 1 ||
     defaultStock.value > 1000
   ) {
     toast.add({
       severity: 'warn',
       summary: 'Lỗi',
-      detail: 'Giá phải từ 20,000 đến 100,000,000 VND và số lượng từ 1 đến 1,000.',
+      detail: 'Giá phải từ 20,000 đến 30,000,000 VND và số lượng từ 1 đến 1,000.',
       life: 3000
     });
     return;
@@ -482,40 +430,26 @@ const applyDefaultValues = () => {
     life: 3000
   });
 };
-// const onParentImageUpload = (event: any) => {
-//   const selectedFiles: File[] = event.files;
-//   parentImages.value = selectedFiles;
-//   toast.add({ severity: 'success', summary: 'Hình ảnh sản phẩm cha đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho sản phẩm cha`, life: 3000 });
-// };
 
 const onParentImageUpload = (event: any) => {
   const selectedFiles: File[] = event.files;
-
-  // Các định dạng ảnh cho phép
   const validImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
-
-  // Tìm file không hợp lệ (bao gồm cả Excel)
   const invalidFiles = selectedFiles.filter(file => !validImageTypes.includes(file.type));
 
   if (invalidFiles.length > 0) {
-    // Thông báo lỗi
     toast.add({
       severity: 'error',
       summary: 'File không hợp lệ',
       detail: 'Chỉ cho phép hình ảnh (JPG, PNG, WEBP, GIF). Không được tải lên file Excel hoặc định dạng khác.',
       life: 4000
     });
-
-    // Xóa hết file đã chọn (PrimeVue FileUpload)
     event.options.clear();
-
-    // Reset lại biến lưu
     parentImages.value = [];
     return;
   }
 
-  // Nếu hợp lệ thì gán vào biến
   parentImages.value = selectedFiles;
+  generateCombinations();
   toast.add({
     severity: 'success',
     summary: 'Hình ảnh hợp lệ',
@@ -523,7 +457,6 @@ const onParentImageUpload = (event: any) => {
     life: 3000
   });
 };
-
 
 const onError = (error: any) => {
   toast.add({ severity: 'error', summary: 'Lỗi tải lên', detail: error.message, life: 3000 });
@@ -552,12 +485,14 @@ const addVariant = () => {
     variantImages: new Map()
   });
   updateAvailableAttributes();
+  toast.add({ severity: 'success', summary: 'Thành công', detail: 'Đã thêm thuộc tính mới', life: 3000 });
 };
 
 const removeVariant = (index: number) => {
   variants.value.splice(index, 1);
   generateCombinations();
   updateAvailableAttributes();
+  toast.add({ severity: 'info', summary: 'Thành công', detail: 'Đã xóa thuộc tính', life: 3000 });
 };
 
 const addVariantValue = (index: number) => {
@@ -586,9 +521,32 @@ const removeVariantValue = (variantIndex: number, valueIndex: number) => {
 
 const onVariantImageUpload = (index: number, event: any) => {
   const selectedFiles: File[] = event.files;
-  const combination = variantCombinations.value[index];
-  combination.images = selectedFiles || [];
-  toast.add({ severity: 'success', summary: 'Hình ảnh đã chọn', detail: `Đã chọn ${selectedFiles.length} hình ảnh cho biến thể "${combination.name}"`, life: 3000 });
+  const validImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+  const invalidFiles = selectedFiles.filter(file => !validImageTypes.includes(file.type));
+
+  if (invalidFiles.length > 0) {
+    toast.add({
+      severity: 'error',
+      summary: 'File không hợp lệ',
+      detail: 'Chỉ cho phép hình ảnh (JPG, PNG, WEBP, GIF).',
+      life: 4000
+    });
+    event.options.clear();
+    return;
+  }
+
+  if (variantCombinations.value[index]) {
+    variantCombinations.value[index].images = [...selectedFiles]; // Thay thế hoàn toàn ảnh hiện tại bằng ảnh mới
+    variantCombinations.value = [...variantCombinations.value]; // Force re-render
+    toast.add({
+      severity: 'success',
+      summary: 'Hình ảnh đã chọn',
+      detail: `Đã chọn ${selectedFiles.length} hình ảnh cho biến thể "${variantCombinations.value[index].name}"`,
+      life: 3000
+    });
+  } else {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Biến thể không tồn tại để thêm hình ảnh.', life: 3000 });
+  }
 };
 
 const getImagePreview = (files: File[]): string[] => {
@@ -617,18 +575,27 @@ const generateCombinations = () => {
   variantCombinations.value = combinations.map(combination => {
     const attributes = validVariants.map((variant, idx) => ({
       attributeId: variant.attributeId,
-      value: combination[idx],
-      price: undefined,
-      stockQuantity: undefined
+      value: combination[idx]
     }));
-    const variantName = `${product.name} - ${combination.join(' - ')}`;
+    const variantName = product.name
+      ? `${product.name} - ${combination.join(' - ')}`
+      : `Biến thể - ${combination.join(' - ')}`;
+    const sku = product.sku
+      ? `${product.sku}-${combination.join('-')}`
+      : `SKU-${combination.join('-')}`;
+
+    // Sử dụng ảnh mặc định nếu không có ảnh được tải lên
+    const images = variantCombinations.value.find(v => 
+      v.attributes.every((a, i) => a.attributeId === attributes[i].attributeId && a.value === attributes[i].value)
+    )?.images || [];
+
     return {
       name: variantName,
-      sku: `${product.sku}-${combination.join('-')}`,
-      price: undefined,
-      stockQuantity: undefined,
-      attributes: attributes as ProductAttributeValue[],
-      images: []
+      sku: sku,
+      price: defaultPrice.value,
+      stockQuantity: defaultStock.value,
+      attributes,
+      images: images.length > 0 ? images : [new File([''], 'default.png', { type: 'image/png' })] // Ảnh mặc định
     };
   });
 };
@@ -657,6 +624,14 @@ watch(
   }
 );
 
+watch(
+  () => parentImages.value,
+  () => {
+    generateCombinations();
+  },
+  { deep: true }
+);
+
 const submitProduct = async () => {
   submitted.value = true;
   isSubmitting.value = true;
@@ -664,15 +639,14 @@ const submitProduct = async () => {
   const nameRegex = /^[\p{L}\s]+$/u;
   product.name = product.name ? product.name.trim() : "";
   product.description = product.description ? product.description.trim() : "";
-  product.sportType = product.sportType ? product.sportType.trim():"";
-  // Validate tên sản phẩm
+  product.sportType = product.sportType ? product.sportType.trim() : "";
   if (!product.name) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Tên sản phẩm là bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
   } 
 
-    if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType || !product.tagId.length) {
+  if (!product.name || !product.categoryId || !product.supplierId || !product.description || !product.sportType || !product.tagId.length) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Vui lòng điền đầy đủ các trường bắt buộc.', life: 3000 });
     isSubmitting.value = false;
     return;
@@ -693,7 +667,7 @@ const submitProduct = async () => {
         v.price === null ||
         isNaN(price) ||
         price < 20000 ||
-        price > 100000000 ||
+        price > 30000000 ||
         v.stockQuantity === null ||
         isNaN(stock) ||
         stock < 1 ||
@@ -704,7 +678,7 @@ const submitProduct = async () => {
     toast.add({
       severity: 'warn',
       summary: 'Lỗi',
-      detail: 'Vui lòng nhập giá từ 20.000đ đến 100.000.000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
+      detail: 'Vui lòng nhập giá từ 20.000đ đến 30,000,000đ và số lượng từ 1 đến 1000 cho tất cả biến thể.',
       life: 3000
     });
     isSubmitting.value = false;
@@ -762,7 +736,8 @@ const openAddAttributeDialog = () => {
 const handleAttributeAdded = (newAttribute: ProductAttributeResponse) => {
   productAttributes.value.push(newAttribute);
   availableAttributes.value.push(newAttribute);
-  updateAvailableAttributes(); // Cập nhật lại danh sách availableAttributes
+  updateAvailableAttributes();
+  toast.add({ severity: 'success', summary: 'Thành công', detail: `Đã thêm thuộc tính "${newAttribute.name}"`, life: 3000 });
 };
 
 onMounted(async () => {
@@ -899,5 +874,11 @@ onMounted(async () => {
   margin-top: 0.5rem;
 }
 
-
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
 </style>
+```

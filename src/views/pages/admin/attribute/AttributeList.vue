@@ -185,13 +185,14 @@ const validateForm = () => {
 
   
   const nameRegex = /^[A-Za-zÀ-ỹà-ỹ\s]+$/u; // Cho phép chữ cái và khoảng trắng (bao gồm cả tiếng Việt)
-  if (!nameRegex.test(name.value.trim())) {
-    nameError.value = 'Tên thuộc tính chỉ được chứa chữ cái và không chứa ký tự đặc biệt';
+ 
+  // Validate name
+  if (!name.value.trim()) {
+    nameError.value = 'Tên thuộc tính không được để trống';
     isValid = false;
   }
-  // Validate name
- else if (!name.value.trim()) {
-    nameError.value = 'Tên thuộc tính không được để trống';
+  else  if (!nameRegex.test(name.value.trim())) {
+    nameError.value = 'Tên thuộc tính chỉ được chứa chữ cái và không chứa ký tự đặc biệt';
     isValid = false;
   } else if (name.value.trim().length < 1 || name.value.trim().length > 20) {
     nameError.value = 'Tên thuộc tính phải có độ dài từ 1 đến 20 ký tự';

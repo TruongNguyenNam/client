@@ -4,7 +4,13 @@
     <div class="filter">
       <div class="card p-4">
         <h3 class="text-lg font-semibold mb-2">PHÂN LOẠI HÀNG HÓA</h3>
-        <button class="clear-button" @click="clearSportType">Clear</button>
+        <!-- <button class="clear-button" @click="clearSportType">Clear</button> -->
+        <Button 
+          icon="pi pi-filter" 
+          class="p-button-rounded p-button-text clear-button" 
+          @click="clearSportType" 
+        />
+
         <div class="flex flex-col gap-2" style="flex-direction: column;">
           <div v-for="category in categories" :key="category.key" class="flex items-center gap-2">
             <RadioButton v-model="selectedSportType" :inputId="category.key" name="sportType" :value="category.name" />
@@ -15,7 +21,12 @@
 
       <div class="card p-4 mt-4">
         <h3 class="text-lg font-semibold mb-2">MỨC GIÁ</h3>
-        <button class="clear-button" @click="clearPriceRange">Clear</button>
+        <!-- <button class="clear-button" @click="clearPriceRange">Clear</button> -->
+        <Button 
+          icon="pi pi-filter" 
+          class="p-button-rounded p-button-text clear-button" 
+          @click="clearPriceRange" 
+        />
         <div class="flex flex-col gap-2" style="flex-direction: column;">
           <div v-for="priceRange in priceRanges" :key="priceRange.key" class="flex items-center gap-2">
             <RadioButton v-model="selectedPriceRange" :inputId="priceRange.key" name="price" :value="priceRange.name" />
@@ -125,7 +136,7 @@ const toast = useToast();
 const selectedSportType = ref('');
 const categories = ref([
   { name: 'Running', key: 'R' },
-  { name: 'Training', key: 'T' },
+  { name: 'FootBall', key: 'F' },
   { name: 'Sneaker', key: 'S' },
   { name: 'Basketball', key: 'B' },
 ]);

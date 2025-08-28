@@ -17,7 +17,7 @@
 
     <div style="border: 2px solid #eee; margin-top: 20px; background: linear-gradient(to right, #ffe6e6, #fff); padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
   <marquee behavior="scroll" direction="left" scrollamount="6" style="font-size: 28px; font-weight: bold; color: #d32f2f; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);">
-    👟🎉 Chào mừng bạn đã đến với ShoeStore VN - Nơi hội tụ những đôi giày chất lượng & thời trang nhất! 🎉👟
+     Chào mừng bạn đã đến với ShoeSprots VN - Nơi hội tụ những đôi giày chất lượng & thời trang nhất!
   </marquee>
 </div>
 

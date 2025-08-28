@@ -2,23 +2,25 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Thêm Sản Phẩm Cùng Loại</h5>
-
+        <div class="card-header">
+          <h5>Thêm Sản Phẩm Cùng Loại</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+        </div>
         <!-- Thông tin sản phẩm cha -->
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label>Tên Sản Phẩm </label>
+            <label>Tên Sản Phẩm</label>
             <InputText v-model="parentProduct.name" disabled />
           </div>
           <div class="field col-12 md:col-6">
-            <label>Mã Sản Phẩm </label>
+            <label>Mã Sản Phẩm</label>
             <InputText v-model="parentProduct.sku" disabled />
           </div>
         </div>
 
         <!-- Thông tin sản phẩm con -->
         <div class="variant-details mt-4 surface-card p-4 border-round">
-          <h6>Thông tin sản phẩm con</h6>
+          <h6>Thông tin sản phẩm chi tiết</h6>
           <div class="p-fluid formgrid grid">
             <div class="field col-12">
               <label for="variant-images">Hình ảnh sản phẩm con *</label>
@@ -79,7 +81,6 @@
               <InputNumber
                 id="variant-stock"
                 v-model="variant.stockQuantity"
-           
                 :class="{ 'p-invalid': hasStockError }"
                 class="w-full"
               />
@@ -101,7 +102,7 @@
         <!-- Thuộc tính sản phẩm con -->
         <div class="attributes mt-4 surface-card p-4 border-round">
           <div class="flex align-items-center justify-content-between mb-3">
-            <h6 class="m-0">Thuộc tính sản phẩm con</h6>
+            <h6 class="m-0">Thuộc tính sản phẩm </h6>
             <Button
               label="Thêm thuộc tính"
               icon="pi pi-plus"
@@ -130,6 +131,7 @@
                   class="w-full"
                   :class="{ 'p-invalid': hasAttributeIdError[index] }"
                   @change="updateSelections"
+                  :disabled="true" 
                 >
                   <template #option="slotProps">
                     <div :class="{ 'text-color-secondary': isAttributeDisabled(slotProps.option.id, index) }">
@@ -147,21 +149,21 @@
                   v-model="attribute.value"
                   placeholder="Nhập giá trị"
                   class="w-full"
-                  maxlength="10"
+                  maxlength="20"
                   :class="{ 'p-invalid': hasAttributeValueError[index] }"
                 />
                 <small class="p-error" v-if="hasAttributeValueError[index]">{{ attributeValueErrorMessages[index] }}</small>
               </div>
 
               <div class="field col-12 md:col-2 flex align-items-end justify-content-center">
-                <Button
+                <!-- <Button
                   icon="pi pi-trash"
                   severity="danger"
                   outlined
                   rounded
                   @click="removeAttribute(index)"
                   :disabled="isSubmitting"
-                />
+                /> -->
               </div>
             </div>
           </div>
@@ -197,13 +199,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed,watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter, useRoute } from 'vue-router';
 import { ProductService } from '../../../../service/admin/ProductServiceLegacy';
 import { ProductAttributeService } from '../../../../service/admin/ProductAttribueService';
+import { ProductAttributeValueService } from '../../../../service/admin/ProductAttributeValueService';
 import type { ProductAttributeResponse } from '../../../../model/admin/productAttribute';
 import type { ProductResponse, AddProductChild } from '../../../../model/admin/product';
+import type { ProductAttributeValueResponse } from '../../../../service/admin/ProductAttributeValueService';
 
 const toast = useToast();
 const router = useRouter();
@@ -220,13 +224,14 @@ const parentProduct = ref<ProductResponse>({
   stockQuantity: null,
   sportType: '',
   originalPrice: null,
+  parentProductId:0,
   sku: '',
   supplierName: '',
   categoryName: '',
   productAttributeValueResponses: [],
   tagName: [],
   imageUrl: [],
-  inventories: []
+  inventories: [],
 });
 
 const variant = reactive({
@@ -234,13 +239,13 @@ const variant = reactive({
   sku: '',
   price: undefined as number | undefined,
   stockQuantity: undefined as number | undefined,
-  images: [] as File[]
+  images: [] as File[],
 });
 
 const attributes = ref<Array<{
   attributeId: number | null;
   value: string;
-}>>([{ attributeId: null, value: '' }]);
+}>>([]); // Khởi tạo rỗng, sẽ được điền từ API
 
 const productAttributes = ref<ProductAttributeResponse[]>([]);
 
@@ -255,8 +260,6 @@ const priceErrorMessage = ref('');
 const stockErrorMessage = ref('');
 const attributeIdErrorMessages = ref<string[]>([]);
 const attributeValueErrorMessages = ref<string[]>([]);
-
-// Thêm trạng thái cho lỗi trùng lặp từ backend
 const hasDuplicateError = ref(false);
 const duplicateErrorMessage = ref('');
 
@@ -266,30 +269,23 @@ const updateErrorArrays = () => {
   hasAttributeValueError.value = new Array(attributes.value.length).fill(false);
   attributeIdErrorMessages.value = new Array(attributes.value.length).fill('');
   attributeValueErrorMessages.value = new Array(attributes.value.length).fill('');
-  // Reset lỗi trùng lặp khi thay đổi thuộc tính
   hasDuplicateError.value = false;
   duplicateErrorMessage.value = '';
 };
 
-updateErrorArrays();
-
 // Computed
-// const getAvailableAttributes = computed(() => (currentIndex: number) => {
-//   return productAttributes.value.map(attr => ({
-//     ...attr,
-//     disabled: isAttributeDisabled(attr.id, currentIndex)
-//   }));
-// });
-
 const getAvailableAttributes = computed(() => (currentIndex: number) => {
-  // Lấy tất cả id đã chọn trừ chính attribute ở index hiện tại
   const selectedIds = attributes.value
     .filter((_, idx) => idx !== currentIndex)
     .map(attr => attr.attributeId);
-
   return productAttributes.value.filter(attr => !selectedIds.includes(attr.id));
 });
 
+const isAttributeDisabled = (attributeId: number, currentIndex: number) => {
+  return attributes.value.some((attr, index) => 
+    index !== currentIndex && attr.attributeId === attributeId
+  );
+};
 
 // Methods
 const loadParentProduct = async () => {
@@ -311,30 +307,25 @@ const loadProductAttributes = async () => {
   }
 };
 
-const isAttributeDisabled = (attributeId: number, currentIndex: number) => {
-  return attributes.value.some((attr, index) => 
-    index !== currentIndex && attr.attributeId === attributeId
-  );
-};
+const loadFirstVariantAttributes = async () => {
+  try {
+    const response = await ProductAttributeValueService.getFirstVariantAttributes(parentProductId);
+    const safeData = response.data ?? []; // fallback [] nếu undefined
 
-const updateSelections = () => {
-  updateVariantNameAndSku();
-};
+    attributes.value = safeData.map(attr => ({
+      attributeId: attr.attributeId,
+      value: '', // để trống ban đầu
+    }));
 
-const addAttribute = () => {
-  if (attributes.value.length < productAttributes.value.length) {
-    attributes.value.push({ attributeId: null, value: '' });
-    updateErrorArrays();
-  }
-};
-
-const removeAttribute = (index: number) => {
-  if (attributes.value.length > 1) {
-    attributes.value.splice(index, 1);
     updateErrorArrays();
     updateVariantNameAndSku();
+  } catch (error: any) {
+    showError('Không thể tải thuộc tính của biến thể đầu tiên', error);
+    attributes.value = [{ attributeId: null, value: '' }];
+    updateErrorArrays();
   }
 };
+
 
 const updateVariantNameAndSku = () => {
   const validAttributes = attributes.value.filter(a => a.attributeId && a.value.trim());
@@ -355,6 +346,25 @@ const updateVariantNameAndSku = () => {
   } else {
     variant.sku = parentProduct.value.sku;
   }
+};
+
+const addAttribute = () => {
+  if (attributes.value.length < productAttributes.value.length) {
+    attributes.value.push({ attributeId: null, value: '' });
+    updateErrorArrays();
+  }
+};
+
+const removeAttribute = (index: number) => {
+  if (attributes.value.length > 1) {
+    attributes.value.splice(index, 1);
+    updateErrorArrays();
+    updateVariantNameAndSku();
+  }
+};
+
+const updateSelections = () => {
+  updateVariantNameAndSku();
 };
 
 const onVariantImageUpload = (event: any) => {
@@ -382,7 +392,7 @@ const showError = (summary: string, error: any) => {
     severity: 'error',
     summary,
     detail: typeof error === 'string' ? error : error.message || 'Đã xảy ra lỗi không xác định',
-    life: 5000
+    life: 5000,
   });
 };
 
@@ -410,31 +420,29 @@ const validateForm = () => {
     errors.push(imageErrorMessage.value);
   }
 
-  // Kiểm tra giá (>= 20000)
-  // Kiểm tra giá từ 20,000 đến 100,000,000
-if (
-  variant.price === undefined ||
-  typeof variant.price !== 'number' ||
-  variant.price < 20000 ||
-  variant.price > 100000000
-) {
-  hasPriceError.value = true;
-  priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 đến 100,000,000.';
-  errors.push(priceErrorMessage.value);
-}
+  // Kiểm tra giá từ 20,000 đến 30,000,000
+  if (
+    variant.price === undefined ||
+    typeof variant.price !== 'number' ||
+    variant.price < 20000 ||
+    variant.price > 30000000
+  ) {
+    hasPriceError.value = true;
+    priceErrorMessage.value = 'Giá sản phẩm không hợp lệ. Vui lòng nhập giá từ 20,000 đến 30,000,000';
+    errors.push(priceErrorMessage.value);
+  }
 
-// Kiểm tra số lượng từ 1 đến 1000
-if (
-  variant.stockQuantity === undefined ||
-  typeof variant.stockQuantity !== 'number' ||
-  variant.stockQuantity <= 0 ||
-  variant.stockQuantity > 1000
-) {
-  hasStockError.value = true;
-  stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số từ 1 đến 1000.';
-  errors.push(stockErrorMessage.value);
-}
-
+  // Kiểm tra số lượng từ 1 đến 1000
+  if (
+    variant.stockQuantity === undefined ||
+    typeof variant.stockQuantity !== 'number' ||
+    variant.stockQuantity <= 0 ||
+    variant.stockQuantity > 1000
+  ) {
+    hasStockError.value = true;
+    stockErrorMessage.value = 'Số lượng tồn kho không hợp lệ. Vui lòng nhập số từ 1 đến 1000.';
+    errors.push(stockErrorMessage.value);
+  }
 
   // Kiểm tra thuộc tính
   if (attributes.value.length === 0) {
@@ -467,7 +475,7 @@ if (
       severity: 'warn',
       summary: 'Lỗi dữ liệu',
       detail: errorMessage,
-      life: 5000
+      life: 5000,
     });
     return false;
   }
@@ -489,15 +497,14 @@ const submitVariant = async () => {
         .filter(a => a.attributeId && a.value.trim())
         .map(a => ({
           attributeId: a.attributeId!,
-          value: a.value.trim()
+          value: a.value.trim(),
         })),
       variants: [{
         price: variant.price!,
         stockQuantity: variant.stockQuantity!,
-        images: variant.images
-      }]
+        images: variant.images,
+      }],
     };
-    console.log(variantForm);
 
     await ProductService.addVariantsToProduct(parentProductId, variantForm, variant.images);
 
@@ -505,20 +512,18 @@ const submitVariant = async () => {
       severity: 'success',
       summary: 'Thành công',
       detail: 'Thêm sản phẩm con thành công',
-      life: 3000
+      life: 3000,
     });
 
     router.push(`/productupdateparent/${parentProductId}`);
   } catch (error: any) {
-    // Ghi log chi tiết để debug
-    console.error("Chi tiết lỗi đầy đủ:", JSON.stringify(error, null, 2));
-    console.error("Dữ liệu thô từ response:", JSON.stringify(error.response, null, 2));
-    console.error("Thông điệp lỗi:", error.message);
+    console.error('Chi tiết lỗi đầy đủ:', JSON.stringify(error, null, 2));
+    console.error('Dữ liệu thô từ response:', JSON.stringify(error.response, null, 2));
+    console.error('Thông điệp lỗi:', error.message);
 
     let errorMessage = 'Không thể thêm sản phẩm con';
     hasDuplicateError.value = false;
 
-    // Lấy thông điệp lỗi từ backend
     let backendMessage = error.message || 'Đã xảy ra lỗi không xác định';
     if (error.response && error.response.data) {
       if (typeof error.response.data === 'object' && error.response.data.message) {
@@ -530,7 +535,6 @@ const submitVariant = async () => {
       }
     }
 
-    // Ánh xạ thông điệp lỗi
     if (typeof backendMessage === 'string') {
       if (backendMessage.includes('Dữ liệu JSON không hợp lệ')) {
         errorMessage = 'Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại thông tin.';
@@ -556,28 +560,63 @@ const submitVariant = async () => {
       } else if (backendMessage.includes('Request failed with status code 404')) {
         errorMessage = 'Không tìm thấy sản phẩm cha hoặc endpoint. Vui lòng kiểm tra ID và kết nối.';
       } else {
-        errorMessage = backendMessage; // Hiển thị thông điệp gốc
+        errorMessage = backendMessage;
       }
     }
 
     duplicateErrorMessage.value = errorMessage;
-    
+
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
       detail: errorMessage,
-      life: 4000
+      life: 4000,
     });
   } finally {
     isSubmitting.value = false;
   }
 };
 
+watch(() => variant.price, (newVal) => {
+  if (typeof newVal === 'number' && newVal >= 20000 && newVal <= 30000000) {
+    hasPriceError.value = false
+    priceErrorMessage.value = ''
+  }
+})
 
+// Watch số lượng
+watch(() => variant.stockQuantity, (newVal) => {
+  if (typeof newVal === 'number' && newVal > 0 && newVal <= 1000) {
+    hasStockError.value = false
+    stockErrorMessage.value = ''
+  }
+})
+
+// Watch hình ảnh
+watch(() => variant.images.length, (len) => {
+  if (len > 0) {
+    hasImageError.value = false
+    imageErrorMessage.value = ''
+  }
+})
+
+// Watch thuộc tính
+watch(attributes, (newAttrs) => {
+  newAttrs.forEach((attr, i) => {
+    if (attr.attributeId) {
+      hasAttributeIdError.value[i] = false
+      attributeIdErrorMessages.value[i] = ''
+    }
+    if (attr.value.trim()) {
+      hasAttributeValueError.value[i] = false
+      attributeValueErrorMessages.value[i] = ''
+    }
+  })
+}, { deep: true })
 
 // Chạy khi trang tải
 onMounted(async () => {
-  await Promise.all([loadParentProduct(), loadProductAttributes()]);
+  await Promise.all([loadParentProduct(), loadProductAttributes(), loadFirstVariantAttributes()]);
 });
 </script>
 
@@ -629,5 +668,12 @@ onMounted(async () => {
 :deep(.p-button.p-button-secondary:not(:disabled):hover) {
   background: var(--primary-color);
   border-color: var(--primary-color);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 </style>

@@ -232,7 +232,7 @@ const onPageChange = (event: any) => {
           </Column>
 
           <Column field="name" header="Tên sản phẩm" sortable style="min-width: 200px"></Column>
-          <Column field="variantCount" header="Số lượng" sortable style="min-width: 150px"></Column>
+          <Column field="variantCount" header="Số biến thể" sortable style="min-width: 150px"></Column>
           <Column field="categoryName" header="Danh mục" sortable style="min-width: 150px"></Column>
           <Column field="supplierName" header="Nhà cung cấp" sortable style="min-width: 150px"></Column>
           <Column field="sportType" header="Loại thể thao" sortable style="min-width: 150px"></Column>

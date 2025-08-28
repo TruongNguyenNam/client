@@ -467,7 +467,7 @@ const handleCancel = () => {
 
 <template>
     <div v-if="loading || !customer">Đang tải dữ liệu...</div>
-    <div v-else class="customer-add-page">
+    <div v-else class="customer-add-page" style="max-width: 1300px;">
         <div class="form-title">Cập Nhật Khách Hàng</div>
         <form class="customer-form" @submit.prevent="handleSubmit">
             <div class="form-row">
