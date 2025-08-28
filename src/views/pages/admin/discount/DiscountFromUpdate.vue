@@ -48,7 +48,7 @@
               type="number"
               :class="{ 'border-red-500': errors.percentValue }"
               class="w-full border px-2 py-1 rounded"
-              :disabled="isActive"
+            
             />
             <small v-if="errors.percentValue" class="text-red-600 mt-1 block text-sm">{{ errors.percentValue }}</small>
           </div>
@@ -60,7 +60,7 @@
               type="datetime-local"
               :class="{ 'border-red-500': errors.startDate }"
               class="w-full border px-2 py-1 rounded"
-              :disabled="isActive"
+             
             />
             <small v-if="errors.startDate" class="text-red-600 mt-1 block text-sm">{{ errors.startDate }}</small>
           </div>
@@ -70,7 +70,7 @@
   <input
     v-model="discount.endDate"
     type="datetime-local"
-    :min="endMinDate"
+   
     class="w-full border px-2 py-1 rounded"
   
   />
@@ -86,7 +86,7 @@
     type="number"
     class="w-full border px-2 py-1 rounded"
    
-    :disabled="isActive"
+  
   />
   <small v-if="errors.priceThreshold" class="text-red-600 mt-1 block text-sm">
     {{ errors.priceThreshold }}
@@ -106,7 +106,7 @@
               optionValue="id"
               placeholder="Chọn danh mục"
               class="w-full"
-              :disabled="isActive"
+            
               @change="fetchProductsByCategory"
             />
           </div>
@@ -117,7 +117,7 @@
               v-model="searchKeyword"
               placeholder="Tìm kiếm sản phẩm theo tên"
               class="p-inputtext-sm w-full mb-2"
-              :disabled="isActive"
+            
               @input="onSearchInput"
             />
 
@@ -130,7 +130,7 @@
     :rows="10"
     :rowsPerPageOptions="[5, 10, 20]"
     class="mt-2"
-    :selectableRowDisabled="() => isActive" 
+   
   >
     <Column selectionMode="multiple" style="width: 3em" />
     <Column field="id" header="ID" sortable />
@@ -208,34 +208,7 @@ const toast = useToast()
 const route = useRoute()
 const id = route.params.id as string | undefined
 
-// Tính trạng thái khuyến mãi có đang active không
-const isActive = computed(() => {
-  if (!discount.value.startDate || !discount.value.endDate) return false
-  const now = new Date()
-  const start = new Date(discount.value.startDate)
-  const end = new Date(discount.value.endDate)
-  return now >= start && now <= end
-})
-const currentDateTimeLocal = ref('')
 
-// Format ngày hiện tại thành "yyyy-MM-ddTHH:mm" cho input
-const updateCurrentDateTime = () => {
-  const now = new Date()
-  const yyyy = now.getFullYear()
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const dd = String(now.getDate()).padStart(2, '0')
-  const hh = String(now.getHours()).padStart(2, '0')
-  const min = String(now.getMinutes()).padStart(2, '0')
-  currentDateTimeLocal.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`
-}
-const endMinDate = computed(() => {
-  // Nếu đang active, mới giới hạn min là giá trị hiện tại của endDate
-  if (isActive.value) {
-    return discount.value.endDate ? discount.value.endDate.slice(0, 16) : currentDateTimeLocal.value
-  }
-  // Nếu chưa active thì không giới hạn
-  return ''
-})
 
 
 
@@ -379,9 +352,7 @@ const doSearch = async (keyword: string) => {
 
 // Mounted
 onMounted(async () => {
-   updateCurrentDateTime()
-  // Nếu muốn realtime update mỗi phút
-  setInterval(updateCurrentDateTime, 60000)
+ 
   try {
     const catRes = await CategoryService.getAllCategories()
     categories.value = [{ id: 0, name: 'Tất cả sản phẩm' }, ...(catRes.data || [])]
