@@ -53,15 +53,18 @@
             <small v-if="errors.endDate" class="text-red-600 mt-1 block text-sm">{{ errors.endDate }}</small>
           </div>
 
-          <div>
-            <label class="block font-medium">Ngưỡng giá áp dụng</label>
-            <input
-              v-model.number="discount.priceThreshold"
-              type="number"
-              class="w-full border px-2 py-1 rounded"
-              min="0"
-            />
-          </div>
+       <div>
+  <label class="block font-medium">Ngưỡng giá áp dụng</label>
+  <input
+    v-model.number="discount.priceThreshold"
+    type="number"
+    :class="{'border-red-500': errors.priceThreshold}"
+    class="w-full border px-2 py-1 rounded"
+   
+  />
+  <small v-if="errors.priceThreshold" class="text-red-600 mt-1 block text-sm">{{ errors.priceThreshold }}</small>
+</div>
+
         </div>
 
         <!-- Cột phải -->
@@ -270,19 +273,30 @@ const validate = () => {
   } else if (discount.value.name.length > 50) {
     errors.value.name = 'Tên khuyến mãi không được vượt quá 50 ký tự.'
   }
+  
   if (!discount.value.percentValue || discount.value.percentValue < 1 || discount.value.percentValue > 100) {
     errors.value.percentValue = 'Phần trăm giảm phải từ 1 đến 100.'
   }
   if (!discount.value.startDate) errors.value.startDate = 'Ngày bắt đầu không được để trống.'
   if (!discount.value.endDate) errors.value.endDate = 'Ngày kết thúc không được để trống.'
- 
+ if (!discount.value.priceThreshold && discount.value.priceThreshold !== 0) {
+  errors.value.priceThreshold = 'Ngưỡng giá áp dụng không được để trống.'
+} else if (discount.value.priceThreshold < 0) {
+  errors.value.priceThreshold = 'Ngưỡng giá áp dụng không được nhỏ hơn 0.'
+}
+
 
   return Object.keys(errors.value).length === 0
 }
 
 const handleSubmit = async () => {
   if (!validate()) {
-    toast.add({ severity: 'warn', summary: 'Lỗi dữ liệu', detail: 'Vui lòng điền đúng thông tin.', life: 4000 })
+    toast.add({
+      severity: 'warn',
+      summary: 'Lỗi dữ liệu',
+      detail: 'Vui lòng điền đúng thông tin.',
+      life: 4000
+    })
     return
   }
 
@@ -297,8 +311,14 @@ const handleSubmit = async () => {
 
     await DiscountService.saveDiscount(payload)
 
-    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Lưu khuyến mãi thành công!', life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Lưu khuyến mãi thành công!',
+      life: 3000
+    })
 
+    // reset form
     discount.value = {
       name: '',
       percentValue: 0,
@@ -311,18 +331,56 @@ const handleSubmit = async () => {
     selectedProducts.value = []
     selectedCategoryId.value = null
     products.value = []
-    
-    // Load lại toàn bộ sản phẩm con sau khi reset form
+
     await loadAllChildProducts()
   } catch (err: any) {
+    errors.value = {} // reset lỗi cũ
     let msg = 'Đã xảy ra lỗi khi gửi dữ liệu.'
-    if (err.response?.status === 400 && err.response.data?.message) msg = err.response.data.message
-    else if (err.response?.status === 405) msg = 'Phương thức không được hỗ trợ (405).'
-    else if (err.response?.data?.error) msg = err.response.data.error
 
+    // ✅ BE trả về object { field: message }
+    if (err.response?.status === 400 && typeof err.response.data === 'object') {
+      if (err.response.data.message) {
+        msg = err.response.data.message
+
+        // Nếu có message chung, map vào field phù hợp
+        if (msg.includes('Ngày bắt đầu')) {
+          errors.value.startDate = msg
+        } else if (msg.includes('Ngày kết thúc')) {
+          errors.value.endDate = msg
+        } else if (msg.includes('tên')) {
+          errors.value.name = msg
+        } else {
+          // fallback: show toast nếu không biết map vào đâu
+          toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 5000 })
+        }
+        return
+      } else {
+        // Nếu BE trả về object { field: message }
+        errors.value = { ...err.response.data }
+        return
+      }
+    }
+
+    // ✅ BE trả về list errors [{field, message}]
+    if (err.response?.data?.errors) {
+      err.response.data.errors.forEach((e: any) => {
+        errors.value[e.field] = e.message
+      })
+      return
+    }
+
+    // ✅ Lỗi khác
+    if (err.response?.status === 405) {
+      msg = 'Phương thức không được hỗ trợ (405).'
+    } else if (err.response?.data?.error) {
+      msg = err.response.data.error
+    }
+
+    // fallback -> show toast
     toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 5000 })
   }
 }
+
 const doSearch = async (keyword: string) => {
   if (!keyword.trim()) {
     // Nếu xóa hết search thì load lại toàn bộ sản phẩm
