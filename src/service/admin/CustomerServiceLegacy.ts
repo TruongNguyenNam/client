@@ -15,6 +15,7 @@ axiosInstance.interceptors.request.use(
         const token = getAuthToken();
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
+             console.log('[axios] attach token:', !!token); // debug
         }
         return config;
     },

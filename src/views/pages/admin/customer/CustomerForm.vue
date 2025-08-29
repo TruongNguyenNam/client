@@ -54,7 +54,7 @@ function validateEmail(email: string) {
     return /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|vn|co\.uk|io|info)$/.test(email);
 }
 function validatePhone(phone: string) {
-    return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+    return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
 }
 
 // Theo dõi email
@@ -108,6 +108,17 @@ watch(() => customer.value.receiverPhone, (newPhone) => {
         delete errors.value.receiverPhone;
     }
 });
+// Khi thay đổi tỉnh/thành, quận/huyện, phường/xã thì reset các trường con
+watch(() => customer.value.province, () => {
+    customer.value.district = "";
+    customer.value.ward = "";
+});
+
+watch(() => customer.value.district, () => {
+    customer.value.ward = "";
+});
+
+
 
 const handleSubmit = async () => {
     errors.value = {};
@@ -154,6 +165,7 @@ const handleSubmit = async () => {
     if (!customer.value.ward) {
         errors.value.ward = "Vui lòng chọn phường/xã";
     }
+
     if (customer.value.receiverPhone && !validatePhone(customer.value.receiverPhone)) {
         errors.value.receiverPhone = "Số điện thoại người nhận không hợp lệ";
     }
@@ -281,7 +293,7 @@ const handleCancel = () => {
                             <select id="province" v-model="customer.province">
                                 <option value="">Chọn tỉnh/thành</option>
                                 <option v-for="p in provinceOptions" :key="p.level1_id" :value="p.level1_id">{{ p.name
-                                }}
+                                    }}
                                 </option>
                             </select>
                             <div v-if="errors.province" class="error-message">{{ errors.province }}</div>
@@ -291,7 +303,7 @@ const handleCancel = () => {
                             <select id="district" v-model="customer.district" :disabled="!customer.province">
                                 <option value="">Chọn quận/huyện</option>
                                 <option v-for="d in districtOptions" :key="d.level2_id" :value="d.level2_id">{{ d.name
-                                }}
+                                    }}
                                 </option>
                             </select>
                             <div v-if="errors.district" class="error-message">{{ errors.district }}</div>

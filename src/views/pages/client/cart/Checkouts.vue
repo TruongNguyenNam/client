@@ -413,14 +413,18 @@ const handleAddressSubmit = async (submittedData: any) => {
       form.value.receiverPhone = resAdd.data.receiverPhone || '';
     }
   } catch (error: any) {
-    console.error('Lỗi xử lý địa chỉ:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.response?.data?.message || 'Không thể xử lý địa chỉ.',
-      life: 3000
-    });
-  }
+  console.error('Lỗi khi thêm địa chỉ:', error);
+  console.error('Response status:', error.response?.status);
+  console.error('Response headers:', error.response?.headers);
+  console.error('Response data:', error.response?.data);
+  toast.add({
+    severity: 'error',
+    summary: 'Lỗi',
+    detail: error.response?.data?.message || 'Không thể thêm địa chỉ',
+    life: 3000,
+  });
+}
+
 };
 
 const subtotal: ComputedRef<number> = computed(() =>

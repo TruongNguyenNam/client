@@ -5,13 +5,46 @@ import { useRouter } from "vue-router";
 import type { CouponRequest } from "../../../../model/admin/coupon";
 import { ar } from "date-fns/locale";
 import { useToast } from 'primevue/usetoast';
-import { exportToExcel,importFromExcel } from "../../../../utils/excel";
+import { exportToExcel, importFromExcel } from "../../../../utils/excel";
 const errors = ref<{ [key: string]: string }>({});
 
 const toast = useToast();
 //Tìm kiếm theo khoảng giá trị giảm
 const minDiscount = ref<number | null>(null);
 const maxDiscount = ref<number | null>(null);
+
+const selectedStatus = ref<string | null>(null);
+
+// Các tùy chọn trạng thái
+const statusOptions = [
+    { label: "Tất cả", value: "ALL" },
+    { label: "Chưa bắt đầu", value: "Chưa bắt đầu" },
+    { label: "Đang hoạt động", value: "Đang hoạt động" },
+    { label: "Đã hết hạn", value: "Đã hết hạn" },
+];
+
+
+const filteredCoupons = computed(() => {
+    let result = coupons.value;
+
+    // Lọc theo trạng thái
+    if (!selectedStatus.value) {
+        result = result.filter(c => getCouponStatus(c).text === "Đang hoạt động");
+    } else if (selectedStatus.value !== "ALL") {
+        result = result.filter(c => getCouponStatus(c).text === selectedStatus.value);
+    }
+
+    // Lọc theo khoảng giảm giá
+    if (minDiscount.value !== null) {
+        result = result.filter(c => c.discountAmount >= minDiscount.value!);
+    }
+    if (maxDiscount.value !== null) {
+        result = result.filter(c => c.discountAmount <= maxDiscount.value!);
+    }
+
+    return result;
+});
+
 
 // Interface cho object dùng trong form (kiểu Date)
 interface Coupon {
@@ -63,12 +96,6 @@ const newCoupon = ref<Coupon>({
 const emit = defineEmits();
 const router = useRouter();
 
-const pagedCoupons = computed(() =>
-    coupons.value.slice(
-        lazyParams.value.page * lazyParams.value.size,
-        (lazyParams.value.page + 1) * lazyParams.value.size
-    )
-);
 
 // Helper chuyển Coupon -> CouponRequest (convert ngày về string)
 function toCouponRequest(c: Coupon): CouponRequest {
@@ -237,7 +264,7 @@ function validateCoupon(data: any, isNew: boolean): boolean {
 
 function validateUpdateCoupon(): boolean {
     errors.value = {}; // reset lỗi
-    const nameRegex = /^[\p{L}\d\s]+$/u; 
+    const nameRegex = /^[\p{L}\d\s]+$/u;
 
     if (coupon.value.couponName?.length > 100) {
         errors.value.couponName = "Tên phiếu giảm giá quá dài (tối đa 100 ký tự)";
@@ -290,6 +317,8 @@ watch(
         }
     }
 );
+
+
 watch(
     () => [coupon.value.startDate, coupon.value.expirationDate],
     ([start, end]) => {
@@ -315,6 +344,18 @@ const addCoupon = async (): Promise<void> => {
         }
     }
 };
+
+watch([minDiscount, maxDiscount], ([min, max]) => {
+    if (min !== null && max !== null && min > max) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Khoảng giá trị không hợp lệ',
+            detail: 'Giá trị "Từ" không được lớn hơn "Đến".',
+            life: 3000
+        });
+    }
+});
+
 
 const editCoupon = (couponData: Coupon) => {
     openEdit(couponData.id);
@@ -361,22 +402,23 @@ watch(() => couponUpdateDialog.value, (visible) => {
     }
 });
 
-// Chặn chọn nếu ngày bắt đầu đã qua
+function normalizeDate(date: Date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
 const isStartDatePast = computed(() => {
     if (!coupon.value.startDate) return false;
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const start = new Date(coupon.value.startDate);
-    start.setSeconds(0, 0);
-    return start.getTime() <= now.getTime(); 
+    const now = normalizeDate(new Date());
+    const start = normalizeDate(new Date(coupon.value.startDate));
+    return start.getTime() < now.getTime(); // chỉ coi là "đã bắt đầu" nếu ngày < hôm nay
 });
 
-// Giới hạn ngày nhỏ nhất để chọn
 const minStartDate = computed(() => {
-    const now = new Date();
-    now.setSeconds(0, 0);
-    return now; // Không cho chọn trước thời điểm hiện tại
+    return normalizeDate(new Date());
 });
+
 
 
 //cập nhật
@@ -398,7 +440,7 @@ const importCoupons = (): void => {
 
 
 
- };
+};
 
 
 
@@ -433,9 +475,13 @@ onMounted(loadCoupons);
 
 const clearSearch = (): void => {
     searchTerm.value = '';
+    minDiscount.value = null;
+    maxDiscount.value = null;
+    selectedStatus.value = null;
     loadCoupons();
     lazyParams.value.page = 0;
 };
+
 
 const searchCoupons = async (): Promise<void> => {
     if (!searchTerm.value.trim()) {
@@ -468,6 +514,8 @@ const searchCoupons = async (): Promise<void> => {
         loading.value = false;
     }
 };
+
+
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 const debouncedSearch = () => {
@@ -523,31 +571,41 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <Button label="Thêm mới" icon="pi pi-plus" class="p-button-success mr-2"
                             @click="openAddDialog" />
                     </template>
-                    <template v-slot:end> 
+                    <template v-slot:end>
                         <!-- <Button label="Nhập Excel" icon="pi pi-upload" class=" p-button-info mr-2" @click="importCoupons" /> -->
-                        <Button label="Xuất Excel" icon="pi pi-download" class="p-button-help " @click="exportCoupons" />
+                        <Button label="Xuất Excel" icon="pi pi-download" class="p-button-help "
+                            @click="exportCoupons" />
                     </template>
                 </Toolbar>
-                <!-- Phần tìm kiếm -->
-                <div class="flex align-items-center justify-content-between mb-4" style="margin-right: 50px;">
-                    <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mr-2"
+
+                <!-- Phần tìm kiếm & bộ lọc -->
+                <div class="filter-bar">
+                    <!-- Nút clear -->
+                    <Button icon="pi pi-filter-slash" label="Clear" class="p-button-outlined clear-btn"
                         @click="clearSearch" />
-                    <div class="search-bar-vertical">
-                        <div class="search-bar-row">
-                            <InputNumber v-model="minDiscount" :min="0" placeholder="Giá trị giảm từ"
-                                class="filter-input" />
 
-                            <span class="filter-separator">-</span>
+                    <!-- Bộ lọc trạng thái -->
+                    <Dropdown v-model="selectedStatus" :options="statusOptions" optionLabel="label" optionValue="value"
+                        placeholder="Trạng thái" class="filter-dropdown" />
 
-                            <InputNumber v-model="maxDiscount" :min="0" placeholder="Đến" class="filter-input" />
-                        </div>
-                        <span class="p-input-icon-left">
-                            <i class="pi pi-search"></i>
-                            <InputText v-model="searchTerm" placeholder="Tìm theo mã phiếu..." class="search-input-box"
-                                @keyup="debouncedSearch" />
-                        </span>
+                    <!-- Bộ lọc khoảng giảm giá -->
+                    <div class="discount-range">
+                        <InputNumber v-model="minDiscount" :min="0" mode="currency" currency="VND" locale="vi-VN"
+                            placeholder="Từ" />
+                        <span class="filter-separator">-</span>
+                        <InputNumber v-model="maxDiscount" :min="0" mode="currency" currency="VND" locale="vi-VN"
+                            placeholder="Đến" />
                     </div>
+
+
+                    <!-- Tìm theo mã phiếu -->
+                    <span class="p-input-icon-left search-box">
+                        <i class="pi pi-search"></i>
+                        <InputText v-model="searchTerm" placeholder="Tìm theo mã phiếu..." @keyup="debouncedSearch" />
+                    </span>
                 </div>
+
+
 
                 <!-- Modal Thêm Phiếu Giảm Giá -->
                 <Dialog v-model:visible="addCouponDialog" :style="{ width: '500px' }" header="Thêm Phiếu Giảm Giá" modal
@@ -576,8 +634,10 @@ const goToGiftCoupon = (coupon: Coupon) => {
                         <!-- Ngày bắt đầu -->
                         <div class="field">
                             <label for="add-startDate" class="field-label">Ngày bắt đầu</label>
-                            <Calendar id="add-startDate" v-model="newCoupon.startDate" dateFormat="dd/mm/yy" showTime
-                                class="field-input" :class="{ 'border-red-500': errors.startDate }" />
+                            <Calendar id="edit-startDate" v-model="newCoupon.startDate" dateFormat="dd/mm/yy" showTime
+                                class="field-input" :class="{ 'border-red-500': errors.startDate }"
+                                :disabled="isStartDatePast" :minDate="minStartDate" />
+
                             <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
                         </div>
 
@@ -631,9 +691,9 @@ const goToGiftCoupon = (coupon: Coupon) => {
                             <label for="edit-startDate" class="field-label">Ngày bắt đầu</label>
                             <Calendar id="edit-startDate" v-model="coupon.startDate" dateFormat="dd/mm/yy" showTime
                                 class="field-input" :class="{ 'border-red-500': errors.startDate }"
-                                :disabled="isStartDatePast"
-                                :minDate="minStartDate"/>
-                                <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
+                                :disabled="isStartDatePast" :minDate="minStartDate" />
+
+                            <small v-if="errors.startDate" class="error-text">{{ errors.startDate }}</small>
                         </div>
 
                         <!-- Ngày hết hạn -->
@@ -653,7 +713,7 @@ const goToGiftCoupon = (coupon: Coupon) => {
                 </Dialog>
 
                 <!-- Bảng hiển thị danh sách phiếu giảm giá -->
-                <DataTable v-model:selection="selectedCoupons" :value="coupons" :paginator="true"
+                <DataTable v-model:selection="selectedCoupons" :value="filteredCoupons" :paginator="true"
                     :first="lazyParams.page * lazyParams.size" :rows="lazyParams.size" :totalRecords="totalRecords"
                     emptyMessage="Không tìm thấy phiếu giảm giá nào." :loading="loading" @page="onPage"
                     :rowsPerPageOptions="[5, 10, 20, 50]" :globalFilterFields="['codeCoupon', 'couponName']"
@@ -704,7 +764,8 @@ const goToGiftCoupon = (coupon: Coupon) => {
                                     @click="editCoupon(slotProps.data)" />
                                 <Button icon="pi pi-gift" class="p-button-rounded p-button-info" :label="''"
                                     @click="goToGiftCoupon(slotProps.data)" v-tooltip="'Tặng coupon cho khách hàng'"
-                                    :disabled="false" />
+                                    :disabled="getCouponStatus(slotProps.data).text !== 'Đang hoạt động'" />
+
                             </div>
                         </template>
                     </Column>
@@ -848,5 +909,58 @@ const goToGiftCoupon = (coupon: Coupon) => {
     font-size: 0.85rem;
     margin-top: 4px;
     display: block;
+}
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem; // tăng khoảng cách chung
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.discount-range {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem; // tạo khoảng cách giữa "Từ - Đến"
+}
+
+.search-box {
+    flex: 1;
+    min-width: 240px; // cho input tìm kiếm rộng hơn
+}
+
+.clear-btn {
+    min-width: 110px;
+}
+
+.filter-dropdown {
+    min-width: 180px;
+}
+
+.discount-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-input {
+    width: 120px;
+}
+
+.filter-separator {
+    color: #888;
+    font-weight: 500;
+    user-select: none;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 220px;
+
+    input {
+        width: 100%;
+        border-radius: 8px;
+    }
 }
 </style>

@@ -258,7 +258,7 @@ function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|vn|co\.uk|io|info)$/.test(email);
 }
 function validatePhone(phone: string) {
-  return /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+ return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
 }
 
 
@@ -313,6 +313,16 @@ watch(() => customer.value.username, (username) => {
   } else {
     delete errors.value.username;
   }
+});
+
+// Khi thay đổi tỉnh/thành, quận/huyện, phường/xã thì reset các trường con
+watch(() => customer.value.province, () => {
+    customer.value.district = "";
+    customer.value.ward = "";
+});
+
+watch(() => customer.value.district, () => {
+    customer.value.ward = "";
 });
 
 

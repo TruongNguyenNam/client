@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick,watch } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 
 import Dialog from 'primevue/dialog';
@@ -148,7 +148,7 @@ const editAddress = async (addr: AddressResponse) => {
 };
 
 // ======= VALIDATE =======
-const validatePhone = (phone: string) => /^(0|\+84)[1-9][0-9]{8}$/.test(phone);
+const validatePhone = (phone: string) =>  /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
 const errors = ref<{ [key: string]: string }>({});
 watch(() => dialogAddressData.value.receiverPhone, (newPhone) => {
   if (!newPhone) {
