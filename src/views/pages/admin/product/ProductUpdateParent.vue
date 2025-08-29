@@ -2,10 +2,13 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <h5>Cập nhật sản phẩm</h5>
+        <div class="card-header">
+          <h5>Cập nhật sản phẩm</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+       </div>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
-            <label for="productName">Tên sản phẩm</label>
+            <label for="productName" class="required">Tên sản phẩm</label>
             <InputText 
               id="productName" 
               v-model="product.name" 
@@ -16,7 +19,7 @@
             <small class="p-error" v-if="submitted && !product.name">Tên sản phẩm là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sku">Mã sản phẩm</label>
+            <label for="sku"class="required">Mã sản phẩm</label>
             <InputText 
               id="sku" 
               v-model="product.sku" 
@@ -26,7 +29,7 @@
             />
           </div>
           <div class="field col-12 md:col-6">
-            <label for="productCategory">Danh mục</label>   
+            <label for="productCategory" class="required">Danh mục</label>   
             <Dropdown
               id="productCategory"
               v-model="product.categoryId"
@@ -39,7 +42,7 @@
             <small class="p-error" v-if="submitted && !product.categoryId">Danh mục là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="sportType">Loại thể thao</label>
+            <label for="sportType" class="required">Loại thể thao</label>
             <InputText 
               id="sportType" 
               v-model="product.sportType" 
@@ -50,7 +53,7 @@
             <small class="p-error" v-if="submitted && !product.sportType">Loại thể thao là bắt buộc.</small>
           </div>
           <div class="field col-12 md:col-6">
-            <label for="productTag">Thẻ</label>
+            <label for="productTag" class="required">Thẻ</label>
             <MultiSelect
               id="productTag"
               v-model="product.tagId"
@@ -62,7 +65,7 @@
             />
           </div>
           <div class="field col-12 md:col-6">
-            <label for="supplier">Nhà cung cấp</label>
+            <label for="supplier" class="required">Nhà cung cấp</label>
             <Dropdown
               id="supplier"
               v-model="product.supplierId"
@@ -75,7 +78,7 @@
             <small class="p-error" v-if="submitted && !product.supplierId">Nhà cung cấp là bắt buộc.</small>
           </div>
           <div class="field col-12">
-            <label for="productDescription">Mô tả</label>
+            <label for="productDescription" class="required">Mô tả</label>
             <Textarea 
               id="productDescription" 
               v-model="product.description" 
@@ -86,7 +89,7 @@
             <small class="p-error" v-if="submitted && !product.description">Mô tả là bắt buộc.</small>
           </div>
           <div class="field col-12">
-            <label for="parentImages">Hình ảnh sản phẩm</label>
+            <label for="parentImages" class="required">Hình ảnh sản phẩm</label>
             <div v-if="existingImages.length > 0" class="image-preview">
               <div v-for="(img, index) in existingImages" :key="index" class="image-container">
                 <img 
@@ -108,10 +111,9 @@
               :multiple="true"
               accept="image/*"
               :auto="false"
-              chooseLabel="Choose Images"
+              chooseLabel="Thêm ảnh"
               @select="onParentImageUpload"
               :maxFileSize="1000000"
-              @error="onError"
               :class="{'p-invalid': submitted && !existingImages.length && !parentImages.length}"
             />
             <small class="p-error" v-if="submitted && !existingImages.length && !parentImages.length">Ít nhất một hình ảnh sản phẩm là bắt buộc.</small>
@@ -177,7 +179,7 @@
             icon="pi pi-times" 
             severity="secondary" 
             class="mr-2" 
-            @click="router.push('/documentation')" 
+            @click="router.push('/products')" 
           />
           <Button 
             label="Cập Nhật Sản Phẩm" 
@@ -483,6 +485,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+label.required::after {
+  content: " *";
+  color: red;
+}
 .image-preview {
   display: flex;
   flex-wrap: wrap;
@@ -513,4 +519,12 @@ onMounted(async () => {
   width: 24px;
   height: 24px;
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between; /* cách xa 2 bên */
+  align-items: center;            /* canh giữa theo chiều cao */
+  margin-bottom: 1rem;            /* cách form bên dưới */
+}
+
 </style>

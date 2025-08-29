@@ -10,15 +10,15 @@
       
         <div class="grid grid-cols-2 gap-4" style="margin-top: 10px; margin-left: 3px;">
           <div class="card" style="width: 50%;">
-            <h2>📦 Thông tin đơn hàng</h2>
+            <h2> Thông tin đơn hàng</h2>
             <p><strong>Mã đơn hàng:</strong> {{ order.orderCode }}</p>
             <p><strong>Ngày đặt:</strong> {{ order.orderDate }}</p>
-            <p><strong>Trạng thái:</strong> {{ order.orderStatus }}</p>
+            <p><strong>Trạng thái:</strong> {{getOrdersByStatus(order.orderStatus)}}</p>
             <p><strong>Tổng tiền:</strong> {{ order.orderTotal.toLocaleString() }} VNĐ</p>
           </div>
 
           <div class="card" style="width: 48%;">
-              <h3>👤 Thông tin khách hàng</h3>
+              <h3> Thông tin khách hàng</h3>
               <p><strong>Người đặt:</strong>
                 <span v-if="order?.address?.username">{{ order.address.username }}</span>
                 <span v-else>Vãng lai</span>
@@ -39,7 +39,7 @@
           </div>
 
           <div class="card" style="width: 50%;">
-            <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
+            <h3 class="mb-2 font-semibold text-lg"> Vận chuyển</h3>
             <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
               <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
               <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
@@ -51,7 +51,7 @@
           </div>
 
           <div class="card" style="width: 48%;">
-            <h3>💳 Thông tin thanh toán</h3>
+            <h3> Thông tin thanh toán</h3>
             <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
             <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
             <p><strong>Tiền thừa:</strong> {{ order?.payment?.changeAmount.toLocaleString('vi-VN') }} đ</p>
@@ -79,7 +79,7 @@
 
       <!-- Khối địa chỉ giao hàng -->
       <div class="card">
-        <h2>🚚 Địa chỉ giao hàng</h2>
+        <h2> Địa chỉ giao hàng</h2>
         <p><strong>Người nhận:</strong> {{ order.address?.receiverName }}</p>
         <p><strong>SĐT:</strong> {{ order.address?.receiverPhone }}</p>
         <p>
@@ -93,7 +93,7 @@
 
       <!-- Khối danh sách sản phẩm -->
       <div class="card">
-        <h2>🛒 Danh sách sản phẩm</h2>
+        <h2> Danh sách sản phẩm</h2>
         <table>
           <thead>
             <tr>
@@ -163,6 +163,7 @@ const shipmentStatusLabels = {
 
 const OrderStatusLabels = {
   PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'xác nhận',
   SHIPPED: 'Đang giao',
   COMPLETED: 'Hoàn thành',
   DELIVERED: 'Đã giao hàng',

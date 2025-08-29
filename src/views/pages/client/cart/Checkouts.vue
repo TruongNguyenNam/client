@@ -23,11 +23,6 @@
               <div class="bg-white p-3 rounded border mb-3">
                 <div v-if="addresses.length > 0" class="mt-3">
                   
-            
-                  <!-- <div class="mb-2">
-                    <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
-                  </div> -->
-
                   <div class="mb-2">
                     <i class="pi pi-user mr-2"></i> <strong>{{ selectedAddress?.receiverName }}</strong> - {{ selectedAddress?.receiverPhone }}
                   </div>
@@ -104,7 +99,8 @@
             </div>
 
             <!-- <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt hàng</button> -->
-            <button class="place-order-button" @click="showConfirmDialog = true">Đặt hàng</button>
+            <!-- <button class="place-order-button" @click="showConfirmDialog = true">Đặt hàng</button> -->
+            <button class="place-order-button" @click="showConfirmDialog = true" :disabled="loading || !isFormValid">Đặt hàng</button>
 
           </div>
         </div>
@@ -181,6 +177,19 @@ const form = ref<CheckoutForm>({
   paymentMethod: null,
 });
 
+const isFormValid = computed(() => {
+  return (
+    !!form.value.paymentMethod && // Kiểm tra đã chọn phương thức thanh toán
+    !!form.value.shippingMethod && // Kiểm tra đã chọn phương thức vận chuyển
+    !!form.value.addressProvince && // Kiểm tra tỉnh/thành phố
+    !!form.value.addressDistrict && // Kiểm tra quận/huyện
+    !!form.value.addressWard && // Kiểm tra phường/xã
+    !!form.value.receiverName && // Kiểm tra tên người nhận
+    isValidPhone(form.value.receiverPhone || '') && // Kiểm tra số điện thoại hợp lệ
+    authStore.cart.length > 0 // Kiểm tra giỏ hàng không rỗng
+  );
+});
+
 const isValidPhone = (phone: string): boolean => {
   const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
   return phoneRegex.test(phone);
@@ -209,8 +218,6 @@ interface CheckoutForm {
   paymentMethod: PaymentMethodClientResponse | null;
 }
 
-
-
 interface UserAddress {
   id: number;
   addressStreet: string;
@@ -225,7 +232,6 @@ interface UserAddress {
   receiverPhone?: string;
   isDefault?: boolean;
 }
-
 
 
 const addresses = computed(() => {
@@ -318,13 +324,131 @@ watch(addresses, (newAddresses) => {
   }
 }, { immediate: true });
 
+// const handleAddressSubmit = async (submittedData: any) => {
+//   if (!authStore.userInfo?.userId) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+//       life: 3000
+//     });
+//     return;
+//   }
+
+//   // Kiểm tra các trường bắt buộc
+//   if (
+//     !submittedData.receiverName ||
+//     !submittedData.receiverPhone ||
+//     !submittedData.province ||
+//     !submittedData.district ||
+//     !submittedData.ward ||
+//     !submittedData.street
+//   ) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Vui lòng điền đầy đủ các trường bắt buộc: Tên người nhận, Số điện thoại, Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Đường.',
+//       life: 3000
+//     });
+//     return;
+//   }
+
+//   // Kiểm tra định dạng số điện thoại
+//   if (!isValidPhone(submittedData.receiverPhone)) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Số điện thoại không hợp lệ.',
+//       life: 3000
+//     });
+//     return;
+//   }
+
+//   const province = provinceOptions.find(p => p.level1_id === submittedData.province);
+//   const district = province?.level2s.find(d => d.level2_id === submittedData.district);
+//   const ward = district?.level3s.find(w => w.level3_id === submittedData.ward);
+
+//   if (!province || !district || !ward) {
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Thông tin địa chỉ không hợp lệ. Vui lòng kiểm tra lại.',
+//       life: 3000
+//     });
+//     return;
+//   }
+
+//   const finalAddress = {
+//     ...submittedData,
+//     province: province.name,
+//     district: district.name,
+//     ward: ward.name,
+//     country: 'Việt Nam'
+//   };
+
+//   try {
+//     let resAdd;
+//     if (submittedData.id) {
+//       resAdd = await AddressService.updateAddressForCustomer(authStore.userInfo.userId, submittedData.id, finalAddress);
+//       toast.add({
+//         severity: 'success',
+//         summary: 'Thành công',
+//         detail: 'Đã cập nhật địa chỉ thành công.',
+//         life: 3000
+//       });
+//     } else {
+//       resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
+//       toast.add({
+//         severity: 'success',
+//         summary: 'Thành công',
+//         detail: 'Đã thêm địa chỉ mới cho khách hàng.',
+//         life: 3000
+//       });
+//     }
+
+//     await authStore.fetchUserInfo(); // Lấy lại thông tin người dùng, bao gồm danh sách địa chỉ mới
+//     addressDialogKey.value++; // Làm mới dialog để hiển thị danh sách địa chỉ mới
+//     showAddressDialog.value = false; // Đóng dialog
+
+//     if (resAdd.data?.id) {
+//       await authStore.fetchUserInfo();
+//       addressDialogKey.value++;
+//       showAddressDialog.value = false;
+//       selectedAddressId.value = resAdd.data.id;
+//       selectedAddress.value = mapToUserAddress(resAdd.data);
+//       form.value.addressProvince = resAdd.data.addressProvince;
+//       form.value.addressDistrict = resAdd.data.addressDistrict;
+//       form.value.addressWard = resAdd.data.addressWard;
+//       form.value.receiverName = resAdd.data.receiverName || '';
+//       form.value.receiverPhone = resAdd.data.receiverPhone || '';
+
+//       console.log('Address updated, calling getAllCarriers with:', {
+//         province: form.value.addressProvince,
+//         district: form.value.addressDistrict,
+//         ward: form.value.addressWard
+//       });
+//       await getAllCarriers();
+//     }
+
+//   } catch (error: any) {
+//     console.error('Lỗi xử lý địa chỉ:', error);
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: error.response?.data?.message || 'Không thể xử lý địa chỉ.',
+//       life: 3000
+//     });
+//   }
+
+// };
+
 const handleAddressSubmit = async (submittedData: any) => {
   if (!authStore.userInfo?.userId) {
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
       detail: 'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
-      life: 3000
+      life: 3000,
     });
     return;
   }
@@ -342,7 +466,7 @@ const handleAddressSubmit = async (submittedData: any) => {
       severity: 'error',
       summary: 'Lỗi',
       detail: 'Vui lòng điền đầy đủ các trường bắt buộc: Tên người nhận, Số điện thoại, Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Đường.',
-      life: 3000
+      life: 3000,
     });
     return;
   }
@@ -353,7 +477,7 @@ const handleAddressSubmit = async (submittedData: any) => {
       severity: 'error',
       summary: 'Lỗi',
       detail: 'Số điện thoại không hợp lệ.',
-      life: 3000
+      life: 3000,
     });
     return;
   }
@@ -367,7 +491,7 @@ const handleAddressSubmit = async (submittedData: any) => {
       severity: 'error',
       summary: 'Lỗi',
       detail: 'Thông tin địa chỉ không hợp lệ. Vui lòng kiểm tra lại.',
-      life: 3000
+      life: 3000,
     });
     return;
   }
@@ -377,7 +501,7 @@ const handleAddressSubmit = async (submittedData: any) => {
     province: province.name,
     district: district.name,
     ward: ward.name,
-    country: 'Việt Nam'
+    country: 'Việt Nam',
   };
 
   try {
@@ -388,7 +512,7 @@ const handleAddressSubmit = async (submittedData: any) => {
         severity: 'success',
         summary: 'Thành công',
         detail: 'Đã cập nhật địa chỉ thành công.',
-        life: 3000
+        life: 3000,
       });
     } else {
       resAdd = await CustomerService.addAddressForCustomer(authStore.userInfo.userId, finalAddress);
@@ -396,36 +520,45 @@ const handleAddressSubmit = async (submittedData: any) => {
         severity: 'success',
         summary: 'Thành công',
         detail: 'Đã thêm địa chỉ mới cho khách hàng.',
-        life: 3000
+        life: 3000,
       });
     }
 
+    await authStore.fetchUserInfo();
+    addressDialogKey.value++;
+    showAddressDialog.value = false;
+
     if (resAdd.data?.id) {
-      await authStore.fetchUserInfo();
-      addressDialogKey.value++;
-      showAddressDialog.value = false;
       selectedAddressId.value = resAdd.data.id;
       selectedAddress.value = mapToUserAddress(resAdd.data);
-      form.value.addressProvince = resAdd.data.addressProvince;
-      form.value.addressDistrict = resAdd.data.addressDistrict;
-      form.value.addressWard = resAdd.data.addressWard;
-      form.value.receiverName = resAdd.data.receiverName || '';
-      form.value.receiverPhone = resAdd.data.receiverPhone || '';
+
+      // Gán các giá trị địa chỉ vào form.value
+      form.value.addressProvince = resAdd.data.addressProvince || resAdd.data.province || province.name;
+      form.value.addressDistrict = resAdd.data.addressDistrict || resAdd.data.district || district.name;
+      form.value.addressWard = resAdd.data.addressWard || resAdd.data.ward || ward.name;
+      form.value.receiverName = resAdd.data.receiverName || submittedData.receiverName || '';
+      form.value.receiverPhone = resAdd.data.receiverPhone || submittedData.receiverPhone || '';
+
+      console.log('Address updated, new form values:', {
+        province: form.value.addressProvince,
+        district: form.value.addressDistrict,
+        ward: form.value.addressWard,
+      });
+
+      // Gọi lại getAllCarriers với thông tin địa chỉ mới
+      await getAllCarriers();
     }
   } catch (error: any) {
-  console.error('Lỗi khi thêm địa chỉ:', error);
-  console.error('Response status:', error.response?.status);
-  console.error('Response headers:', error.response?.headers);
-  console.error('Response data:', error.response?.data);
-  toast.add({
-    severity: 'error',
-    summary: 'Lỗi',
-    detail: error.response?.data?.message || 'Không thể thêm địa chỉ',
-    life: 3000,
-  });
-}
-
+    console.error('Lỗi xử lý địa chỉ:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error.response?.data?.message || 'Không thể xử lý địa chỉ.',
+      life: 3000,
+    });
+  }
 };
+
 
 const subtotal: ComputedRef<number> = computed(() =>
   authStore.cart.reduce((sum, item) => {
@@ -436,31 +569,12 @@ const subtotal: ComputedRef<number> = computed(() =>
 );
 
 const shippingCost: ComputedRef<number> = computed(() => {
-  return subtotal.value > 500000 ? 0 : 30000;
+  return subtotal.value > 1000000 ? 0 : 50000;
 });
 
 const total: ComputedRef<number> = computed(() => {
   return Math.max(0, subtotal.value - couponDiscount.value + shippingCost.value);
 });
-
-const isFormValid: ComputedRef<boolean> = computed(() =>
-  !!form.value.fullName &&
-  !!form.value.phone &&
-  isValidPhone(form.value.phone) &&
-  !!form.value.email &&
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email) &&
-  !!form.value.addressProvince &&
-  !!form.value.addressDistrict &&
-  !!form.value.addressWard &&
-  !!form.value.shippingMethod &&
-  !!form.value.paymentMethod &&
-  !!selectedAddressId.value &&
-  !!selectedAddress.value?.receiverName &&
-  !!selectedAddress.value?.receiverPhone &&
-  isValidPhone(selectedAddress.value?.receiverPhone || '')
-);
-
-
 
 
 
@@ -686,6 +800,8 @@ const getAllCarriers = async () => {
   }
 };
 
+
+
 const logout = () => {
   sessionStorage.removeItem('accessToken');
   sessionStorage.removeItem('refreshToken');
@@ -836,16 +952,6 @@ const submitOrder = async () => {
     router.push('/login');
     return;
   }
-
-  // if (!isFormValid.value) {
-  //   toast.add({
-  //     severity: 'warn',
-  //     summary: 'Cảnh báo',
-  //     detail: 'Vui lòng điền đầy đủ thông tin và đảm bảo số điện thoại, email và địa chỉ hợp lệ.',
-  //     life: 3000
-  //   });
-  //   return;
-  // }
 
   if (authStore.cart.length === 0) {
     toast.add({

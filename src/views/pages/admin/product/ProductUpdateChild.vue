@@ -1,8 +1,11 @@
 <template>
   <div class="grid">
     <div class="col-12">
-      <div class="card">
-        <h5>Cập nhật sản phẩm chi tiết</h5>
+      <div class="card">       
+        <div class="card-header">
+          <h5>Cập nhật sản phẩm chi tiết</h5>
+          <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" />
+       </div>
         <div class="p-fluid formgrid grid">
           <div class="field col-12 md:col-6">
             <label for="productName">Tên sản phẩm</label>
@@ -108,7 +111,7 @@
             :class="{'p-invalid': submitted && !isPriceValid }"
           />
           <small class="p-error" v-if="submitted && !isPriceValid">
-            Giá phải từ 20.000đ đến 100.000.000đ.
+            Giá phải từ 20.000đ đến 30.000.000đ.
           </small>
         </div>
 
@@ -161,49 +164,50 @@
 
           <!-- Product Attributes -->     
           <!-- Thuộc tính sản phẩm -->
-<div class="field col-12">
-  <label for="productAttributes">Thuộc tính sản phẩm</label>
-  <div v-for="(attr, index) in product.productAttributeValues" :key="index" class="p-fluid formgrid grid">
-    <div class="field col-12 md:col-5">
-      <Dropdown
-        v-model="attr.attributeId"
-        :options="availableAttributes(index)"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="chọn thuộc tính"
-        :class="{'p-invalid': submitted && !attr.attributeId}"
-        :disabled="true"
-        @change="onAttributeChange(index)"
-      />
-      <small class="p-error" v-if="submitted && !attr.attributeId">Thuộc tính là bắt buộc.</small>
-    </div>
-    <div class="field col-12 md:col-5">
-      <InputText 
-        v-model="attr.value" 
-        placeholder="nhập giá trị thuộc tính"   
-        maxlength="10"  
-        :class="{'p-invalid': submitted && !attr.value}"
-      />
-      <small class="p-error" v-if="submitted && !attr.value">Giá trị là bắt buộc.</small>
-    </div>
-    <div class="field col-12 md:col-2">
-      <Button 
-        icon="pi pi-trash" 
-        severity="danger" 
-        @click="removeAttribute(index)" 
-      />
-    </div>
-  </div>
-  <Button 
-    label="Thêm thuộc tính" 
-    icon="pi pi-plus" 
-    severity="secondary" 
-    class="add-attribute-btn"
-    @click="addAttribute" 
-    :disabled="product.productAttributeValues.length >= productAttributes.length"
-  />
-</div>
+        <div class="field col-12">
+          <label for="productAttributes">Thuộc tính sản phẩm</label>
+          <div v-for="(attr, index) in product.productAttributeValues" :key="index" class="p-fluid formgrid grid">
+            <div class="field col-12 md:col-5">
+              <Dropdown
+                v-model="attr.attributeId"
+                :options="availableAttributes(index)"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="chọn thuộc tính"
+                :class="{'p-invalid': submitted && !attr.attributeId}"
+                :disabled="true"
+                @change="onAttributeChange(index)"
+              />
+              <small class="p-error" v-if="submitted && !attr.attributeId">Thuộc tính là bắt buộc.</small>
+            </div>
+            <div class="field col-12 md:col-5">
+              <InputText 
+                v-model="attr.value" 
+                placeholder="nhập giá trị thuộc tính"   
+                maxlength="20"  
+                :class="{'p-invalid': submitted && !attr.value}"
+              />
+              <small class="p-error" v-if="submitted && !attr.value">Giá trị là bắt buộc.</small>
+            </div>
+            <!-- <div class="field col-12 md:col-2">
+              <Button 
+                icon="pi pi-trash" 
+                severity="danger" 
+                @click="removeAttribute(index)" 
+              />
+            </div> -->
+          </div>
+          <Button 
+            label="Thêm thuộc tính" 
+            icon="pi pi-plus" 
+            severity="secondary" 
+            class="add-attribute-btn"
+            @click="addAttribute" 
+            disabled
+          />
         </div>
+        
+      </div>
 
         <div class="flex justify-content-end mt-4">
           <Button 
@@ -211,7 +215,7 @@
             icon="pi pi-times" 
             severity="secondary" 
             class="mr-2" 
-            @click="router.push('/documentation')" 
+            @click="router.push('/products')" 
           />
           <Button 
             label="Cập nhật sản phẩm chi tiết" 
@@ -480,7 +484,7 @@ const submitChildProduct = async () => {
   const description = product.description?.trim() ?? '';
 
   const isDescriptionValid = description.length > 0;
-  const isPriceValid = typeof price === 'number' && price >= 20000 && price <= 100000000;
+  const isPriceValid = typeof price === 'number' && price >= 20000 && price <= 30000000;
   const isStockValid = typeof stock === 'number' && stock >= 1 && stock <= 1000;
   const isAttributeValid = product.productAttributeValues.every(
     (attr) => attr.attributeId && attr.value?.toString().trim().length > 0
@@ -494,7 +498,7 @@ const submitChildProduct = async () => {
       errorDetail += ' Mô tả không được để trống.';
     }
     if (!isPriceValid) {
-      errorDetail += ' Giá phải từ 20.000đ đến 100.000.000đ.';
+      errorDetail += ' Giá phải từ 20.000đ đến 30.000.000đ.';
     }
     if (!isStockValid) {
       errorDetail += ' Số lượng phải từ 1 đến 1000.';
@@ -539,7 +543,7 @@ const submitChildProduct = async () => {
       life: 3000
     });
 
-    router.push('/documentation');
+    router.push('/products');
   } catch (error: any) {
     console.error("Submit Child Product Error:", error);
     toast.add({
@@ -614,4 +618,12 @@ onMounted(async () => {
   width: 24px;
   height: 24px;
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between; /* cách xa 2 bên */
+  align-items: center;            /* canh giữa theo chiều cao */
+  margin-bottom: 1rem;            /* cách form bên dưới */
+}
+
 </style>

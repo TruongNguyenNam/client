@@ -13,6 +13,9 @@
             <TabPanel :header="`Đang chờ (${statusCounts.PENDING || 0})`">
               <span>Đơn hàng đang chờ</span>
             </TabPanel>
+            <TabPanel :header="`xác nhận (${statusCounts.CONFIRMED || 0})`">
+              <span>Đơn hàng đã xác nhận</span>
+            </TabPanel>
             <TabPanel :header="`Hoàn thành (${statusCounts.COMPLETED || 0})`">
               <span>Đơn hàng hoàn thành</span>
             </TabPanel>
@@ -203,6 +206,8 @@
     switch (status) {
       case OrderStatus.PENDING:
         return 'Đang chờ';
+      case OrderStatus.CONFIRMED:
+        return 'xác nhận';
       case OrderStatus.COMPLETED:
         return 'Hoàn thành';
       case OrderStatus.CANCELLED:
@@ -218,7 +223,7 @@
 
   const formatShipmentStatus = (status: string): string => {
   const shipmentStatusLabels = {
-    PENDING: 'Chờ xác nhận',
+    PENDING: 'Chờ chuyển giao',
     SHIPPED: 'Đang giao',
     DELIVERED: 'Đã giao hàng',
     RETURNED: 'Trả hàng',
@@ -253,6 +258,7 @@ const getOrderList = async () => {
     const statusMap = [
       null,
       OrderStatus.PENDING,
+      OrderStatus.CONFIRMED,
       OrderStatus.COMPLETED,
       OrderStatus.CANCELLED,
       OrderStatus.SHIPPED,

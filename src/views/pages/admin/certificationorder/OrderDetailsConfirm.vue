@@ -1,6 +1,7 @@
 ```vue
 <template>
   <div class="p-4">
+    <!-- <Button label="Quay lại" icon="pi pi-arrow-left" @click="$router.back()" style="margin-left: 900px;" /> -->
     <div class="card mb-4">
       <div v-if="order">
         <div class="custom-timeline">
@@ -20,7 +21,7 @@
       </div>
     </div>
 
-    <div class="card mb-4">
+    <!-- <div class="card mb-4">
       <Button v-if="order?.orderStatus === OrderStatus.PENDING"
         :label="order?.isPos ? 'Xác nhận hoàn thành' : 'Xác nhận đóng gói'" class="p-button-success"
         @click="openConfirmDialog(order?.isPos ? OrderStatus.COMPLETED : OrderStatus.SHIPPED)" :disabled="loading" />
@@ -28,7 +29,39 @@
         @click="openConfirmDialog(OrderStatus.COMPLETED)" :disabled="loading" />
       <Button v-if="order?.orderStatus === OrderStatus.PENDING" label="Huỷ Đơn" class="p-button-danger"
         @click="openConfirmDialog(OrderStatus.CANCELLED)" style="margin-left: 20px;" :disabled="loading" />
-    </div>
+    </div> -->
+
+    <div class="card mb-4">
+  <Button
+    v-if="order?.orderStatus === OrderStatus.PENDING"
+    label="Xác nhận đơn hàng"
+    class="p-button-success"
+    @click="openConfirmDialog(OrderStatus.CONFIRMED)"
+    :disabled="loading"
+  />
+  <Button
+    v-if="order?.orderStatus === OrderStatus.CONFIRMED"
+    :label="order?.isPos ? 'Xác nhận hoàn thành' : 'Xác nhận đóng gói'"
+    class="p-button-success"
+    @click="openConfirmDialog(order?.isPos ? OrderStatus.COMPLETED : OrderStatus.SHIPPED)"
+    :disabled="loading"
+  />
+  <Button
+    v-if="order?.orderStatus === OrderStatus.SHIPPED"
+    label="Xác nhận hoàn thành"
+    class="p-button-success"
+    @click="openConfirmDialog(OrderStatus.COMPLETED)"
+    :disabled="loading"
+  />
+  <Button
+    v-if="order?.orderStatus === OrderStatus.PENDING || order?.orderStatus === OrderStatus.CONFIRMED"
+    label="Huỷ Đơn"
+    class="p-button-danger"
+    @click="openConfirmDialog(OrderStatus.CANCELLED)"
+    style="margin-left: 20px;"
+    :disabled="loading"
+  />
+</div>
 
     <div class="grid grid-cols-2 gap-4 items-stretch" style="margin-left: 3px;">
       <div class="card h-full" style="width: 45%;">
@@ -44,7 +77,7 @@
       </div>
 
       <div class="card h-full" style="width: 52%;">
-        <h3 class="mb-2 font-semibold text-lg">🚚 Vận chuyển</h3>
+        <h3 class="mb-2 font-semibold text-lg"> Vận chuyển</h3>
         <div v-if="order?.shipments && order.shipments.length > 0" class="space-y-1 text-gray-700">
           <p><strong>Trạng thái:</strong> {{ getShipmentStatusLabel(order?.shipments[0].shipmentStatus) }}</p>
           <p><strong>Đơn vị vận chuyển:</strong> {{ order?.shipments[0].carrierName }}</p>
@@ -94,7 +127,7 @@
     </div>
 
     <div class="card mb-4">
-      <h3>💳 Thông tin thanh toán</h3>
+      <h3> Thông tin thanh toán</h3>
       <p><strong>Phương thức:</strong> {{ order?.payment?.paymentMethodName }}</p>
       <p><strong>Số tiền:</strong> {{ order?.payment?.amount.toLocaleString('vi-VN') }} đ</p>
       <p><strong>Tiền thừa:</strong> {{ order?.payment?.changeAmount.toLocaleString('vi-VN') }} đ</p>
@@ -135,11 +168,11 @@
             {{ (slotProps.data.quantity * slotProps.data.unitPrice).toLocaleString('vi-VN') }} đ
           </template>
         </Column>
-        <Column header="Hành động">
+        <!-- <Column header="Hành động">
           <template #body="slotProps">
             <Button label="Xoá" severity="danger" @click="removeItem(slotProps.index)" style="margin-left: 40px;" :disabled="order?.orderStatus !== OrderStatus.PENDING || loading" />
           </template>
-        </Column>
+        </Column> -->
       </DataTable>
 
       <div class="card mb-4 justify-content-between" style="display: flex; justify-content: flex-end;">
@@ -310,6 +343,7 @@ const shipmentStatusLabels = {
 
 const OrderStatusLabels = {
   PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'Xác nhận',
   SHIPPED: 'Đang giao',
   COMPLETED: 'Hoàn thành',
   DELIVERED: 'Đã giao hàng',
@@ -578,6 +612,7 @@ const saveAddress = async () => {
 const steps = computed(() => {
   const defaultSteps = [
     { label: 'Chờ xác nhận', value: OrderStatus.PENDING, icon: 'pi pi-clock' },
+    { label: 'Xác Nhận', value: OrderStatus.CONFIRMED, icon: 'pi pi-truck' },
     { label: 'Đang giao', value: OrderStatus.SHIPPED, icon: 'pi pi-truck' },
     { label: 'Hoàn thành', value: OrderStatus.COMPLETED, icon: 'pi pi-check-circle' },
     { label: 'Trả hàng', value: OrderStatus.RETURNED, icon: 'pi pi-refresh' },
@@ -866,6 +901,33 @@ const handleAddProduct = async (product: ProductResponse) => {
   await checkAndUpdateOrderItems();
 };
 
+// const openConfirmDialog = (status: OrderStatus) => {
+//   if (!order.value) {
+//     console.log('Order is undefined, cannot proceed');
+//     return;
+//   }
+//   const isSufficient = checkPaymentSufficiency();
+//   console.log('Open Confirm Dialog - Status:', status, 'Payment Sufficient:', isSufficient);
+//   if (!isSufficient) {
+//     showPaymentDialog.value = true;
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: 'Vui lòng cập nhật thanh toán trước khi thay đổi trạng thái đơn hàng',
+//       life: 3000
+//     });
+//     return;
+//   }
+//   newStatus.value = status;
+//   confirmHeader.value = status === OrderStatus.COMPLETED ? 'Xác nhận hoàn thành' : status === OrderStatus.SHIPPED ? 'Xác nhận đóng gói' : 'Hủy đơn hàng';
+//   confirmMessage.value = status === OrderStatus.COMPLETED
+//     ? 'Bạn có chắc chắn muốn xác nhận đơn hàng này đã được giao thành công?'
+//     : status === OrderStatus.SHIPPED
+//       ? 'Bạn có chắc chắn muốn xác nhận đóng gói và chuyển giao đơn hàng này?'
+//       : 'Bạn có chắc chắn muốn hủy đơn hàng này?';
+//   showConfirmDialog.value = true;
+// };
+
 const openConfirmDialog = (status: OrderStatus) => {
   if (!order.value) {
     console.log('Order is undefined, cannot proceed');
@@ -884,14 +946,71 @@ const openConfirmDialog = (status: OrderStatus) => {
     return;
   }
   newStatus.value = status;
-  confirmHeader.value = status === OrderStatus.COMPLETED ? 'Xác nhận hoàn thành' : status === OrderStatus.SHIPPED ? 'Xác nhận đóng gói' : 'Hủy đơn hàng';
-  confirmMessage.value = status === OrderStatus.COMPLETED
-    ? 'Bạn có chắc chắn muốn xác nhận đơn hàng này đã được giao thành công?'
-    : status === OrderStatus.SHIPPED
+  confirmHeader.value =
+    status === OrderStatus.COMPLETED
+      ? 'Xác nhận hoàn thành'
+      : status === OrderStatus.SHIPPED
+      ? 'Xác nhận đóng gói'
+      : status === OrderStatus.CONFIRMED
+      ? 'Xác nhận đơn hàng'
+      : 'Hủy đơn hàng';
+  confirmMessage.value =
+    status === OrderStatus.COMPLETED
+      ? 'Bạn có chắc chắn muốn xác nhận đơn hàng này đã được giao thành công?'
+      : status === OrderStatus.SHIPPED
       ? 'Bạn có chắc chắn muốn xác nhận đóng gói và chuyển giao đơn hàng này?'
+      : status === OrderStatus.CONFIRMED
+      ? 'Bạn có chắc chắn muốn xác nhận đơn hàng này?'
       : 'Bạn có chắc chắn muốn hủy đơn hàng này?';
   showConfirmDialog.value = true;
 };
+
+// const updateOrderStatus = async () => {
+//   if (!order.value || !newStatus.value) {
+//     console.log('Invalid state - order or newStatus is null', { order: order.value, newStatus: newStatus.value });
+//     return;
+//   }
+
+//   loading.value = true;
+//   try {
+//     const statusRequest: UpdateOrderStatusRequest = {
+//       newStatus: newStatus.value,
+//       nodes: confirmNotes.value.trim() || ''
+//     };
+//     console.log('Sending Status Request:', statusRequest, 'Order Code:', order.value.orderCode);
+//     const response = await OrderService.updateOrderStatus(order.value.orderCode!, statusRequest);
+//     if (response.data) {
+//       order.value = { ...response.data };
+//       syncOrderItems();
+//       console.log('API Response - New Status:', response.data.orderStatus);
+//       toast.add({
+//         severity: 'success',
+//         summary: 'Thành công',
+//         detail: `Cập nhật trạng thái đơn hàng sang ${newStatus.value === OrderStatus.COMPLETED ? 'Hoàn thành' : newStatus.value === OrderStatus.SHIPPED ? 'Đang giao' : 'Đã hủy'} thành công`,
+//         life: 3000
+//       });
+//       showConfirmDialog.value = false;
+//       await getOrderDetails();
+//       renderKey.value += 1;
+//       const instance = getCurrentInstance();
+//       if (instance) instance.proxy?.$forceUpdate();
+//     } else {
+//       console.log('No data in response');
+//     }
+//   } catch (error: any) {
+//     console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
+//     toast.add({
+//       severity: 'error',
+//       summary: 'Lỗi',
+//       detail: error.response?.data?.message || 'Cập nhật trạng thái đơn hàng thất bại',
+//       life: 3000
+//     });
+//   } finally {
+//     loading.value = false;
+//     newStatus.value = null;
+//     confirmNotes.value = '';
+//   }
+// };
 
 const updateOrderStatus = async () => {
   if (!order.value || !newStatus.value) {
@@ -914,7 +1033,15 @@ const updateOrderStatus = async () => {
       toast.add({
         severity: 'success',
         summary: 'Thành công',
-        detail: `Cập nhật trạng thái đơn hàng sang ${newStatus.value === OrderStatus.COMPLETED ? 'Hoàn thành' : newStatus.value === OrderStatus.SHIPPED ? 'Đang giao' : 'Đã hủy'} thành công`,
+        detail: `Cập nhật trạng thái đơn hàng sang ${
+          newStatus.value === OrderStatus.COMPLETED
+            ? 'Hoàn thành'
+            : newStatus.value === OrderStatus.SHIPPED
+            ? 'Đang giao'
+            : newStatus.value === OrderStatus.CONFIRMED
+            ? 'Đã xác nhận'
+            : 'Đã hủy'
+        } thành công`,
         life: 3000
       });
       showConfirmDialog.value = false;

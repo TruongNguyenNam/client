@@ -35,6 +35,7 @@ export interface ProductResponse {
     price: number | null;
     originalPrice : number | null;
     stockQuantity: number | null;
+    parentProductId:number;
     sportType: string;
     sku: string;
     supplierName: string; 

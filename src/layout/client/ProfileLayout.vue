@@ -31,11 +31,11 @@
               <i class="pi pi-key mr-2"></i> Đổi Mật Khẩu
             </router-link>
           </li>
-          <li>
+          <!-- <li>
             <router-link to="/auth/profile/orders" class="block" :class="isActive('/auth/profile/orders')">
               <i class="pi pi-shopping-bag mr-2"></i> Đơn Hàng
             </router-link>
-          </li>
+          </li> -->
           <li>
             <router-link to="/auth/profile/vouchers" class="block" :class="isActive('/auth/profile/vouchers')">
               <i class="pi pi-ticket mr-2"></i> Kho Voucher

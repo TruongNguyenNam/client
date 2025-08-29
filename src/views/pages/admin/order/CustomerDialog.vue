@@ -148,16 +148,16 @@
         v-if="currentTab === 'list'" 
       />
 
-      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
-        @click="selectCustomer" v-if="currentTab === 'list'" />
+      <!-- <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" /> -->
 
       <!-- <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
         @click="clearSelectedCustomer" v-if="selectedCustomer" />
       <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" /> -->
 
-      <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
-        @click="clearSelectedCustomer" v-if="selectedCustomer" />
+      <!-- <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
+        @click="clearSelectedCustomer" v-if="selectedCustomer" /> -->
       <!--  <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" /> -->
 
