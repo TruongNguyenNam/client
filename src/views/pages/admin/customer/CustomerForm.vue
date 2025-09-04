@@ -56,7 +56,15 @@ function validateEmail(email: string) {
 function validatePhone(phone: string) {
     return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
 }
+// Khi thay đổi tỉnh/thành, quận/huyện, phường/xã thì reset các trường con
+watch(() => customer.value.province, () => {
+    customer.value.district = "";
+    customer.value.ward = "";
+});
 
+watch(() => customer.value.district, () => {
+    customer.value.ward = "";
+});
 // Theo dõi email
 watch(() => customer.value.email, (newEmail) => {
     if (!validateEmail(newEmail)) {
@@ -108,19 +116,10 @@ watch(() => customer.value.receiverPhone, (newPhone) => {
         delete errors.value.receiverPhone;
     }
 });
-// Khi thay đổi tỉnh/thành, quận/huyện, phường/xã thì reset các trường con
-watch(() => customer.value.province, () => {
-    customer.value.district = "";
-    customer.value.ward = "";
-});
-
-watch(() => customer.value.district, () => {
-    customer.value.ward = "";
-});
-
-
+const submitting = ref(false);
 
 const handleSubmit = async () => {
+    submitting.value = true; 
     errors.value = {};
     const usernameRegex = /^[a-zA-Z0-9_.]+$/;
 
@@ -165,7 +164,6 @@ const handleSubmit = async () => {
     if (!customer.value.ward) {
         errors.value.ward = "Vui lòng chọn phường/xã";
     }
-
     if (customer.value.receiverPhone && !validatePhone(customer.value.receiverPhone)) {
         errors.value.receiverPhone = "Số điện thoại người nhận không hợp lệ";
     }
@@ -177,6 +175,7 @@ const handleSubmit = async () => {
             detail: 'Vui lòng kiểm tra lại các trường bị lỗi.',
             life: 3000
         });
+        submitting.value = false;
         return;
     }
     const address = {
@@ -224,6 +223,9 @@ const handleSubmit = async () => {
         } else {
             errors.value.global = "Đã có lỗi xảy ra";
         }
+    }
+    finally {
+        submitting.value = false;
     }
     console.log('errors.value:', errors.value);
 };
@@ -334,10 +336,12 @@ const handleCancel = () => {
                             <span class="icon">✖</span>
                             <span>Huỷ</span>
                         </button>
-                        <button class="btn btn-submit" type="submit">
-                            <span class="icon">✔</span>
-                            <span>Thêm Khách Hàng</span>
+                        <button class="btn btn-submit" type="submit" :disabled="submitting">
+                            <span v-if="submitting" class="pi pi-spin pi-spinner"></span>
+                            <span v-else class="icon">✔</span>
+                            <span>{{ submitting ? 'Đang thêm...' : 'Thêm Khách Hàng' }}</span>
                         </button>
+
                     </div>
                 </form>
             </div>

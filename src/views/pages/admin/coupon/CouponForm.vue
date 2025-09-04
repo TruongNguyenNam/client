@@ -84,45 +84,51 @@ const getCouponDisplayStatus = (coupon: any) => {
   return "Đang hoạt động";
 };
 
+
+// loading tặng coupon cho từng khách
+const gifting = ref<{ [customerId: number]: boolean }>({});
+// loading khi tặng nhiều khách cùng lúc
+const giftingSelected = ref(false);
+
 // Tặng cho 1 khách
 const handleGift = async (customer: Customer) => {
+  gifting.value[customer.id] = true; // bật loading cho nút của khách đó
   try {
     await CouponUsageService.giveCouponToSingleCustomer({
       couponId,
       userIds: [customer.id]
     });
     giftStatus.value[customer.id] = 'success';
-    showNotification("success", `Tặng coupon thành công cho khách hàng ${customer.username}`);
-    setTimeout(() => giftStatus.value[customer.id] = '', 2000);
+    showNotification("success", `Tặng coupon thành công cho ${customer.username}`);
     await reloadCoupon();
     await reloadCustomers();
   } catch (err) {
     giftStatus.value[customer.id] = 'error';
-    showNotification("error", `Tặng coupon thất bại cho khách hàng ${customer.username}`);
-    setTimeout(() => giftStatus.value[customer.id] = '', 2000);
+    showNotification("error", `Tặng coupon thất bại cho ${customer.username}`);
+  } finally {
+    gifting.value[customer.id] = false; // tắt loading
   }
 };
+
 
 // Tặng cho nhiều khách
 const handleGiftSelected = async () => {
   const userIds = selectedCustomers.value.map(cus => cus.id);
+  giftingSelected.value = true; // bật loading cho nút "Tặng các khách đã chọn"
   try {
     await CouponUsageService.giveCouponToManyCustomers({ couponId, userIds });
-    userIds.forEach(id => {
-      giftStatus.value[id] = 'success';
-      setTimeout(() => giftStatus.value[id] = '', 2000);
-    });
+    userIds.forEach(id => giftStatus.value[id] = 'success');
     showNotification("success", "Tặng coupon thành công cho các khách hàng đã chọn");
     await reloadCoupon();
     await reloadCustomers();
   } catch (err) {
-    userIds.forEach(id => {
-      giftStatus.value[id] = 'error';
-      setTimeout(() => giftStatus.value[id] = '', 2000);
-    });
+    userIds.forEach(id => giftStatus.value[id] = 'error');
     showNotification("error", "Tặng coupon thất bại cho các khách hàng đã chọn");
+  } finally {
+    giftingSelected.value = false; // tắt loading
   }
 };
+
 
 function showNotification(type: "success" | "error", message: string) {
   notification.value = { type, message };
@@ -210,8 +216,9 @@ const selectedCount = computed(() => selectedCustomers.value.length);
         <template v-else>
           <div class="flex justify-content-between align-items-center mb-3">
             <span class="table-title-text">Danh sách khách hàng</span>
-            <Button label="Tặng các khách đã chọn" icon="pi pi-gift" class="p-button-info"
-              :disabled="!selectedCustomers.length" @click="handleGiftSelected" />
+            <Button label="Tặng các khách đã chọn" icon="pi pi-gift" class="p-button-info" :loading="giftingSelected"
+              :disabled="!selectedCustomers.length || giftingSelected" @click="handleGiftSelected" />
+
           </div>
           <div class="flex justify-content-between align-items-center mb-3">
             <input v-model="searchEmail" type="text" placeholder="Nhập email khách hàng..." class="search-box" />
@@ -239,7 +246,8 @@ const selectedCount = computed(() => selectedCustomers.value.length);
             <Column header="Hành động" headerClass="center-header" bodyClass="center-cell">
               <template #body="slotProps">
                 <Button label="Tặng" icon="pi pi-gift" class="p-button-success p-button-sm"
-                  :disabled="giftStatus[slotProps.data.id] === 'success'" @click="handleGift(slotProps.data)" />
+                  :loading="gifting[slotProps.data.id]" :disabled="giftStatus[slotProps.data.id] === 'success'"
+                  @click="handleGift(slotProps.data)" />
                 <span v-if="giftStatus[slotProps.data.id] === 'success'" style="color:green;margin-left:8px;">✔️</span>
                 <span v-if="giftStatus[slotProps.data.id] === 'error'" style="color:red;margin-left:8px;">Lỗi</span>
               </template>

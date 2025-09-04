@@ -119,11 +119,13 @@
           <input :value="fullAddress" type="text" readonly placeholder="" />
         </div>
         <div class="form-actions">
-          <button class="btn btn-submit" type="submit">
-            <span class="icon">✔</span>
-            <span>Thêm Khách Hàng</span>
+          <button class="btn btn-submit" type="submit" :disabled="submitting">
+            <span v-if="submitting" class="pi pi-spin pi-spinner"></span>
+            <span v-else class="icon">✔</span>
+            <span>{{ submitting ? 'Đang thêm...' : 'Thêm Khách Hàng' }}</span>
           </button>
         </div>
+
       </form>
     </div>
 
@@ -132,21 +134,10 @@
         v-if="currentTab === 'form'" />
       <Button label="Hủy" icon="pi pi-times" class="p-button-text" @click="visible = false" />
 
-      <Button 
-        label="Hủy chọn khách hàng" 
-        icon="pi pi-user-minus" 
-        class="p-button-warning" 
-        @click="clearSelectedCustomer" 
-        v-if="selectedCustomer"
-      />
-      <Button 
-        label="Chọn" 
-        icon="pi pi-check" 
-        class="p-button-primary" 
-        :disabled="!selectedCustomer" 
-        @click="selectCustomer" 
-        v-if="currentTab === 'list'" 
-      />
+      <Button label="Hủy chọn khách hàng" icon="pi pi-user-minus" class="p-button-warning"
+        @click="clearSelectedCustomer" v-if="selectedCustomer" />
+      <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
+        @click="selectCustomer" v-if="currentTab === 'list'" />
 
       <!-- <Button label="Chọn" icon="pi pi-check" class="p-button-primary" :disabled="!selectedCustomer"
         @click="selectCustomer" v-if="currentTab === 'list'" /> -->
@@ -258,7 +249,7 @@ function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|vn|co\.uk|io|info)$/.test(email);
 }
 function validatePhone(phone: string) {
- return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
+  return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
 }
 
 
@@ -317,14 +308,15 @@ watch(() => customer.value.username, (username) => {
 
 // Khi thay đổi tỉnh/thành, quận/huyện, phường/xã thì reset các trường con
 watch(() => customer.value.province, () => {
-    customer.value.district = "";
-    customer.value.ward = "";
+  customer.value.district = "";
+  customer.value.ward = "";
 });
 
 watch(() => customer.value.district, () => {
-    customer.value.ward = "";
+  customer.value.ward = "";
 });
 
+const submitting = ref(false);
 
 const submitCustomer = async () => {
   errors.value = {};
@@ -403,7 +395,7 @@ const submitCustomer = async () => {
   // Nếu có lỗi thì return
   if (Object.keys(errors.value).length > 0) return;
 
-
+  submitting.value = true;
   const address = {
     street: customer.value.street,
     ward: wardOptions.value.find(w => w.level3_id === customer.value.ward)?.name || "",
@@ -460,6 +452,8 @@ const submitCustomer = async () => {
       life: 3000
     });
     console.error(error.response?.data || error);
+  } finally {
+    submitting.value = false;
   }
 };
 

@@ -128,6 +128,28 @@ watch(() => props.data, (newData) => {
 function validatePhone(phone: string) {
    return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone);
 }
+// Reset district + ward khi đổi tỉnh
+watch(() => formData.value.province, (newVal) => {
+  formData.value.district = "";
+  formData.value.ward = "";
+
+  if (!newVal) {
+    errors.value.province = "Vui lòng chọn Tỉnh/Thành phố";
+  } else {
+    delete errors.value.province;
+  }
+});
+
+// Reset ward khi đổi quận
+watch(() => formData.value.district, (newVal) => {
+  formData.value.ward = "";
+
+  if (!newVal) {
+    errors.value.district = "Vui lòng chọn Quận/Huyện";
+  } else {
+    delete errors.value.district;
+  }
+});
 watch(() => formData.value.receiverPhone, (newPhone) => {
   if (!validatePhone(newPhone)) {
     errors.value.receiverPhone = "SĐT người nhận không hợp lệ";
